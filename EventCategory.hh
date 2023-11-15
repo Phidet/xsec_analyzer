@@ -9,37 +9,20 @@ enum EventCategory {
   // has no MC truth information)
   kUnknown = 0,
 
-  // Signal events broken down by underlying reaction mode
-  kSignalCCQE = 1,
-  kSignalCCMEC = 2,
-  kSignalCCRES = 3,
-  kSignalOther = 4,
+  // Signal
+  kNumuCC1PiChargedNonGolden = 1,
+  kNumuCC1PiChargedGolden = 2,
 
-  // True numu CC event with at least one final-state pion above threshold
-  kNuMuCCNpi = 5,
-
-  // True numu CC event with zero final-state pions above threshold and
-  // zero final-state protons above threshold
-  kNuMuCC0pi0p = 6,
-
-  // Any true numu CC event which does not satisfy the criteria for inclusion
-  // in one of the other categories above
-  kNuMuCCOther = 7,
-
-  // True nue CC event
-  kNuECC = 8,
-
-  // True neutral current event for any neutrino flavor
-  kNC = 9,
-
-  // True neutrino vertex (any reaction mode and flavor combination) is outside
-  // of the fiducial volume
-  kOOFV = 10,
-
-  // All events that do not fall within any of the other categories (e.g.,
-  // numubar CC)
-  kOther = 11
-
+  // MC Background
+  kExternal = 3,
+  kDirt = 4,
+  kNonFiducial = 5,
+  kNue = 6,
+  kNC = 7,
+  kNumuCC0Pi = 8,
+  kNumuCC1PiZero = 9,
+  kNumuCCOther = 10,
+  // kNumuCC1PiNonSignal = 11
 };
 
 // Singleton class that helps manipulate EventCategory enum values
@@ -125,32 +108,32 @@ class EventCategoryInterpreter {
     EventCategoryInterpreter() {}
 
     std::map< EventCategory, std::string > event_category_to_label_map_ = {
-      { kUnknown, "Unknown" },
-      { kSignalCCQE, "Signal (CCQE)" },
-      { kSignalCCMEC, "Signal (CCMEC)" },
-      { kSignalCCRES, "Signal (CCRES)" },
-      { kSignalOther, "Signal (Other)" },
-      { kNuMuCCNpi, "#nu_{#mu} CCN#pi" },
-      { kNuMuCC0pi0p, "#nu_{#mu} CC0#pi0p" },
-      { kNuMuCCOther, "Other #nu_{#mu} CC" },
-      { kNuECC, "#nu_{e} CC" },
+      { kUnknown, "Unknown/Data" },
+      { kNumuCC1PiChargedGolden, "#nu_{#mu} CC1#pi^{#pm} for p_{#pi}" },
+      { kNumuCC1PiChargedNonGolden, "#nu_{#mu} CC1#pi^{#pm} Other" },
+      // { kNumuCC1PiNonSignal, "#nu_{#mu} CC1#pi^{#pm} Non-Signal" },
+      { kNumuCC0Pi, "#nu_{#mu} CC0#pi" },
+      { kNumuCC1PiZero, "#nu_{#mu} CC1#pi^{0}" },
+      { kNumuCCOther, "Other #nu_{#mu} CC" },
+      { kNue, "#nu_{e}" },
       { kNC, "NC" },
-      { kOOFV, "Out FV" },
-      { kOther, "Other" }
+      { kDirt, "Dirt" },
+      { kNonFiducial, "Non-Fiducial" },
+      { kExternal, "External" }
     };
 
-    std::map< EventCategory, int > event_category_to_color_map_ = {
+    std::map< EventCategory, Color_t > event_category_to_color_map_ = {
       { kUnknown, kGray },
-      { kSignalCCQE, kGreen },
-      { kSignalCCMEC, kGreen + 1 },
-      { kSignalCCRES, kGreen + 2 },
-      { kSignalOther, kGreen + 3 },
-      { kNuMuCCNpi, kAzure - 2 },
-      { kNuMuCC0pi0p, kAzure - 1 },
-      { kNuMuCCOther, kAzure },
-      { kNuECC, kViolet },
-      { kNC, kOrange },
-      { kOOFV, kRed + 3 },
-      { kOther, kRed + 1 }
+      { kNumuCC1PiChargedGolden,  kGreen },
+      { kNumuCC1PiChargedNonGolden, kGreen + 1 },
+      // { kNumuCC1PiNonSignal , kYellow - 1 },
+      { kNumuCC0Pi, kYellow },
+      { kNumuCC1PiZero, kOrange - 4 },
+      { kNumuCCOther, kOrange - 3 },
+      { kNue, kBlue },
+      { kNC, kViolet },
+      { kDirt, kOrange+3 },
+      { kNonFiducial, kBlack },
+      { kExternal, kBlack }
     };
 };

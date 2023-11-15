@@ -26,12 +26,15 @@
 // Abbreviation to make using the enum class easier
 using NFT = NtupleFileType;
 
+#define USE_FAKE_DATA ""
+
 void make_plots( const std::string& branchexpr, const std::string& selection,
   const std::set<int>& runs, std::vector<double> bin_low_edges,
   const std::string& x_axis_label = "",
   const std::string& y_axis_label = "", const std::string& title = "",
   const std::string& mc_event_weight = DEFAULT_MC_EVENT_WEIGHT )
 {
+  std::cout<<"DEBUG plot.C Point -4"<<std::endl;
   // Get the number of bins to use in histograms
   int Nbins = bin_low_edges.size() - 1;
 
@@ -40,18 +43,26 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
   static long plot_counter = -1;
   ++plot_counter;
 
+  std::cout<<"DEBUG plot.C Point -3"<<std::endl;
+
   // Get access to the singleton utility classes that we'll need
   const EventCategoryInterpreter& eci = EventCategoryInterpreter::Instance();
-  const FilePropertiesManager& fpm = FilePropertiesManager::Instance();
+  FilePropertiesManager& fpm = FilePropertiesManager::Instance();
+
+  #ifdef USE_FAKE_DATA
+    fpm.load_file_properties( "nuwro_file_properties.txt" );
+  #endif
 
   // Consider samples for data taken with the beam on, data taken with the beam
   // off, and CV MC samples for numus, intrinsic nues, and dirt events
   constexpr std::array< NFT, 5 > file_types = { NFT::kOnBNB, NFT::kExtBNB,
-    NFT::kNumuMC, NFT::kIntrinsicNueMC, NFT::kDirtMC };
+    NFT::kNumuMC, NFT::kDirtMC }; // NFT::kIntrinsicNueMC
 
   // Similar array that includes only the CV MC samples
   constexpr std::array< NFT, 3 > mc_file_types = { NFT::kNumuMC,
-    NFT::kIntrinsicNueMC, NFT::kDirtMC };
+    NFT::kDirtMC }; // NFT::kIntrinsicNueMC
+
+  std::cout<<"DEBUG plot.C Point -2"<<std::endl;
 
   // Prepare TChains needed to loop over the event ntuples to be analyzed. Also
   // prepare maps to keep track of the corresponding POT normalizations and
@@ -66,6 +77,8 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
     trigger_map[ type ] = 0;
   }
 
+  std::cout<<"DEBUG plot.C Point -1"<<std::endl;
+
   // Add files for each of the selected runs to the appropriate TChain. Also
   // update the corresponding POT normalizations. Use the FilePropertiesManager
   // to find the right ntuple files for each run.
@@ -74,18 +87,26 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
 
   for ( const int& run : runs ) {
     // Get the map storing the ntuple file names for the current run
+    std::cout<<"DEBUG plot.C Point 0"<<std::endl;
     const auto& run_map = ntuple_map.at( run );
+    std::cout<<"DEBUG plot.C Point 1"<<std::endl;
 
     for ( const auto& type : file_types ) {
 
       // Get the set of ntuple files for the current run and sample type
+      std::cout<<"DEBUG plot.C Point 2"<<std::endl;
       const auto& ntuple_files = run_map.at( type );
+      std::cout<<"DEBUG plot.C Point 3"<<std::endl;
 
       // Get access to the corresponding TChain, total POT value, and total
       // number of triggers that we want to use to handle these files
+      std::cout<<"DEBUG plot.C Point 4"<<std::endl;
       auto* tchain = tchain_map.at( type ).get();
+      std::cout<<"DEBUG plot.C Point 5"<<std::endl;
       double& total_pot = pot_map.at( type );
+      std::cout<<"DEBUG plot.C Point 6"<<std::endl;
       long& total_triggers = trigger_map.at( type );
+      std::cout<<"DEBUG plot.C Point 7"<<std::endl;
 
       for ( const auto& file_name : ntuple_files ) {
         // Add the current file to the appropriate TChain
@@ -95,7 +116,9 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
         // FilePropertiesManager and add it to the total (it's not stored in
         // the files themselves)
         if ( type == NFT::kOnBNB || type == NFT::kExtBNB ) {
+          std::cout<<"DEBUG plot.C Point 8"<<std::endl;
           const auto& norm_info = data_norm_map.at( file_name );
+          std::cout<<"DEBUG plot.C Point 9"<<std::endl;
           total_triggers += norm_info.trigger_count_;
           // This will just be zero for beam-off data. We will calculate an
           // effective value using the trigger counts below.
@@ -125,16 +148,20 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
   TH1D* off_data_hist = new TH1D( off_data_hist_name.c_str(),
     plot_title.c_str(), Nbins, bin_low_edges.data() );
 
+  std::cout<<"DEBUG plot.C Point 10"<<std::endl;
   TChain* off_chain = tchain_map.at( NFT::kExtBNB ).get();
+  std::cout<<"DEBUG plot.C Point 11"<<std::endl;
   off_chain->Draw( (branchexpr + " >> " + off_data_hist_name).c_str(),
     selection.c_str(), "goff" );
   //off_data_hist->SetDirectory( nullptr );
 
   // We need to scale the beam-off data to an effective POT based on the ratio
   // of the total trigger counts for beam-off and beam-on data. Do that here.
+  std::cout<<"DEBUG plot.C Point 12"<<std::endl;
   double pot_on = pot_map.at( NFT::kOnBNB );
   double trigs_on = trigger_map.at( NFT::kOnBNB );
   double trigs_off = trigger_map.at( NFT::kExtBNB );
+  std::cout<<"DEBUG plot.C Point 13"<<std::endl;
 
   // Compute the effective POT and store it in the map
   double ext_effective_pot = trigs_off * pot_on / trigs_on;
@@ -150,7 +177,9 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
   TH1D* on_data_hist = new TH1D( on_data_hist_name.c_str(),
     plot_title.c_str(), Nbins, bin_low_edges.data() );
 
+  std::cout<<"DEBUG plot.C Point 14"<<std::endl;
   TChain* on_chain = tchain_map.at( NFT::kOnBNB ).get();
+  std::cout<<"DEBUG plot.C Point 15"<<std::endl;
   on_chain->Draw( (branchexpr + " >> " + on_data_hist_name).c_str(),
     selection.c_str(), "goff" );
 
@@ -187,9 +216,11 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
   static int dummy_counter = 0;
   for ( const auto& type : mc_file_types ) {
 
+    std::cout<<"DEBUG plot.C Point 16"<<std::endl;
     TChain* mc_ch = tchain_map.at( type ).get();
     double on_pot = pot_map.at( NFT::kOnBNB );
     double mc_pot = pot_map.at( type );
+    std::cout<<"DEBUG plot.C Point 17"<<std::endl;
 
     // Add this sample's contribution to the stacked histograms by MC event
     // category
@@ -213,7 +244,9 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
       temp_mc_hist->Scale( on_pot / mc_pot );
 
       // Add this histogram's contribution (now properly scaled) to the total
+      std::cout<<"DEBUG plot.C Point 18"<<std::endl;
       mc_hists.at( ec )->Add( temp_mc_hist );
+      std::cout<<"DEBUG plot.C Point 19"<<std::endl;
 
       // We don't need the temporary histogram anymore, so just get rid of it
       delete temp_mc_hist;
@@ -289,7 +322,9 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
     EventCategory ec = pair.first;
     std::string label = pair.second;
 
+    std::cout<<"DEBUG plot.C Point 20"<<std::endl;
     TH1* category_hist = mc_hists.at( ec );
+    std::cout<<"DEBUG plot.C Point 21"<<std::endl;
 
     // Use TH1::Integral() to account for CV reweighting correctly
     double events_in_category = category_hist->Integral();
@@ -351,7 +386,7 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
   h_ratio->GetXaxis()->SetTitleOffset( 0.9 );
 
   // y-axis
-  h_ratio->GetYaxis()->SetTitle( "ratio" ); //"#frac{Beam ON}{Beam OFF + MC}" );
+  h_ratio->GetYaxis()->SetTitle( "Ratio" ); //"#frac{Beam ON}{Beam OFF + MC}" );
   h_ratio->GetYaxis()->CenterTitle( true );
   h_ratio->GetYaxis()->SetLabelSize( 0.08);
   h_ratio->GetYaxis()->SetTitleSize( 0.15 );
@@ -398,6 +433,7 @@ void make_plots( const std::string& branchexpr, const std::string& selection,
 
 
 void plots() {
+  std::cout<<"DEBUG plot.C Point plots 0"<<std::endl;
 
   const std::string sel_CCNp = "sel_CCNp0pi";
   const std::string sel_CCincl = "sel_nu_mu_cc && sel_has_muon_candidate"
@@ -410,56 +446,150 @@ void plots() {
 
   //const std::string sel_CCNpi = "sel_nu_mu_cc && sel_no_reco_showers && sel_has_muon_candidate && sel_has_p_candidate && !sel_passed_proton_pid_cut && sel_protons_contained"; // && sel_lead_p_passed_mom_cuts";
 
+  // make_plots( /* branchexpr = */        "cc1pi_reco_muonCosTheta", 
+  //             /* selection = */         "cc1pi_selected_generic",
+  //             /* runs = */              std::set<int>{1,2,3}, 
+  //             /* xmin = */              -1.0,
+  //             /* xmax = */              1.0,
+  //             /* NBins = */             20,
+  //             /* x_axis_label = */      "CC1pi reco muonCosTheta",
+  //             /* y_axis_label = */      "# Events", 
+  //             /* title = */             "CC1pi reco muonCosTheta" \
+  //             /* mc_event_weight = */ );
 
-  make_plots( "topological_score",
-    "sel_reco_vertex_in_FV && sel_pfp_starts_in_PCV && sel_has_muon_candidate"
-    " && sel_no_reco_showers && sel_muon_above_threshold"
-    "  && sel_has_p_candidate && sel_passed_proton_pid_cut"
-    "  && sel_protons_contained && sel_lead_p_passed_mom_cuts",
-    std::set<int>{1}, 0., 1., 40, "topological score", "events", "Run 1" );
+  // make_plots( /* branchexpr = */        "cc1pi_reco_muonPhi", 
+  //             /* selection = */         "cc1pi_selected_generic",
+  //             /* runs = */              std::set<int>{1,2,3}, 
+  //             /* xmin = */              -3.1416,
+  //             /* xmax = */              3.1416,
+  //             /* NBins = */             15,
+  //             /* x_axis_label = */      "CC1pi reco muonPhi",
+  //             /* y_axis_label = */      "# Events", 
+  //             /* title = */             "CC1pi reco muonPhi" \
+  //             /* mc_event_weight = */ );
+
+  // make_plots( /* branchexpr = */        "run", 
+  //             /* selection = */         "cc1pi_selected_generic", //"cc1pi_selected_generic",
+  //             /* runs = */              std::set<int>{1,2,3}, 
+  //             /* xmin = */              1,
+  //             /* xmax = */              4,
+  //             /* NBins = */             1,
+  //             /* x_axis_label = */      "CC1pi runs",
+  //             /* y_axis_label = */      "# Events", 
+  //             /* title = */             "CC1pi runs" \
+  //             /* mc_event_weight = */ );
+
+  // make_plots( /* branchexpr = */      "cc1pi_truth_muonCosTheta",
+  //           /* selection = */         "passed_particleTrackScore", //"cc1pi_selected_generic",
+  //           /* runs = */              std::set<int>{1,2,3},
+  //           /* xmin = */              -1,
+  //           /* xmax = */              1,
+  //           /* NBins = */             10,
+  //           /* x_axis_label = */      "CC1pi",
+  //           /* y_axis_label = */      "# Events",
+  //           /* title = */             "CC1pi" \
+  //           /* mc_event_weight = */ );
+
+  // make_plots( /* branchexpr = */      "cc1pi_truth_muonCosTheta",
+  //           /* selection = */         "passed_particleVertexDistance", //"cc1pi_selected_generic",
+  //           /* runs = */              std::set<int>{1,2,3},
+  //           /* xmin = */              -1,
+  //           /* xmax = */              1,
+  //           /* NBins = */             10,
+  //           /* x_axis_label = */      "CC1pi",
+  //           /* y_axis_label = */      "# Events",
+  //           /* title = */             "CC1pi" \
+  //           /* mc_event_weight = */ );
+
+  // make_plots( /* branchexpr = */      "cc1pi_truth_muonCosTheta",
+  //           /* selection = */         "passed_min2Tracks", //"cc1pi_selected_generic",
+  //           /* runs = */              std::set<int>{1,2,3},
+  //           /* xmin = */              -1,
+  //           /* xmax = */              1,
+  //           /* NBins = */             10,
+  //           /* x_axis_label = */      "CC1pi",
+  //           /* y_axis_label = */      "# Events",
+  //           /* title = */             "CC1pi" \
+  //           /* mc_event_weight = */ );
+
+  make_plots( /* branchexpr = */        "cc1pi_reco_muonCosTheta",
+              /* selection = */         "cc1pi_selected_generic", //"cc1pi_selected_generic",
+              /* runs = */              std::set<int>{1,2,3},
+              /* xmin = */              -1,
+              /* xmax = */              2,
+              /* NBins = */             10,
+              /* x_axis_label = */      "CC1pi",
+              /* y_axis_label = */      "# Events", 
+              /* title = */             "CC1pi run 1" \
+              /* mc_event_weight = */ );
+
+  // make_plots( /* branchexpr = */        "run",
+  //             /* selection = */         "cc1pi_selected_generic", //"cc1pi_selected_generic",
+  //             /* runs = */              std::set<int>{2},
+  //             /* xmin = */              2,
+  //             /* xmax = */              3,
+  //             /* NBins = */             1,
+  //             /* x_axis_label = */      "CC1pi",
+  //             /* y_axis_label = */      "# Events", 
+  //             /* title = */             "CC1pi run 2" \
+  //             /* mc_event_weight = */ );
+
+  // make_plots( /* branchexpr = */        "run",
+  //             /* selection = */         "cc1pi_selected_generic", //"cc1pi_selected_generic",
+  //             /* runs = */              std::set<int>{3},
+  //             /* xmin = */              3,
+  //             /* xmax = */              4,
+  //             /* NBins = */             1,
+  //             /* x_axis_label = */      "CC1pi",
+  //             /* y_axis_label = */      "# Events",
+  //             /* title = */             "CC1pi run 3" \
+  //             /* mc_event_weight = */ );
+
+
+  std::cout<<"DEBUG plot.C Point plots 1"<<std::endl;
 
   //make_plots( "reco_nu_vtx_sce_z", sel_CCNpi, std::set<int>{1}, FV_Z_MIN,
-  //  FV_Z_MAX, 40, "reco vertex z [cm]", "events", "Run 1" );
+  //  FV_Z_MAX, 40, "reco vertex z [cm]", "# Events", "Run 1" );
 
   //make_plots( "delta_pT", "sel_CCNp0pi", // && sel_topo_cut_passed",
-  //  std::set<int>{1}, 0., 0.8, 15, "#deltap_{T} [GeV]", "events",
+  //  std::set<int>{1}, 0., 0.8, 15, "#deltap_{T} [GeV]", "# Events",
   //  "Runs 1-3" );
 
   // NEW COMPARISONS with MCC8 CCNp
 
   //make_plots( "p3_mu.CosTheta()", "sel_CCNp0pi", std::set<int>{1,2,3},
   //  { -1.0, -0.82, -0.66, -0.39, -0.16, 0.05, 0.25, 0.43, 0.59, 0.73,
-  //  0.83, 0.91, 1.0 }, "cos#theta_{#mu}", "events",
+  //  0.83, 0.91, 1.0 }, "cos#theta_{#mu}", "# Events",
   //  "MCC9 CCNp (Run 1)" );
 
   //make_plots( "TMath::ACos( (p3_mu.X()*p3_lead_p.X() + "
   //"p3_mu.Y()*p3_lead_p.Y() + p3_mu.Z()*p3_lead_p.Z()) / p3_mu.Mag()"
   //"/ p3_lead_p.Mag() )", "sel_CCNp0pi", std::set<int>{1},
-  //  { 0.0, 0.8, 1.2, 1.57, 1.94, 2.34, M_PI }, "#theta_{#mu-p}", "events",
+  //  { 0.0, 0.8, 1.2, 1.57, 1.94, 2.34, M_PI }, "#theta_{#mu-p}", "# Events",
   //  "MCC9 CCNp (Run 1, spline weights only)",
   //  "spline_weight" );
 
   //make_plots( "p3_lead_p.Mag()", "sel_CCNp0pi", std::set<int>{1},
   //  { 0.3, 0.41, 0.495, 0.56, 0.62, 0.68, 0.74, 0.8, 0.87, 0.93, 1.2 },
-  //  "p_{p} (GeV)", "events",
+  //  "p_{p} (GeV)", "# Events",
   //  "MCC9 CCNp (Run 1, spline weights only)",
   //  "spline_weight" );
 
   //make_plots( "p3_mu.Mag()", "sel_CCNp0pi", std::set<int>{1},
   //  { 0.1, 0.18, 0.3, 0.48, 0.75, 1.14, 2.5 },
-  //  "p_{#mu} (GeV)", "events",
+  //  "p_{#mu} (GeV)", "# Events",
   //  "MCC9 CCNp (Run 1, spline weights only)",
   //  "spline_weight" );
 
   //make_plots( "p3_lead_p.CosTheta()", "sel_CCNp0pi", std::set<int>{1},
   //  { -1.0, -0.5, 0.0, 0.27, 0.45, 0.62, 0.76, 0.86, 0.94, 1.0 },
-  //  "cos#theta_{p}", "events",
+  //  "cos#theta_{p}", "# Events",
   //  "MCC9 CCNp (Run 1, spline weights only)",
   //  "spline_weight" );
 
   //make_plots( "p3_mu.CosTheta()", sel_CCincl, std::set<int>{1},
   //  { -1.00, -0.5, 0.00, 0.27, 0.45, 0.62, 0.76, 0.86, 0.94, 1.0 },
-  //  "cos#theta_{#mu}", "events",
+  //  "cos#theta_{#mu}", "# Events",
   //  "Steven G's CC inclusive (Run 1)" );
 
 }

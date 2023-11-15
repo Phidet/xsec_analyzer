@@ -128,7 +128,6 @@ int main( int argc, char* argv[] ) {
       tdirfile_name = univ_maker.dir_name();
       set_tdirfile_name = true;
     }
-
   } // loop over input files
 
   // Use a temporary MCC9SystematicsCalculator object to automatically calculate the total
@@ -138,6 +137,6 @@ int main( int argc, char* argv[] ) {
   // passed as the second argument to the constructor just instructs the
   // MCC9SystematicsCalculator class to use the default systematics configuration file.
   MCC9SystematicsCalculator unfolder( output_file_name, "", tdirfile_name );
-
+  std::cout<<"--- All done ---"<<std::endl;
   return 0;
 }

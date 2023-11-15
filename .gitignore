@@ -1,3 +1,5 @@
 *.root
 univmake
 analyzer
+.nfs*
+*.pcm

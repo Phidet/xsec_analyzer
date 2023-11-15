@@ -24,6 +24,7 @@ std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
   constexpr double BIG_DOUBLE = std::numeric_limits<double>::max();
   double min_abs = BIG_DOUBLE;
   int num_bins = mat.GetNrows();
+  std::cout<<"DEBUG invert_matrix - num_bins: "<<num_bins<<std::endl;
   for ( int a = 0; a < num_bins; ++a ) {
     for ( int b = 0; b < num_bins; ++b ) {
       double element = mat( a, b );

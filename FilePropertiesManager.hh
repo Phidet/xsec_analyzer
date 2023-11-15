@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -255,6 +256,7 @@ class FilePropertiesManager {
           int trigs;
           double pot;
           temp_ss >> trigs >> pot;
+          std::cout<<"DEBUG load_file_properties file_name: "<<file_name<<" trigs: "<<trigs<<" pot: "<<pot<<std::endl;
 
           // Store this information in the normalization map
           data_norm_map_[ file_name ] = TriggersAndPOT( trigs, pot );

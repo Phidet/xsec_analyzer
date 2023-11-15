@@ -142,7 +142,6 @@ UnfoldedMeasurement DAgostiniUnfolder::unfold( const TMatrixD& data_signal,
   int it = 0;
   double fm = DBL_MAX;
   while ( true ) {
-
     // If we've hit the configured or global maximum number of iterations, then
     // stop the loop
     if ( conv_criter_ == ConvergenceCriterion::FixedIterations
@@ -151,6 +150,7 @@ UnfoldedMeasurement DAgostiniUnfolder::unfold( const TMatrixD& data_signal,
 
     // If the figure of merit for convergence has gone below threshold, then
     // stop the loop
+    std::cout<<"DEBUG fm: "<< fm <<" - fig_merit_target_: " << fig_merit_target_<<std::endl;
     if ( fm < fig_merit_target_ ) break;
 
     // Compute the column vector of expected reco-space signal event counts
@@ -158,6 +158,39 @@ UnfoldedMeasurement DAgostiniUnfolder::unfold( const TMatrixD& data_signal,
     // signal events in true-space
     TMatrixD reco_expected( smearcept, TMatrixD::EMatrixCreatorsOp2::kMult,
       *true_signal );
+
+    std::cout<<"##### DEBUG it: "<<it<<" smearcep: ";
+    const auto nrows = smearcept.GetNrows();
+    const auto ncols = smearcept.GetNcols();
+    for (int i = 0; i < nrows; ++i)
+    {
+        for (int j = 0; j < ncols; ++j)
+        {
+            std::cout << smearcept(i, j) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    // Print out true_signal values
+    std::cout<<"##### DEBUG it: "<<it<<" true_signal: ";
+    for ( int t = 0; t < num_true_signal_bins; ++t ) {
+      std::cout<<true_signal->operator()( t, 0 )<<" ";
+    }
+    std::cout<<std::endl;
+
+    // Print out true_signal values
+    std::cout<<"##### DEBUG it: "<<it<<" reco_expected: ";
+    for ( int r = 0; r < num_true_signal_bins; ++r ) {
+      std::cout<<reco_expected( r, 0 )<<" ";
+    }
+    std::cout<<std::endl;
+
+    // Print out true_signal values
+    std::cout<<"##### DEBUG it: "<<it<<" data_signal: ";
+    for ( int r = 0; r < num_true_signal_bins; ++r ) {
+      std::cout<<data_signal( r, 0 )<<" ";
+    }
+    std::cout<<std::endl;
 
     // Update the unfolding matrix for the current iteration
     for ( int t = 0; t < num_true_signal_bins; ++t ) {
@@ -404,11 +437,14 @@ double DAgostiniUnfolder::calc_figure_of_merit(
   }
 
   double fm = 0.;
+  std::cout<<"DEBUG updating fm (num_rows: "<<num_rows<<"): ";
   for ( int r = 0; r < num_rows; ++r ) {
     double old_val = old_true_signal( r, 0 );
     double new_val = new_true_signal( r, 0 );
     fm += std::abs( new_val - old_val ) / new_val;
+    std::cout<<" ("<<fm<<", "<<new_val<<", "<<old_val<<")";
   }
+  std::cout<<std::endl;
 
   fm /= num_rows;
   return fm;
