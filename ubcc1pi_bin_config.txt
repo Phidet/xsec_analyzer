@@ -67,7 +67,6 @@ stv_tree
 0 7 "cc1pi_signal  &&  cc1pi_truth_nProtons      == 1"
 0 7 "cc1pi_signal  &&  cc1pi_truth_nProtons      > 1"
 0 8 "cc1pi_signal"
-1 -1 "(category == 1 || category == 2) && !cc1pi_signal"
 1 -1 "category == 3"
 1 -1 "category == 4"
 1 -1 "category == 5"
@@ -76,6 +75,7 @@ stv_tree
 1 -1 "category == 8"
 1 -1 "category == 9"
 1 -1 "category == 10"
+1 -1 "category == 11"
 66
 0 0 "cc1pi_selected_generic  &&  cc1pi_reco_muonCosTheta  >= -1             &&  cc1pi_reco_muonCosTheta < -0.27"
 0 0 "cc1pi_selected_generic  &&  cc1pi_reco_muonCosTheta  >= -0.27          &&  cc1pi_reco_muonCosTheta < 0.29"

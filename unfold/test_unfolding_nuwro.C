@@ -66,9 +66,9 @@ struct TruthFileInfo
 std::map<std::string, TruthFileInfo> truth_file_map = {};
 
 std::map<std::string, std::string> samples_to_hist_names{
-    {"unfolded data", "UnfData"},
+    {"Unfolded NuWro Reco", "UnfData"},
     {"MicroBooNE Tune", "uBTune"},
-    {"truth", "FakeData"}};
+    {"NuWro Truth", "FakeData"}};
 
 struct SampleInfo
 {
@@ -222,16 +222,20 @@ void dump_overall_results(const UnfoldedMeasurement &result,
 
 void test_unfolding_nuwro()
 {
-    //// Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
+    // Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
+  
+    // fpm.load_file_properties("../nuwro_file_properties_closure.txt");
+    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/univmake_output_nuwro_v5_noext_nodirt_run1.root");
+    // // Do the systematics calculations in preparation for unfolding
+    // std::cout << "DEBUG test_unfolding_nuwro - Point 0" << std::endl;
+    // const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
+
     fpm.load_file_properties("../nuwro_file_properties.txt");
-
-    const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_4/univmake_output_nuwroFix.root");
-
+    const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/univmake_output_nuwro_v6_nodirtdetvarext.root");
     // Do the systematics calculations in preparation for unfolding
-    std::cout << "DEBUG test_unfolding_nuwro - Point 0" << std::endl;
-    const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd.conf");
-    std::cout << "DEBUG test_unfolding_nuwro - Point 1" << std::endl;
+    const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
+
     const auto &syst = *syst_ptr;
 
     // Get the tuned GENIE CV prediction in each true bin (including the
@@ -255,7 +259,8 @@ void test_unfolding_nuwro()
     // these event counts in the signal true bins via unfolding the fake data.
     const auto &fake_data_univ = syst.fake_data_universe();
     TH1D *fake_data_truth_hist = fake_data_univ ? fake_data_univ->hist_true_.get() : nullptr;
-    const auto using_fake_data = true; //(fake_data_univ != nullptr);
+    const auto using_fake_data = (fake_data_univ != nullptr);
+    std::cout<<"DEBUG using_fake_data: "<<using_fake_data<<std::endl;
 
     auto num_ordinary_reco_bins = getBinCount(syst.reco_bins_, kSidebandRecoBin, false);
     auto num_sideband_reco_bins = syst.reco_bins_.size() - num_ordinary_reco_bins;
@@ -265,83 +270,14 @@ void test_unfolding_nuwro()
     std::cout << "NUM TRUE SIGNAL BINS = " << num_true_signal_bins << '\n';
 
     auto *matrix_map_ptr = syst.get_covariances().release();
+    std::cout<<"DEBUG U-1 V3"<<std::endl;
     auto &matrix_map = *matrix_map_ptr;
+    std::cout<<"DEBUG U-0.9"<<std::endl;
     auto *cov_mat = matrix_map.at("total").cov_matrix_.get();
-
-    // std::unique_ptr<Unfolder> unfolder(new DAgostiniUnfolder(DAgostiniUnfolder::ConvergenceCriterion::FigureOfMerit, 0.025));
-    std::unique_ptr<Unfolder> unfolder(new WienerSVDUnfolder( true, WienerSVDUnfolder::RegularizationMatrixType::kFirstDeriv));
-    // std::unique_ptr<Unfolder> unfolder(new WienerSVDUnfolder( true, WienerSVDUnfolder::RegularizationMatrixType::kSecondDeriv));
-    // constexpr int NUM_DAGOSTINI_ITERATIONS = 50;
-    // std::unique_ptr<Unfolder> unfolder(new DAgostiniUnfolder( NUM_DAGOSTINI_ITERATIONS ));
-    constexpr bool USE_ADD_SMEAR = true;
-
-    // // Extract the inputs needed for the unfolding procedure from the
-    // // supplied SystematicsCalculator object
-    // const auto &smearcept = syst.get_cv_smearceptance_matrix();
-    // const auto &true_signal = syst.get_cv_true_signal();
-
-    // // const auto &reco_selected = syst.get_cv_reco_selected();
-    // // const auto data_signal = syst.get_cv_reco_signal();
-    // const auto &meas = syst.get_measured_events();
-    // const auto &data_signal = meas.reco_signal_;
-    // const auto &data_covmat = meas.cov_matrix_;
-
-    auto result = unfolder->unfold(syst);
-
-    // Propagate all defined covariance matrices through the unfolding procedure
-    TMatrixD err_prop_tr(TMatrixD::kTransposed, *result.err_prop_matrix_);
-
-    std::map<std::string, std::unique_ptr<TMatrixD>> unfolded_cov_matrix_map;
-
-    for (const auto &matrix_pair : matrix_map)
-    {
-        std::cout << "DEBUG matrix_pair.first: " << matrix_pair.first << std::endl;
-        unfolded_cov_matrix_map[matrix_pair.first] = std::make_unique<TMatrixD>(
-            *result.err_prop_matrix_, TMatrixD::EMatrixCreatorsOp2::kMult,
-            TMatrixD(*matrix_pair.second.get_matrix(), TMatrixD::EMatrixCreatorsOp2::kMult, err_prop_tr));
-    }
-
-    // Decompose the block-diagonal pieces of the total covariance matrix
-    // into normalization, shape, and mixed components (for later plotting
-    // purposes)
-    NormShapeCovMatrix bd_ns_covmat = make_block_diagonal_norm_shape_covmat(
-        *result.unfolded_signal_, *result.cov_matrix_, syst.true_bins_);
-
-    // // Assuming result_cov_matrix is a std::unique_ptr<TMatrixD>
-    // int nRows = result.cov_matrix_->GetNrows();
-    // int nCols = result.cov_matrix_->GetNcols();
-
-    // // Create a new TH2D object
-    // TH2D *h2 = new TH2D("h2", "Covariance Matrix", nCols, 0, nCols, nRows, 0, nRows);
-
-    // // Fill the TH2D object with the values from the TMatrixD
-    // for (int i = 1; i <= nRows; ++i) {
-    //     for (int j = 1; j <= nCols; ++j) {
-    //         h2->SetBinContent(j, i, (*result.cov_matrix_)(i-1, j-1));
-    //     }
-    // }
-
-    // Set the color palette
     std::cout<<"DEBUG U0"<<std::endl;
-    gStyle->SetPalette(util::CreateRedToBlueColorPalette(20));
-    gStyle->SetTitleFontSize(0.05); // Set the title font size to 0.05
-    std::cout<<"DEBUG U1"<<std::endl;
 
 
-    // Draw the TH2D object on the canvas
-    TCanvas *cm1 = new TCanvas("cm1", "Canvas", 800, 600);
 
-    TMatrixD* corr_unfolded = new TMatrixD(util::CovarianceMatrixToCorrelationMatrix(*result.cov_matrix_));
-    TH2D* corr_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*corr_unfolded, "corr_unfolded", "Correlation Matrix", 0, corr_unfolded->GetNrows(), 0, corr_unfolded->GetNcols()));
-    delete corr_unfolded; // Delete the dynamically allocated memory
-
-    corr_unfolded_hist->SetTitleSize(0.05, "t"); // Set the title font size to 0.05
-    corr_unfolded_hist->SetTitle("Correlation matrix after blockwise unfolding");
-    corr_unfolded_hist->GetZaxis()->SetRangeUser(-1, 1);
-    corr_unfolded_hist->GetXaxis()->SetTitle("Truth bins"); // Set x-axis label
-    corr_unfolded_hist->GetYaxis()->SetTitle("Truth bins"); // Set y-axis label
-    corr_unfolded_hist->SetStats(kFALSE);
-    corr_unfolded_hist->Draw("COLZ");
 
     // Define your custom labels and intervals
     const Int_t n = 9;
@@ -350,73 +286,10 @@ void test_unfolding_nuwro()
     Double_t overUnderFlowBins[overUnderFlowN] = {31, 49, 54};
     const Char_t *labels[n] = {"cos(#theta_{#mu})", "#phi_{#mu}", "p_{#mu}", "cos(#theta_{#pi})", "#phi_{#pi}", "p_{#pi}^{**}", "#theta_{#pi #mu}", "N_{p}", "Total"};
 
-
-    // Draw vertical and horizontal lines at the bin edges
-    for (Int_t i = 1; i < n; i++) {
-        TLine *vline = new TLine(bins[i], 0, bins[i], corr_unfolded_hist->GetNbinsY());
-        vline->SetLineColor(kBlack);
-        vline->Draw();
-
-        TLine *hline = new TLine(0, bins[i], corr_unfolded_hist->GetNbinsX(), bins[i]);
-        hline->SetLineColor(kBlack);
-        hline->Draw();
-    }
-
-    for (Int_t i = 1; i <= n; i++) {
-        // Draw white dotted lines from bins[i-1] to bins[i]
-        TLine *vline_dotted1 = new TLine(bins[i], bins[i-1], bins[i], bins[i]);
-        vline_dotted1->SetLineColor(kWhite);
-        vline_dotted1->SetLineStyle(2); // Set line style to dotted
-        vline_dotted1->Draw();
-
-        TLine *hline_dotted1 = new TLine(bins[i-1], bins[i], bins[i], bins[i]);
-        hline_dotted1->SetLineColor(kWhite);
-        hline_dotted1->SetLineStyle(2); // Set line style to dotted
-        hline_dotted1->Draw();
-
-        if(i<n)
-        {
-            TLine *vline_dotted2 = new TLine(bins[i], bins[i+1], bins[i], bins[i]);
-            vline_dotted2->SetLineColor(kWhite);
-            vline_dotted2->SetLineStyle(2); // Set line style to dotted
-            vline_dotted2->Draw();
-
-            TLine *hline_dotted2 = new TLine(bins[i+1], bins[i], bins[i], bins[i]);
-            hline_dotted2->SetLineColor(kWhite);
-            hline_dotted2->SetLineStyle(2); // Set line style to dotted
-            hline_dotted2->Draw();
-        }
-    }
-
-    // Add labels in the middle of the intervals
-    for (Int_t i = 0; i < n; i++) {
-        Double_t midPoint = i==n-1 ? bins[i+1] + 1 : (bins[i] + bins[i+1]) / 2.0;
-        TLatex *text = new TLatex(midPoint, 1.03*corr_unfolded_hist->GetNbinsY(), labels[i]);
-        text->SetTextSize(0.03); // Set text size to something smaller
-        text->SetTextAlign(22); // Center alignment
-        text->Draw();
-        // delete text;
-    }
-
-    // Add asterisk for over-/underrflow bins
-    for (Int_t i = 0; i < overUnderFlowN; i++) {
-        Double_t midPoint = overUnderFlowBins[i] + 0.5;
-        TLatex *text = new TLatex(midPoint, 1.0*corr_unfolded_hist->GetNbinsY(), "*");
-        text->SetTextSize(0.03); // Set text size to something smaller
-        text->SetTextAlign(22); // Center alignment
-        text->SetTextColor(kGray+3); // Set text color to grey
-        text->Draw();
-        // delete text;
-    }
-
-    // Add footnote
-    TLatex *footnote1 = new TLatex(0, -0.1*corr_unfolded_hist->GetNbinsY(), "* Under-/overflow bin; ** Selection subset");
-    footnote1->SetTextSize(0.02); // Set text size to something smaller
-    footnote1->SetTextColor(kGray+3);
-    // footnote->SetTextAlign(22); // Center alignment
-    footnote1->Draw();
-
-    cm1->SaveAs("plots/plot_unfolded_slice_entire_corr.pdf");
+    // Set the color palette
+    util::CreateRedToBlueColorPalette(20);
+    // gStyle->SetPalette(util::CreateRedToBlueColorPalette(20));
+    gStyle->SetTitleFontSize(0.05); // Set the title font size to 0.05
 
     TMatrixD* corr = new TMatrixD(util::CovarianceMatrixToCorrelationMatrix(util::TH2DToTMatrixD(*cov_mat)));
     TH2D* corr_hist = new TH2D(util::TMatrixDToTH2D(*corr, "corr", "Correlation Matrix", 0, corr->GetNrows(), 0, corr->GetNcols()));
@@ -427,8 +300,8 @@ void test_unfolding_nuwro()
     corr_hist->SetTitle("Correlation matrix");
     corr_hist->GetZaxis()->SetRangeUser(-1, 1);
     corr_hist->GetXaxis()->SetRangeUser(0, 66); // Set the range of the x-axis
-    corr_hist->GetXaxis()->SetTitle("Reco bins"); // Set x-axis label
-    corr_hist->GetYaxis()->SetTitle("Reco bins"); // Set y-axis label
+    corr_hist->GetXaxis()->SetTitle("Reco Bins"); // Set x-axis label
+    corr_hist->GetYaxis()->SetTitle("Reco Bins"); // Set y-axis label
     corr_hist->SetStats(kFALSE);
     corr_hist->Draw("COLZ");
 
@@ -499,6 +372,146 @@ void test_unfolding_nuwro()
 
     cm2->SaveAs("plots/plot_slice_entire_corr.pdf");
 
+    std::cout<<"DEBUG U0.1"<<std::endl;
+
+    // std::unique_ptr<Unfolder> unfolder(new DAgostiniUnfolder(DAgostiniUnfolder::ConvergenceCriterion::FigureOfMerit, 0.025));
+    std::unique_ptr<Unfolder> unfolder(new WienerSVDUnfolder( true, WienerSVDUnfolder::RegularizationMatrixType::kFirstDeriv));
+    std::cout<<"DEBUG U1"<<std::endl;
+    // std::unique_ptr<Unfolder> unfolder(new WienerSVDUnfolder( true, WienerSVDUnfolder::RegularizationMatrixType::kSecondDeriv));
+    // constexpr int NUM_DAGOSTINI_ITERATIONS = 50;
+    // std::unique_ptr<Unfolder> unfolder(new DAgostiniUnfolder( NUM_DAGOSTINI_ITERATIONS ));
+    constexpr bool USE_ADD_SMEAR = true;
+
+    // // Extract the inputs needed for the unfolding procedure from the
+    // // supplied SystematicsCalculator object
+    // const auto &smearcept = syst.get_cv_smearceptance_matrix();
+    // const auto &true_signal = syst.get_cv_true_signal();
+
+    // // const auto &reco_selected = syst.get_cv_reco_selected();
+    // // const auto data_signal = syst.get_cv_reco_signal();
+    // const auto &meas = syst.get_measured_events();
+    // const auto &data_signal = meas.reco_signal_;
+    // const auto &data_covmat = meas.cov_matrix_;
+
+    auto result = unfolder->unfold(syst);
+    std::cout<<"DEBUG U2"<<std::endl;
+
+    // Propagate all defined covariance matrices through the unfolding procedure
+    TMatrixD err_prop_tr(TMatrixD::kTransposed, *result.err_prop_matrix_);
+
+    std::map<std::string, std::unique_ptr<TMatrixD>> unfolded_cov_matrix_map;
+
+    for (const auto &matrix_pair : matrix_map)
+    {
+        std::cout << "DEBUG matrix_pair.first: " << matrix_pair.first << std::endl;
+        unfolded_cov_matrix_map[matrix_pair.first] = std::make_unique<TMatrixD>(
+            *result.err_prop_matrix_, TMatrixD::EMatrixCreatorsOp2::kMult,
+            TMatrixD(*matrix_pair.second.get_matrix(), TMatrixD::EMatrixCreatorsOp2::kMult, err_prop_tr));
+    }
+
+    // Decompose the block-diagonal pieces of the total covariance matrix
+    // into normalization, shape, and mixed components (for later plotting
+    // purposes)
+    NormShapeCovMatrix bd_ns_covmat = make_block_diagonal_norm_shape_covmat(
+        *result.unfolded_signal_, *result.cov_matrix_, syst.true_bins_);
+
+    // // Assuming result_cov_matrix is a std::unique_ptr<TMatrixD>
+    // int nRows = result.cov_matrix_->GetNrows();
+    // int nCols = result.cov_matrix_->GetNcols();
+
+    // // Create a new TH2D object
+    // TH2D *h2 = new TH2D("h2", "Covariance Matrix", nCols, 0, nCols, nRows, 0, nRows);
+
+    // // Fill the TH2D object with the values from the TMatrixD
+    // for (int i = 1; i <= nRows; ++i) {
+    //     for (int j = 1; j <= nCols; ++j) {
+    //         h2->SetBinContent(j, i, (*result.cov_matrix_)(i-1, j-1));
+    //     }
+    // }
+
+
+    // Draw the TH2D object on the canvas
+    TCanvas *cm1 = new TCanvas("cm1", "Canvas", 800, 600);
+
+    TMatrixD* corr_unfolded = new TMatrixD(util::CovarianceMatrixToCorrelationMatrix(*result.cov_matrix_));
+    TH2D* corr_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*corr_unfolded, "corr_unfolded", "Correlation Matrix", 0, corr_unfolded->GetNrows(), 0, corr_unfolded->GetNcols()));
+    delete corr_unfolded; // Delete the dynamically allocated memory
+
+    corr_unfolded_hist->SetTitleSize(0.05, "t"); // Set the title font size to 0.05
+    corr_unfolded_hist->SetTitle("Correlation matrix after blockwise unfolding");
+    corr_unfolded_hist->GetZaxis()->SetRangeUser(-1, 1);
+    corr_unfolded_hist->GetXaxis()->SetTitle("Truth Bins"); // Set x-axis label
+    corr_unfolded_hist->GetYaxis()->SetTitle("Truth Bins"); // Set y-axis label
+    corr_unfolded_hist->SetStats(kFALSE);
+    corr_unfolded_hist->Draw("COLZ");
+
+    // Draw vertical and horizontal lines at the bin edges
+    for (Int_t i = 1; i < n; i++) {
+        TLine *vline = new TLine(bins[i], 0, bins[i], corr_unfolded_hist->GetNbinsY());
+        vline->SetLineColor(kBlack);
+        vline->Draw();
+
+        TLine *hline = new TLine(0, bins[i], corr_unfolded_hist->GetNbinsX(), bins[i]);
+        hline->SetLineColor(kBlack);
+        hline->Draw();
+    }
+
+    for (Int_t i = 1; i <= n; i++) {
+        // Draw white dotted lines from bins[i-1] to bins[i]
+        TLine *vline_dotted1 = new TLine(bins[i], bins[i-1], bins[i], bins[i]);
+        vline_dotted1->SetLineColor(kWhite);
+        vline_dotted1->SetLineStyle(2); // Set line style to dotted
+        vline_dotted1->Draw();
+
+        TLine *hline_dotted1 = new TLine(bins[i-1], bins[i], bins[i], bins[i]);
+        hline_dotted1->SetLineColor(kWhite);
+        hline_dotted1->SetLineStyle(2); // Set line style to dotted
+        hline_dotted1->Draw();
+
+        if(i<n)
+        {
+            TLine *vline_dotted2 = new TLine(bins[i], bins[i+1], bins[i], bins[i]);
+            vline_dotted2->SetLineColor(kWhite);
+            vline_dotted2->SetLineStyle(2); // Set line style to dotted
+            vline_dotted2->Draw();
+
+            TLine *hline_dotted2 = new TLine(bins[i+1], bins[i], bins[i], bins[i]);
+            hline_dotted2->SetLineColor(kWhite);
+            hline_dotted2->SetLineStyle(2); // Set line style to dotted
+            hline_dotted2->Draw();
+        }
+    }
+
+    // Add labels in the middle of the intervals
+    for (Int_t i = 0; i < n; i++) {
+        Double_t midPoint = i==n-1 ? bins[i+1] + 1 : (bins[i] + bins[i+1]) / 2.0;
+        TLatex *text = new TLatex(midPoint, 1.03*corr_unfolded_hist->GetNbinsY(), labels[i]);
+        text->SetTextSize(0.03); // Set text size to something smaller
+        text->SetTextAlign(22); // Center alignment
+        text->Draw();
+        // delete text;
+    }
+
+    // Add asterisk for over-/underrflow bins
+    for (Int_t i = 0; i < overUnderFlowN; i++) {
+        Double_t midPoint = overUnderFlowBins[i] + 0.5;
+        TLatex *text = new TLatex(midPoint, 1.0*corr_unfolded_hist->GetNbinsY(), "*");
+        text->SetTextSize(0.03); // Set text size to something smaller
+        text->SetTextAlign(22); // Center alignment
+        text->SetTextColor(kGray+3); // Set text color to grey
+        text->Draw();
+        // delete text;
+    }
+
+    // Add footnote
+    TLatex *footnote1 = new TLatex(0, -0.1*corr_unfolded_hist->GetNbinsY(), "* Under-/overflow bin; ** Selection subset");
+    footnote1->SetTextSize(0.02); // Set text size to something smaller
+    footnote1->SetTextColor(kGray+3);
+    // footnote->SetTextAlign(22); // Center alignment
+    footnote1->Draw();
+
+    cm1->SaveAs("plots/plot_unfolded_slice_entire_corr.pdf");
+
     // Add the blockwise decomposed matrices into the map
     unfolded_cov_matrix_map["total_blockwise_norm"] = std::make_unique<TMatrixD>(bd_ns_covmat.norm_);
     unfolded_cov_matrix_map["total_blockwise_shape"] = std::make_unique<TMatrixD>(bd_ns_covmat.shape_);
@@ -550,15 +563,16 @@ void test_unfolding_nuwro()
     TMatrixD *A_C = result.add_smear_matrix_.get();
 
     // Define the colors and stops for the gradient
-    const int nColors = 3;
-    double stops[nColors] = {0.0, 1/4.0, 1.0};
-    double red[nColors] = {1.0, 1.0, 0.0};
-    double green[nColors] = {0.0, 1.0, 0.0};
-    double blue[nColors] = {0.0, 1.0, 1.0};
+    constexpr int nColors = 3;
+    Double_t stops[nColors] = {0.0, 1/4.0, 1.0};
+    Double_t red[nColors] = {1.0, 1.0, 0.0};
+    Double_t green[nColors] = {0.0, 1.0, 0.0};
+    Double_t blue[nColors] = {0.0, 1.0, 1.0};
 
     // Create the gradient color table
-    int paletteNumber = TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
-    gStyle->SetPalette(paletteNumber);
+    // const int paletteNumber = 
+    TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
+    // gStyle->SetPalette(paletteNumber);
 
     // Convert TMatrixD to TH2D using the TMatrixDToTH2D function
     TH2D h_A_C = util::TMatrixDToTH2D(*A_C, "h_A_C", "Additional smearing matrix", 0, A_C->GetNcols(), 0, A_C->GetNrows());
@@ -568,8 +582,8 @@ void test_unfolding_nuwro()
     h_A_C.SetStats(0); // Disable the statistics box
     h_A_C.GetZaxis()->SetRangeUser(-0.5, 1.5); // Set the z range
     h_A_C.Draw("colz");
-    // h_A_C.GetXaxis()->SetTitle("Truth bins");
-    // h_A_C.GetYaxis()->SetTitle("Truth bins");
+    // h_A_C.GetXaxis()->SetTitle("Truth Bins");
+    // h_A_C.GetYaxis()->SetTitle("Truth Bins");
     c_ac->Update();
 
     // Draw vertical and horizontal lines at the bin edges
@@ -657,7 +671,7 @@ void test_unfolding_nuwro()
     genie_cv_truth->SetLineWidth(3);
     genie_cv_truth->SetLineStyle(9);
 
-    unfolded_events->Draw("e");
+    unfolded_events->Draw("E1");
     genie_cv_truth->Draw("hist same");
 
     if (using_fake_data)
@@ -682,13 +696,13 @@ void test_unfolding_nuwro()
     lg->AddEntry(genie_cv_truth, "uB tune", "l");
     if (using_fake_data)
     {
-        lg->AddEntry(fake_data_truth_hist, "truth", "l");
+        lg->AddEntry(fake_data_truth_hist, "NuWro Truth", "l");
     }
 
     lg->Draw("same");
 
     // Plot slices of the unfolded result
-    auto *sb_ptr = new SliceBinning("../ubcc1pi_slice_config.txt");
+    auto *sb_ptr = new SliceBinning("../ubcc1pi_true_slice_config.txt");
     auto &sb = *sb_ptr;
 
     // Get the factors needed to convert to cross-section units
@@ -737,7 +751,7 @@ void test_unfolding_nuwro()
     TCanvas* c_cv_hist_2d = new TCanvas("c_cv_hist_2d", "CV Histogram 2D", 800, 600);
     cv_hist_2d->Draw("colz");
     gPad->SetLogz();
-    gStyle->SetPalette(util::CreateWhiteToBlueColorPalette(20));
+    util::CreateWhiteToBlueColorPalette(20);
     c_cv_hist_2d->SaveAs("plots/entire_cv_hist_2d.pdf");
 
     for (size_t sl_idx = 0u; sl_idx < sb.slices_.size(); ++sl_idx)
@@ -768,51 +782,201 @@ void test_unfolding_nuwro()
 
         std::cout<<"DEBUG truth from "<<start<<" to "<<stop<<std::endl;
         TMatrixD cv_hist_2d_slice(stop - start + 1, stop - start + 1);
+        TMatrixD fake_hist_2d_slice(stop - start + 1, stop - start + 1);
+        TMatrixD ac_hist_slice(stop - start + 1, stop - start + 1);
+        TMatrixD corr_unfolded_hist_slice(stop - start + 1, stop - start + 1);
+        TMatrixD corr_hist_slice(stop - start + 1, stop - start + 1);
         for (int i = start; i <= stop; i++) {
             for (int j = start; j <= stop; j++) {
                 cv_hist_2d_slice(i - start, j - start) = cv_hist_2d->GetBinContent(i+1, j+1);
+                if(using_fake_data) fake_hist_2d_slice(i - start, j - start) = fake_data_univ->hist_2d_->GetBinContent(i+1, j+1);
+                ac_hist_slice(i - start, j - start) = A_C->operator()(i, j);
+                corr_unfolded_hist_slice(i - start, j - start) = corr_unfolded_hist->GetBinContent(i+1, j+1);
+                corr_hist_slice(i - start, j - start) = corr_hist->GetBinContent(i+1, j+1);
             }
         }
 
         const auto cv_confusion_mat = util::CountsToConfusionMatrix(cv_hist_2d_slice, "row");
-        const auto conf_title = std::string("CV Confusion Matrix") + slice_unf->hist_->GetXaxis()->GetTitle();
-        auto cv_confusion_hist = util::TMatrixDToTH2D(cv_confusion_mat, "cv_confusion", conf_title.c_str(),0,1,0,1);
+        const auto fake_confusion_mat = util::CountsToConfusionMatrix(fake_hist_2d_slice, "row");
+        const auto conf_title = std::string("CV Confusion Matrix") + slice_unf->hist_->GetXaxis()->GetTitle() +";Truth Bins;Reco Bins";
+        const auto ac_title = std::string("Additional Smearing Matrix") + slice_unf->hist_->GetXaxis()->GetTitle() +";Truth Bins;Reco Bins";
+        const auto corr_unf_title = std::string("Unfolded Correlation Matrix") + slice_unf->hist_->GetXaxis()->GetTitle() +";Truth Bins;Reco Bins";
+        const auto corr_title = std::string("Correlation Matrix") + slice_unf->hist_->GetXaxis()->GetTitle() +";Truth Bins;Reco Bins";
 
-        // Assuming cv_confusion_hist is already defined and filled
+
+        const int num_bins = slice.hist_->GetNbinsX();
+        Double_t edges[num_bins+1];
+        for (int i = 0; i < num_bins; i++) {
+            edges[i] = slice.hist_->GetBinLowEdge(i+1);
+        }
+        edges[num_bins] = slice.hist_->GetBinLowEdge(num_bins) + slice.hist_->GetBinWidth(num_bins);
+
+        // Create a TH2D histogram
+        TH2D *cv_confusion_hist = new TH2D("cv_confusion",("Genie " + conf_title).c_str(),
+                                sizeof(edges) / sizeof(Double_t) - 1, edges,
+                                sizeof(edges) / sizeof(Double_t) - 1, edges);
+
+        // Create a TH2D histogram
+        TH2D *fake_confusion_hist = new TH2D("fake_confusion",("NuWro " + conf_title).c_str(),
+                                sizeof(edges) / sizeof(Double_t) - 1, edges,
+                                sizeof(edges) / sizeof(Double_t) - 1, edges);
+
+        // Create a TH2D histogram
+        TH2D *ac_hist = new TH2D("ac_hist",(ac_title).c_str(),
+                                sizeof(edges) / sizeof(Double_t) - 1, edges,
+                                sizeof(edges) / sizeof(Double_t) - 1, edges);
+                                
+        TH2D *trimmed_corr_unf_hist = new TH2D("trimmed_corr_unf_hist",(corr_unf_title).c_str(),
+                                sizeof(edges) / sizeof(Double_t) - 1, edges,
+                                sizeof(edges) / sizeof(Double_t) - 1, edges);
+
+        TH2D *trimmed_corr_hist = new TH2D("trimmed_corr_hist", corr_title.c_str(),
+                                sizeof(edges) / sizeof(Double_t) - 1, edges,
+                                sizeof(edges) / sizeof(Double_t) - 1, edges);
+
+        // Fill histogram with values from TMatrixD
+        for (int i = 0; i < cv_confusion_mat.GetNrows(); i++) {
+            for (int j = 0; j < cv_confusion_mat.GetNcols(); j++) {
+                cv_confusion_hist->SetBinContent(i+1, j+1, cv_confusion_mat(i, j));
+            }
+        }
+
+        if(using_fake_data)
+        {
+            // Fill fake histogram with values from TMatrixD
+            for (int i = 0; i < fake_confusion_mat.GetNrows(); i++) {
+                for (int j = 0; j < fake_confusion_mat.GetNcols(); j++) {
+                    fake_confusion_hist->SetBinContent(i+1, j+1, fake_confusion_mat(i, j));
+                }
+            }
+        }
+
+        for (int i = 0; i < ac_hist_slice.GetNrows(); i++) {
+            for (int j = 0; j < ac_hist_slice.GetNcols(); j++) {
+                ac_hist->SetBinContent(i+1, j+1, ac_hist_slice.operator()(i, j));
+            }
+        }
+
+        for(int i = 0; i < corr_unfolded_hist_slice.GetNrows(); i++) {
+            for(int j = 0; j < corr_unfolded_hist_slice.GetNcols(); j++) {
+                trimmed_corr_unf_hist->SetBinContent(i+1, j+1, corr_unfolded_hist_slice.operator()(i, j));
+            }
+        }
+
+        for(int i = 0; i < corr_hist_slice.GetNrows(); i++) {
+            for(int j = 0; j < corr_hist_slice.GetNcols(); j++) {
+                trimmed_corr_hist->SetBinContent(i+1, j+1, corr_hist_slice.operator()(i, j));
+            }
+        }
+
+
+
         TCanvas* c_conf_1 = new TCanvas("c_conf_1", "c confusion matrix", 800, 600);
-        cv_confusion_hist.SetStats(false);
-        cv_confusion_hist.SetMinimum(0);
-        cv_confusion_hist.SetMaximum(1.0);
-        gStyle->SetPalette(util::CreateWhiteToBlueColorPalette(20));
-        cv_confusion_hist.Draw("colz");
+        cv_confusion_hist->SetStats(false);
+        cv_confusion_hist->SetMinimum(0);
+        cv_confusion_hist->SetMaximum(1.0);
+        // gStyle->SetPalette(util::CreateWhiteToBlueColorPalette(20));
+        gStyle->SetPalette();
+        cv_confusion_hist->Draw("colz");
+        // cv_hist_2d_slice.Draw("same TEXT");
+
+        // Fill histogram with slice data
+        for (int i = 0; i < num_bins; i++) {
+            for (int j = 0; j < num_bins; j++) {
+                double bin_content = cv_hist_2d_slice(i, j);
+                TLatex* latex = new TLatex(cv_confusion_hist->GetXaxis()->GetBinCenter(i+1), cv_confusion_hist->GetYaxis()->GetBinCenter(j+1), Form("#splitline{%.1f%%}{(%.1f)}", 100*cv_confusion_hist->GetBinContent(i+1, j+1), bin_content));
+                latex->SetTextFont(42);
+                latex->SetTextSize(0.02);
+                latex->SetTextAlign(22);
+                latex->Draw();
+            }
+        }
+
         c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf").c_str());
 
-        TMatrixD* matrix = result.cov_matrix_.get();
-        std::cout<<"DEBUG result.cov_matrix_: "<<std::endl;
-        for (int i = 0; i < matrix->GetNrows(); i++) {
-            for (int j = 0; j < matrix->GetNcols(); j++) {
-                std::cout << (*matrix)(i, j) << " ";
+
+        if(using_fake_data)
+        {
+            TCanvas* c_conf_fake = new TCanvas("c_conf_fake", "c confusion matrix", 800, 600);
+            fake_confusion_hist->SetStats(false);
+            fake_confusion_hist->SetMinimum(0);
+            fake_confusion_hist->SetMaximum(1.0);
+            // gStyle->SetPalette(util::CreateWhiteToBlueColorPalette(20));
+            // gStyle->SetPalette();
+            fake_confusion_hist->Draw("colz");
+            // cv_hist_2d_slice.Draw("same TEXT");
+
+            // Fill histogram with slice data
+            for (int i = 0; i < num_bins; i++) {
+                for (int j = 0; j < num_bins; j++) {
+                    double bin_content = fake_hist_2d_slice(i, j);
+                    TLatex* latex = new TLatex(fake_confusion_hist->GetXaxis()->GetBinCenter(i+1), fake_confusion_hist->GetYaxis()->GetBinCenter(j+1), Form("#splitline{%.1f%%}{(%.1f)}", 100*fake_confusion_hist->GetBinContent(i+1, j+1), bin_content));
+                    latex->SetTextFont(42);
+                    latex->SetTextSize(0.02);
+                    latex->SetTextAlign(22);
+                    latex->Draw();
+                }
             }
-            std::cout << std::endl;
+
+            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf").c_str());
         }
 
-        TH2D* hist2D = slice_unf->cmat_.cov_matrix_.get();
-        std::cout<<"DEBUG slice_unf->cmat_.cov_matrix_: "<<std::endl;
-        for (int i = 1; i <= hist2D->GetNbinsX(); i++) {
-            for (int j = 1; j <= hist2D->GetNbinsY(); j++) {
-                std::cout << hist2D->GetBinContent(i, j) << " ";
-            }
-            std::cout << std::endl;
-        }
 
-        const auto matrix2 = slice_unf->cmat_.get_matrix();
-        std::cout<<"DEBUG slice_unf->cmat_.get_matrix: "<<std::endl;
-        for (int i = 0; i < matrix2->GetNrows(); i++) {
-            for (int j = 0; j < matrix2->GetNcols(); j++) {
-                std::cout << (*matrix2)(i, j) << " ";
-            }
-            std::cout << std::endl;
-        }
+        TCanvas* c_ac_slice = new TCanvas("c_ac_slice", "c ac matrix", 800, 600);
+        ac_hist->SetTitleSize(0.05, "t");
+        ac_hist->SetStats(false);
+        ac_hist->GetZaxis()->SetRangeUser(-0.5, 1.5); // Set the z range
+        ac_hist->Draw("colz");
+        TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
+        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf").c_str());
+
+        // Plot for trimmed_corr_unf_hist
+        TCanvas* c_corr_unf_slice = new TCanvas("c_corr_unf_slice", "c correlation matrix", 800, 600);
+        util::CreateRedToBlueColorPalette(20);
+        trimmed_corr_unf_hist->SetTitleSize(0.05, "t");
+        trimmed_corr_unf_hist->GetZaxis()->SetRangeUser(-1, 1);
+        trimmed_corr_unf_hist->SetStats(false);
+        trimmed_corr_unf_hist->GetZaxis()->SetRangeUser(-1.0, 1.0); // Set the z range
+        trimmed_corr_unf_hist->Draw("colz");
+        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf").c_str());
+
+        // Plot for trimmed_corr_hist
+        TCanvas* c_corr_slice = new TCanvas("c_corr_slice", "c correlation matrix", 800, 600);
+        util::CreateRedToBlueColorPalette(20);
+        trimmed_corr_hist->SetTitleSize(0.05, "t");
+        trimmed_corr_hist->GetZaxis()->SetRangeUser(-1, 1);
+        trimmed_corr_hist->SetStats(false);
+        trimmed_corr_hist->GetZaxis()->SetRangeUser(-1.0, 1.0); // Set the z range
+        trimmed_corr_hist->Draw("colz");
+        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf").c_str());
+
+
+        // TMatrixD* matrix = result.cov_matrix_.get();
+        // std::cout<<"DEBUG result.cov_matrix_: "<<std::endl;
+        // for (int i = 0; i < matrix->GetNrows(); i++) {
+        //     for (int j = 0; j < matrix->GetNcols(); j++) {
+        //         std::cout << (*matrix)(i, j) << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+
+        // TH2D* hist2D = slice_unf->cmat_.cov_matrix_.get();
+        // std::cout<<"DEBUG slice_unf->cmat_.cov_matrix_: "<<std::endl;
+        // for (int i = 1; i <= hist2D->GetNbinsX(); i++) {
+        //     for (int j = 1; j <= hist2D->GetNbinsY(); j++) {
+        //         std::cout << hist2D->GetBinContent(i, j) << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+
+        // const auto matrix2 = slice_unf->cmat_.get_matrix();
+        // std::cout<<"DEBUG slice_unf->cmat_.get_matrix: "<<std::endl;
+        // for (int i = 0; i < matrix2->GetNrows(); i++) {
+        //     for (int j = 0; j < matrix2->GetNcols(); j++) {
+        //         std::cout << (*matrix2)(i, j) << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
 
         // Temporary copies of the unfolded true event count slices with different covariance matrices
         std::map<std::string, std::unique_ptr<SliceHistogram>> sh_cov_map;
@@ -834,11 +998,11 @@ void test_unfolding_nuwro()
         auto *slice_gen_map_ptr = new std::map<std::string, SliceHistogram *>();
         auto &slice_gen_map = *slice_gen_map_ptr;
 
-        slice_gen_map["unfolded data"] = slice_unf;
+        slice_gen_map["Unfolded NuWro Reco"] = slice_unf;
         slice_gen_map["MicroBooNE Tune"] = slice_cv;
 
         if (using_fake_data)
-            slice_gen_map["truth"] = slice_truth;
+            slice_gen_map["NuWro Truth"] = slice_truth;
 
         for (const auto &pair : generator_truth_map)
             slice_gen_map[pair.first] = SliceHistogram::make_slice_histogram(*pair.second, slice, nullptr);
@@ -936,15 +1100,15 @@ void test_unfolding_nuwro()
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
 
-            if (name == "unfolded data")
+            if (name == "Unfolded NuWro Reco")
             {
                 chi2_map[name] = SliceHistogram::Chi2Result();
                 continue;
             }
 
-            const auto &chi2_result = chi2_map[name] = slice_h->get_chi2(*slice_gen_map.at("unfolded data"));
+            const auto &chi2_result = chi2_map[name] = slice_h->get_chi2(*slice_gen_map.at("Unfolded NuWro Reco"));
 
-            double chi2_alt = slice_h->hist_->Chi2Test(slice_gen_map.at("unfolded data")->hist_.get(), "UW CHI2");
+            double chi2_alt = slice_h->hist_->Chi2Test(slice_gen_map.at("Unfolded NuWro Reco")->hist_.get(), "UW CHI2");
             std::cout<<"DEBUG (slice "<<sl_idx<<") Chi-square alt: "<<chi2_alt<<std::endl;
 
 
@@ -1046,13 +1210,20 @@ void test_unfolding_nuwro()
             std::cout<<std::endl;
             h_ratio_truth->SetStats(false);
             h_ratio_truth->Divide(h_cv_no_errors);
-            h_ratio_truth->SetLineColor(kOrange);
-            h_ratio_truth->SetLineWidth(1);
+            h_ratio_truth->SetLineColor(kGreen);
+            h_ratio_truth->SetLineWidth(2);
             min = TMath::Min(min, 0.9 * h_ratio_truth->GetMinimum());
             max = TMath::Max(max, 1.1 * h_ratio_truth->GetMaximum());
             h_ratio_truth->GetYaxis()->SetRangeUser(min, max);
             h_ratio_truth->Draw("hist same");
         }
+
+        // TH1D* statUncertHist = dynamic_cast<TH1D*>(sh_cov_map.at("DataStats")->hist_.get());
+        // TH1D* statUncertHist_ratio = dynamic_cast<TH1D*>(statUncertHist->Clone("statUncertHist_ratio"));
+        // statUncertHist_ratio->Divide(h_cv_no_errors);
+        // statUncertHist_ratio->SetLineWidth(2);
+        // statUncertHist_ratio->SetLineColor(kBlack);
+        // statUncertHist_ratio->Draw("E1 same");
 
         line->Draw();
 
@@ -1068,10 +1239,11 @@ void test_unfolding_nuwro()
 
 
         slice_unf->hist_->SetLineColor(kBlack);
-        slice_unf->hist_->SetLineWidth(5);
+        // slice_unf->hist_->SetLineWidth(5);
         slice_unf->hist_->SetMarkerStyle(kFullCircle);
         slice_unf->hist_->SetMarkerSize(0.8);
         slice_unf->hist_->SetStats(false);
+        slice_unf->hist_->SetLineWidth(2);
 
         std::cout << "DEBUG Unfolding Point 5" << std::endl;
 
@@ -1087,7 +1259,7 @@ void test_unfolding_nuwro()
             if (max > ymax)
                 ymax = max;
 
-            if (name == "unfolded data" || name == "truth" || name == "MicroBooNE Tune")
+            if (name == "Unfolded NuWro Reco" || name == "NuWro Truth" || name == "MicroBooNE Tune")
                 continue;
 
             const auto &file_info = truth_file_map.at(name);
@@ -1106,13 +1278,13 @@ void test_unfolding_nuwro()
         if (using_fake_data)
         {
             slice_truth->hist_->SetStats(false);
-            slice_truth->hist_->SetLineColor(kOrange);
-            slice_truth->hist_->SetLineWidth(1);
+            slice_truth->hist_->SetLineColor(kGreen);
+            slice_truth->hist_->SetLineWidth(2);
             slice_truth->hist_->Draw("hist same");
         }
 
         slice_unf->hist_->GetYaxis()->SetRangeUser(0., ymax * 1.07);
-        slice_unf->hist_->Draw("e same");
+        slice_unf->hist_->Draw("3 same");
         slice_unf->hist_->SetTitle("Unfolded NuWro CC1#pi^{#pm}Np");
         slice_unf->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis
         slice_unf->hist_->GetXaxis()->SetTitleOffset(999); // Hide x-axis title
@@ -1122,17 +1294,24 @@ void test_unfolding_nuwro()
 
         // for (const auto& key : {std::string("total_blockwise_norm"), std::string("total_blockwise_shape"), std::string("total_blockwise_mixed")}) {
         //     TH1D* hist = dynamic_cast<TH1D*>(sh_cov_map.at(key)->hist_.get());
-
         //     // Draw the histogram
         //     if (key == std::string("total_blockwise_norm")) {
         //         hist->SetFillColor(kBlue);
+        //         hist->SetLineWidth(2); // Set line width for this histogram
         //     } else if (key == std::string("total_blockwise_shape")) {
         //         hist->SetFillColor(kRed);
+        //         hist->SetLineWidth(3); // Set a different line width for this histogram
         //     } else if (key == std::string("total_blockwise_mixed")) {
         //         hist->SetFillColor(kGreen);
+        //         hist->SetLineWidth(4); // Set yet another line width for this histogram
         //     }
         //     hist->Draw("e same");
         // }
+        
+        // statUncertHist->SetLineWidth(2);
+        // statUncertHist->SetLineColor(kBlack);
+        // statUncertHist->Draw("E1 same");
+
 
         std::cout << "DEBUG Unfolding Point 6" << std::endl;
 
@@ -1149,7 +1328,7 @@ void test_unfolding_nuwro()
             if (chi2_result.num_bins_ > 1)
                 oss << "s; p-value = " << chi2_result.p_value_;
 
-            label += (name != "unfolded data") ? ": #chi^{2} = " + oss.str() : "";
+            label += (name != "Unfolded NuWro Reco") ? ": #chi^{2} = " + oss.str() : "";
 
             lg->AddEntry(slice_h->hist_.get(), label.c_str(), "l");
         }
@@ -1211,7 +1390,7 @@ void test_unfolding_nuwro()
         // std::string out_pdf_name_cov = "plots/plot_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf";
         // c2->SaveAs(out_pdf_name_cov.c_str());
 
-        // const auto unfolded_cov_matrix = slice_gen_map.at("unfolded data")->cmat_.cov_matrix_.get();
+        // const auto unfolded_cov_matrix = slice_gen_map.at("Unfolded NuWro Reco")->cmat_.cov_matrix_.get();
         // TCanvas *c3 = new TCanvas("c3", "Canvas", 800, 600);
         // unfolded_cov_matrix->Draw("COLZ");
         // unfolded_cov_matrix->SetTitle("Unfolded covariance matrix");

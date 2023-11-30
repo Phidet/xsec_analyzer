@@ -3,19 +3,19 @@
 # file_name run file_type [triggers POT (for data only)]
 #
 ##### Beam-off data
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380078 0
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380078 0
 #
 ##### Full beam-on data
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4_nuwroFix/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 onBNB 68603417 3.08672e20  # Real data: 37094101 1.669e20
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4_nuwroFix/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 onBNB 74407431 3.14546e20  # Real data: 61882790 2.616e20
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4_nuwroFix/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 onBNB 75564514 3.154e20    # Real data: 61381194 2.562e20
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 onBNB 0 3.08672e20 # fake with ext 68603417 3.08672e20  # Real data: 37094101 1.669e20
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 onBNB 0 3.14546e20 # fake with ext 74407431 3.14546e20  # Real data: 61882790 2.616e20
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 onBNB 0 3.154e20 # fake with ext 75564514 3.154e20    # Real data: 61381194 2.562e20
 #
 ##### Dirt MC samples
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root 1 dirtMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root 2 dirtMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/overlay_peleeTuple_uboone_v08_00_00_70_run3_dirt_ubcc1pi.root 3 dirtMC
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root 1 dirtMC
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root 2 dirtMC
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/overlay_peleeTuple_uboone_v08_00_00_70_run3_dirt_ubcc1pi.root 3 dirtMC
 #
 ##### Intrinsic nue MC samples
 # path.root 1 nueMC
@@ -23,24 +23,24 @@
 # path.root 3 nueMC
 #
 ##### Numu MC samples
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
 #
 ##### DetVar MC samples
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_CVextra_ubcc1pi.root 3 detVarCVExtra
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_CV_virtualParentsFix_ubcc1pi.root 3 detVarCV
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYAtteNuation_ubcc1pi.root 3 detVarLYatten
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYDown_ubcc1pi.root 3 detVarLYdown
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYRayleigh_virtualParentsFix_ubcc1pi.root 3 detVarLYrayl
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_Recomb2_ubcc1pi.root 3 detVarRecomb2
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_SCE_ubcc1pi.root 3 detVarSCE
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaXZ_ubcc1pi.root 3 detVarWMAngleXZ
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaYZ_ubcc1pi.root 3 detVarWMAngleYZ
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModX_virtualParentsFix_ubcc1pi.root 3 detVarWMX
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModYZ_ubcc1pi.root 3 detVarWMYZ
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_CVextra_ubcc1pi.root 3 detVarCVExtra
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_CV_virtualParentsFix_ubcc1pi.root 3 detVarCV
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYAtteNuation_ubcc1pi.root 3 detVarLYatten
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYDown_ubcc1pi.root 3 detVarLYdown
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYRayleigh_virtualParentsFix_ubcc1pi.root 3 detVarLYrayl
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_Recomb2_ubcc1pi.root 3 detVarRecomb2
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_SCE_ubcc1pi.root 3 detVarSCE
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaXZ_ubcc1pi.root 3 detVarWMAngleXZ
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaYZ_ubcc1pi.root 3 detVarWMAngleYZ
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModX_virtualParentsFix_ubcc1pi.root 3 detVarWMX
+# /uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModYZ_ubcc1pi.root 3 detVarWMYZ
 #
 ##### NuWro numuMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4_nuwroFix/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4_nuwroFix/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
-/uboone/data/users/jdetje/ubcc1piOutput/100Percent_4_nuwroFix/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
+/uboone/data/users/jdetje/ubcc1piOutput/100Percent_5/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
