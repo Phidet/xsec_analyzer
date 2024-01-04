@@ -76,6 +76,7 @@ class SliceHistogram {
 SliceHistogram* SliceHistogram::make_slice_histogram( TH1D& reco_bin_histogram,
   const Slice& slice, const CovMatrix* input_cov_mat )
 {
+  std::cout<<"DEBUG make_slice_histogram Point 0"<<std::endl;
   // Get the binning and axis labels for the current slice by cloning the
   // (empty) histogram owned by the Slice object
   TH1* slice_hist = dynamic_cast< TH1* >(

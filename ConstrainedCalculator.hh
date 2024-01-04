@@ -360,8 +360,11 @@ MeasuredEvents ConstrainedCalculator::get_measured_events() const
   // All we need now to apply the sideband constraint are submatrices of
   // the total covariance matrix. Build it and pull out the blocks that
   // we need.
+  std::cout<<"DEBUG (ConstrainedCalculator) Point 0"<<std::endl;
   auto cov_map_ptr = this->get_covariances();
+  std::cout<<"DEBUG (ConstrainedCalculator) Point 1"<<std::endl;
   auto tot_cov_mat = cov_map_ptr->at( "total" ).get_matrix();
+  std::cout<<"DEBUG (ConstrainedCalculator) Point 2"<<std::endl;
 
   // Zero-based indices for the covariance matrix elements describing the
   // ordinary reco bins (ob) and sideband reco bins (sb)
@@ -385,7 +388,18 @@ MeasuredEvents ConstrainedCalculator::get_measured_events() const
 
   // Invert the sideband covariance matrix in preparation for applying
   // the sideband constraint
+  std::cout<<"DEBUG (ConstrainedCalculator) Point 2.5"<<std::endl;
+  
+  std::cout << "sideband_cov_mat:" << std::endl;
+  for (int i = 0; i < sideband_cov_mat.GetNrows(); ++i) {
+    for (int j = 0; j < sideband_cov_mat.GetNcols(); ++j) {
+      std::cout << sideband_cov_mat(i, j) << " ";
+    }
+    std::cout << std::endl;
+  }
+
   auto inverse_sideband_cov_mat = invert_matrix( sideband_cov_mat );
+  std::cout<<"DEBUG (ConstrainedCalculator) Point 2.6"<<std::endl;
 
   // We're ready. Apply the sideband constraint to the prediction vector first.
   TMatrixD sideband_data_mc_diff( sideband_data,
@@ -432,5 +446,7 @@ MeasuredEvents ConstrainedCalculator::get_measured_events() const
 
   MeasuredEvents result( reco_data_minus_bkgd, reco_bkgd_vec,
     mc_plus_ext_vec, sig_plus_bkgd_cov_mat );
+
+  std::cout<<"DEBUG (ConstrainedCalculator) Point 3"<<std::endl;
   return result;
 }

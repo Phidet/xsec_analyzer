@@ -1,6 +1,6 @@
 ubcc1pi
 stv_tree
-75
+76
 0 0 "cc1pi_signal  &&  cc1pi_truth_muonCosTheta  >= -1             &&  cc1pi_truth_muonCosTheta < -0.27"
 0 0 "cc1pi_signal  &&  cc1pi_truth_muonCosTheta  >= -0.27          &&  cc1pi_truth_muonCosTheta < 0.29"
 0 0 "cc1pi_signal  &&  cc1pi_truth_muonCosTheta  >= 0.29           &&  cc1pi_truth_muonCosTheta < 0.46"
@@ -76,6 +76,7 @@ stv_tree
 1 -1 "category == 9"
 1 -1 "category == 10"
 1 -1 "category == 11"
+1 -1 "category == 12"
 66
 0 0 "cc1pi_selected_generic  &&  cc1pi_reco_muonCosTheta  >= -1             &&  cc1pi_reco_muonCosTheta < -0.27"
 0 0 "cc1pi_selected_generic  &&  cc1pi_reco_muonCosTheta  >= -0.27          &&  cc1pi_reco_muonCosTheta < 0.29"

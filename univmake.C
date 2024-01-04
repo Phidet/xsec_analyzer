@@ -128,9 +128,9 @@ int main( int argc, char* argv[] ) {
       std::cout<<"DEBUG univmake.C Point 6"<<std::endl;
     }
 
-    std::cout<<"DEBUG univmake.C Point 7"<<std::endl;
+    std::cout<<"Starting with saving histograms"<<std::endl;
     univ_maker.save_histograms( output_file_name, input_file_name );
-    std::cout<<"DEBUG univmake.C Point 8"<<std::endl;
+    std::cout<<"Done with saving histograms"<<std::endl;
 
     // The root TDirectoryFile name is the same across all iterations of this
     // loop, so just set it once on the first iteration

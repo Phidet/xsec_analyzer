@@ -40,12 +40,12 @@ void slice_plots(const bool normaliseByBinWidth) {
     auto& fpm = FilePropertiesManager::Instance();
     fpm.load_file_properties( "nuwro_file_properties.txt" );
     auto* syst_ptr = new MCC9SystematicsCalculator(
-      "/uboone/data/users/jdetje/ubcc1pi_univmake/univmake_output_nuwro_v6_nodirtdetvarext.root",
-      "systcalc_unfold_fd_closure.conf" );
+      "/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_9/univmake_output_nuwro_6Dec23.root",
+      "systcalc_unfold_fd_min.conf" );
     std::string nameExtension = "_fd";
   #else
     auto* syst_ptr = new MCC9SystematicsCalculator(
-    "/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_5/univmake_output_bnb_v5.root",
+    "...",
     "systcalc.conf" );
     std::string nameExtension = "_bnb";
   #endif
@@ -231,7 +231,9 @@ void slice_plots(const bool normaliseByBinWidth) {
     oss << "#splitline{#chi^{2} = " << std::setprecision( 3 ) << chi2_result.chi2_ << " / "
     << chi2_result.num_bins_ << " bin";
     if ( chi2_result.num_bins_ > 1 ) oss << "s";
-    oss<<"}{p-value = " << chi2_result.p_value_<<"}";
+    oss<<"}{";
+    if(chi2_result.num_bins_ > 1) oss<<"p-value = " << chi2_result.p_value_<<"}";
+    else oss<<"}";
     const auto title =  oss.str();
 
     // std::string legend_title = get_legend_title( pot_on );
@@ -274,7 +276,8 @@ void slice_plots(const bool normaliseByBinWidth) {
 
     #ifdef USE_FAKE_DATA
     // cov_mat_keys = { "total", "xsec_total", "MCstats", "EXTstats", "BNBstats"};
-    cov_mat_keys = { "total", "xsec_multi", "xsec_AxFFCCQEshape", "xsec_DecayAngMEC", "xsec_NormCCCOH", "xsec_NormNCCOH", "xsec_RPA_CCQE", "xsec_ThetaDelta2NRad", "xsec_Theta_Delta2Npi", "xsec_VecFFCCQEshape", "xsec_XSecShape_CCMEC", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie", "MCstats", "EXTstats", "BNBstats"};
+    cov_mat_keys = { "total", "MCstats", "EXTstats", "BNBstats", "xsec_multi", "xsec_unisim", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie"};
+    // cov_mat_keys = { "total", "xsec_multi", "xsec_AxFFCCQEshape", "xsec_DecayAngMEC", "xsec_NormCCCOH", "xsec_NormNCCOH", "xsec_RPA_CCQE", "xsec_ThetaDelta2NRad", "xsec_Theta_Delta2Npi", "xsec_VecFFCCQEshape", "xsec_XSecShape_CCMEC", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie", "MCstats", "EXTstats", "BNBstats"};
     #endif
 
     // Loop over the various systematic uncertainties

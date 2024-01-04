@@ -22,7 +22,8 @@ enum EventCategory {
   kNumuCC0Pi = 8,
   kNumuCC1PiZero = 9,
   kNumuCCOther = 10,
-  kNumuCC1PiNonSignal = 11
+  kNumuCC1PiNonSignal = 11,
+  kNumuCC0PiSignal = 12
 };
 
 // Singleton class that helps manipulate EventCategory enum values
@@ -112,7 +113,8 @@ class EventCategoryInterpreter {
       { kNumuCC1PiChargedGolden, "#nu_{#mu} CC1#pi^{#pm} for p_{#pi}" },
       { kNumuCC1PiChargedNonGolden, "#nu_{#mu} CC1#pi^{#pm} Other" },
       { kNumuCC1PiNonSignal, "#nu_{#mu} CC1#pi^{#pm} Non-Signal" },
-      { kNumuCC0Pi, "#nu_{#mu} CC0#pi" },
+      { kNumuCC0PiSignal, "#nu_{#mu} CC0#pi Constraint Signal" },
+      { kNumuCC0Pi, "#nu_{#mu} CC0#pi Other" },
       { kNumuCC1PiZero, "#nu_{#mu} CC1#pi^{0}" },
       { kNumuCCOther, "Other #nu_{#mu} CC" },
       { kNue, "#nu_{e}" },
@@ -126,7 +128,8 @@ class EventCategoryInterpreter {
       { kUnknown, kGray },
       { kNumuCC1PiChargedGolden,  kGreen },
       { kNumuCC1PiChargedNonGolden, kGreen + 1 },
-      { kNumuCC1PiNonSignal , kYellow - 1 },
+      { kNumuCC1PiNonSignal , kOrange + 5 },
+      { kNumuCC0PiSignal, kYellow - 6},
       { kNumuCC0Pi, kYellow },
       { kNumuCC1PiZero, kOrange - 4 },
       { kNumuCCOther, kOrange - 3 },
