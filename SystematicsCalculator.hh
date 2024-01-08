@@ -1477,13 +1477,13 @@ void make_cov_mat(const SystematicsCalculator &sc, CovMatrix &cov_mat,
   // Get the expected observable values in each reco bin in the CV universe
   std::vector<double> cv_reco_obs(num_cm_bins, 0.);
 
-  std::cout << "DEBUG cv_reco_obs: ";
+  // std::cout << "DEBUG cv_reco_obs: ";
   for (size_t rb = 0u; rb < num_cm_bins; ++rb)
   {
     cv_reco_obs.at(rb) = sc.evaluate_observable(cv_univ, rb);
-    std::cout << std::setw(10) << std::setprecision(5) << std::fixed << cv_reco_obs.at(rb)<<" ";
+    // std::cout << std::setw(10) << std::setprecision(5) << std::fixed << cv_reco_obs.at(rb)<<" ";
   }
-  std::cout<<std::endl;
+  // std::cout<<std::endl;
 
   // Loop over universes
   int num_universes = universes.size();
@@ -1503,13 +1503,13 @@ void make_cov_mat(const SystematicsCalculator &sc, CovMatrix &cov_mat,
     // current universe.
     std::vector<double> univ_reco_obs(num_cm_bins, 0.);
 
-    std::cout << "DEBUG univ_reco_obs: ";
+    // std::cout << "DEBUG univ_reco_obs: ";
     for (size_t rb = 0u; rb < num_cm_bins; ++rb)
     {
       univ_reco_obs.at(rb) = sc.evaluate_observable(*univ, rb, flux_u_idx);
-      std::cout << std::setw(10) << std::setprecision(5) << std::fixed << univ_reco_obs.at(rb)<<" ";
+      // std::cout << std::setw(10) << std::setprecision(5) << std::fixed << univ_reco_obs.at(rb)<<" ";
     }
-    std::cout<<std::endl;
+    // std::cout<<std::endl;
 
     // We have all the needed ingredients to get the contribution of this
     // universe to the covariance matrix. Loop over each pair covariance matrix
@@ -1574,19 +1574,19 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
   // definition contains at least a name and a type specifier
   std::ifstream config_file(syst_config_file_name_);
   std::string name, type;
-  std::cout << "\rDEBUG get_covariances - Y 0 - syst_config_file_name_: " << syst_config_file_name_ << std::endl;
+  // std::cout << "\rDEBUG get_covariances - Y 0 - syst_config_file_name_: " << syst_config_file_name_ << std::endl;
   while (config_file >> name >> type)
   {
-    std::cout << "\rDEBUG get_covariances - Y 1 - name: " << name << " type: " << type << std::endl;
+    // std::cout << "\rDEBUG get_covariances - Y 1 - name: " << name << " type: " << type << std::endl;
 
     CovMatrix temp_cov_mat = this->make_covariance_matrix(name);
 
-    std::cout << "\rDEBUG get_covariances - Y 2" << std::flush;
+    // std::cout << "\rDEBUG get_covariances - Y 2" << std::flush;
     // If the current covariance matrix is defined as a sum of others, then
     // just add the existing ones together to compute it
     if (type == "sum")
     {
-      std::cout << "\rDEBUG get_covariances - Y 3" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 3" << std::flush;
       int count = 0;
       config_file >> count;
       std::string cm_name;
@@ -1599,13 +1599,13 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
         }
         temp_cov_mat += matrix_map.at(cm_name);
       } // terms in the sum
-      std::cout << "\rDEBUG get_covariances - Y 4" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 4" << std::flush;
 
     } // sum type
 
     else if (type == "MCstat")
     {
-      std::cout << "\rDEBUG get_covariances - Y 5" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 5" << std::flush;
       size_t num_cm_bins = this->get_covariance_matrix_size();
       const auto &cv_univ = this->cv_universe();
 
@@ -1622,12 +1622,12 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
           temp_cov_mat.cov_matrix_->SetBinContent(rb1 + 1, rb2 + 1, mc_cov);
         }
       }
-      std::cout << "\rDEBUG get_covariances - Y 6" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 6" << std::flush;
     } // MCstat type
 
     else if (type == "BNBstat" || type == "EXTstat")
     {
-      std::cout << "\rDEBUG get_covariances - Y 7" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 7" << std::flush;
 
       bool use_ext = false;
       if (type == "EXTstat")
@@ -1646,13 +1646,13 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
           temp_cov_mat.cov_matrix_->SetBinContent(rb1 + 1, rb2 + 1, stat_cov);
         }
       }
-      std::cout << "\rDEBUG get_covariances - Y 8" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 8" << std::flush;
 
     } // BNBstat and EXTstat types
 
     else if (type == "MCFullCorr")
     {
-      std::cout << "\rDEBUG get_covariances - Y 9" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 9" << std::flush;
       // Read in the fractional uncertainty from the configuration file
       double frac_unc = 0.;
       config_file >> frac_unc;
@@ -1678,18 +1678,18 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
         } // reco bin b
 
       } // reco bin a
-      std::cout << "\rDEBUG get_covariances - Y 10" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 10" << std::flush;
 
     } // MCFullCorr type
 
     else if (type == "DV")
     {
-      std::cout << "\rDEBUG get_covariances - Y 11" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 11" << std::flush;
       // Get the detector variation type represented by the current universe
       std::string ntuple_type_str;
       config_file >> ntuple_type_str;
 
-      std::cout << "\rDEBUG get_covariances - Y 12 ntupletype: " << ntuple_type_str << std::endl;
+      // std::cout << "\rDEBUG get_covariances - Y 12 ntupletype: " << ntuple_type_str << std::endl;
 
       const auto &fpm = FilePropertiesManager::Instance();
       auto ntuple_type = fpm.string_to_ntuple_type(ntuple_type_str);
@@ -1701,14 +1701,14 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
         throw std::runtime_error("Invalid NtupleFileType!");
       }
 
-      std::cout << "\rDEBUG get_covariances - Y 12" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 12" << std::flush;
 
       // Use a bare pointer for the CV universe so that we can reassign it
       // below if needed. References can't be reassigned after they are
       // initialized.
       const auto *detVar_cv_u = detvar_universes_.at(NFT::kDetVarMCCV).get();
       const auto &detVar_alt_u = detvar_universes_.at(ntuple_type);
-      std::cout << "\rDEBUG get_covariances - Y 13" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - Y 13" << std::flush;
 
       // The Recomb2 and SCE variations use an alternate "extra CV" universe
       // since they were generated with smaller MC statistics.
@@ -1732,10 +1732,10 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
       detVar_alt_u->hist_categ_->Print();
       detVar_alt_u->hist_reco2d_->Print();
 
-      std::cout << "\rDEBUG get_covariances - DetVar 1" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - DetVar 1" << std::flush;
       make_cov_mat(*this, temp_cov_mat, *detVar_cv_u,
                    *detVar_alt_u, false, false);
-      std::cout << "\rDEBUG get_covariances - DetVar 2" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - DetVar 2" << std::flush;
     } // DV type
 
     else if (type == "RW" || type == "FluxRW")
@@ -1766,10 +1766,10 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
       config_file >> avg_over_universes;
 
       const auto &cv_univ = this->cv_universe();
-      std::cout << "\rDEBUG get_covariances - CV_univ 1" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - CV_univ 1" << std::flush;
       make_cov_mat(*this, temp_cov_mat, cv_univ, alt_univ_vec,
                    avg_over_universes, is_flux_variation);
-      std::cout << "\rDEBUG get_covariances - CV_univ 2" << std::flush;
+      // std::cout << "\rDEBUG get_covariances - CV_univ 2" << std::flush;
 
     } // RW and FluxRW types
 
@@ -1792,45 +1792,45 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
       // cv_univ.hist_categ_->Print();
       // cv_univ.hist_reco2d_->Print();
 
-      std::cout << "cv_univ.hist_true_: " << std::endl;
-      util::PrintMatrix(*cv_univ.hist_true_);
+      // std::cout << "cv_univ.hist_true_: " << std::endl;
+      // util::PrintMatrix(*cv_univ.hist_true_);
 
-      std::cout << "cv_univ.hist_reco_: " << std::endl;
-      util::PrintMatrix(*cv_univ.hist_reco_);
+      // std::cout << "cv_univ.hist_reco_: " << std::endl;
+      // util::PrintMatrix(*cv_univ.hist_reco_);
 
-      std::cout << "cv_univ.hist_2d_: " << std::endl;
-      util::PrintMatrix(*cv_univ.hist_2d_);
+      // std::cout << "cv_univ.hist_2d_: " << std::endl;
+      // util::PrintMatrix(*cv_univ.hist_2d_);
 
-      std::cout << "cv_univ.hist_categ_: " << std::endl;
-      util::PrintMatrix(*cv_univ.hist_categ_);
+      // std::cout << "cv_univ.hist_categ_: " << std::endl;
+      // util::PrintMatrix(*cv_univ.hist_categ_);
 
-      std::cout << "cv_univ.hist_reco2d_: " << std::endl;
-      util::PrintMatrix(*cv_univ.hist_reco2d_);
+      // std::cout << "cv_univ.hist_reco2d_: " << std::endl;
+      // util::PrintMatrix(*cv_univ.hist_reco2d_);
 
-      // std::cout << "----------- DEBUG alt_univ_vec.size(): " << alt_univ_vec.size() << std::endl;
-      for (int i = 0; i < alt_univ_vec.size(); i++)
-      {
-        std::cout<<"alt_univ_vec.at("<<i<<")->hist_true_: "<<std::endl;
-        util::PrintMatrix(*alt_univ_vec.at(i)->hist_true_);
+      // // std::cout << "----------- DEBUG alt_univ_vec.size(): " << alt_univ_vec.size() << std::endl;
+      // for (int i = 0; i < alt_univ_vec.size(); i++)
+      // {
+      //   std::cout<<"alt_univ_vec.at("<<i<<")->hist_true_: "<<std::endl;
+      //   util::PrintMatrix(*alt_univ_vec.at(i)->hist_true_);
  
-        std::cout << "alt_univ_vec.at(" << i << ")->hist_reco_: " << std::endl;
-        util::PrintMatrix(*alt_univ_vec.at(i)->hist_reco_);
+      //   std::cout << "alt_univ_vec.at(" << i << ")->hist_reco_: " << std::endl;
+      //   util::PrintMatrix(*alt_univ_vec.at(i)->hist_reco_);
 
-        std::cout << "alt_univ_vec.at(" << i << ")->hist_2d_: " << std::endl;
-        util::PrintMatrix(*alt_univ_vec.at(i)->hist_2d_);
+      //   std::cout << "alt_univ_vec.at(" << i << ")->hist_2d_: " << std::endl;
+      //   util::PrintMatrix(*alt_univ_vec.at(i)->hist_2d_);
 
-        std::cout << "alt_univ_vec.at(" << i << ")->hist_categ_: " << std::endl;
-        util::PrintMatrix(*alt_univ_vec.at(i)->hist_categ_);
+      //   std::cout << "alt_univ_vec.at(" << i << ")->hist_categ_: " << std::endl;
+      //   util::PrintMatrix(*alt_univ_vec.at(i)->hist_categ_);
 
-        std::cout << "alt_univ_vec.at(" << i << ")->hist_reco2d_: " << std::endl;
-        util::PrintMatrix(*alt_univ_vec.at(i)->hist_reco2d_);
+      //   std::cout << "alt_univ_vec.at(" << i << ")->hist_reco2d_: " << std::endl;
+      //   util::PrintMatrix(*alt_univ_vec.at(i)->hist_reco2d_);
       
-        // alt_univ_vec.at(i)->hist_true_->Print();
-        // alt_univ_vec.at(i)->hist_reco_->Print();
-        // alt_univ_vec.at(i)->hist_2d_->Print();
-        // alt_univ_vec.at(i)->hist_categ_->Print();
-        // alt_univ_vec.at(i)->hist_reco2d_->Print();
-      }
+      //   // alt_univ_vec.at(i)->hist_true_->Print();
+      //   // alt_univ_vec.at(i)->hist_reco_->Print();
+      //   // alt_univ_vec.at(i)->hist_2d_->Print();
+      //   // alt_univ_vec.at(i)->hist_categ_->Print();
+      //   // alt_univ_vec.at(i)->hist_reco2d_->Print();
+      // }
 
       make_cov_mat(*this, temp_cov_mat, cv_univ, alt_univ_vec,
                    true, false);
@@ -1847,12 +1847,12 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
     {
       throw std::runtime_error("Duplicate covariance matrix definition for " + name);
     }
-    std::cout << "\rDEBUG get_covariances - X 1" << std::flush;
+    // std::cout << "\rDEBUG get_covariances - X 1" << std::flush;
     matrix_map[name] = std::move(temp_cov_mat);
-    std::cout << "\rDEBUG get_covariances - X 2" << std::flush;
+    // std::cout << "\rDEBUG get_covariances - X 2" << std::flush;
 
   } // Covariance matrix definitions
-  std::cout << "\rDEBUG get_covariances - X 3" << std::flush;
+  // std::cout << "\rDEBUG get_covariances - X 3" << std::flush;
 
   return matrix_map_ptr;
 }
@@ -2010,7 +2010,7 @@ SystematicsCalculator::get_cv_ordinary_reco_helper(bool return_bkgd) const
     // Start by tallying the EXT contribution in the current reco bin. Note
     // that the EXT data histogram bins have a one-based index.
     double bkgd_events = ext_hist->GetBinContent(r + 1);
-    std::cout<<"^^^DEBUG bkgd_events r: " << r << " is: "<<bkgd_events<< std::endl; 
+    // std::cout<<"^^^DEBUG bkgd_events r: " << r << " is: "<<bkgd_events<< std::endl; 
 
     // Also start out with zero signal events (the signal prediction comes
     // purely from MC)
@@ -2028,13 +2028,13 @@ SystematicsCalculator::get_cv_ordinary_reco_helper(bool return_bkgd) const
       // Set the pointer to the appropriate counter
       if (tbin.type_ == kBackgroundTrueBin)
       {
-        std::cout<<"^^^DEBUG backgroundBins r: " << r << " t: " << t << " is background - added value: "<<cv_univ.hist_2d_->GetBinContent(t + 1, r + 1)<< std::endl;
+        // std::cout<<"^^^DEBUG backgroundBins r: " << r << " t: " << t << " is background - added value: "<<cv_univ.hist_2d_->GetBinContent(t + 1, r + 1)<< std::endl;
         temp_events_ptr = &bkgd_events;
       }
       else if (tbin.type_ == kSignalTrueBin)
       {
         temp_events_ptr = &signal_events;
-        std::cout<<"^^^DEBUG signalBins r: " << r << " t: " << t << " is signal - added value: "<<cv_univ.hist_2d_->GetBinContent(t + 1, r + 1)<< std::endl;
+        // std::cout<<"^^^DEBUG signalBins r: " << r << " t: " << t << " is signal - added value: "<<cv_univ.hist_2d_->GetBinContent(t + 1, r + 1)<< std::endl;
       }
       else
       {
