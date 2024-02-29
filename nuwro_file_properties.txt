@@ -3,21 +3,21 @@
 # file_name run file_type [triggers POT (for data only)]
 #
 ##### Beam-off data
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380078 0
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380078 0
 #
 ##### Full beam-on data
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 onBNB 68603417 3.08672e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 onBNB 74407431 3.14546e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 onBNB 75564514 3.154e20
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 onBNB 68603417 3.08672e20
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 onBNB 74407431 3.14546e20
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 onBNB 75564514 3.154e20
 #
 ##### Numu MC samples
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
 #
 ##### NuWro numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_9/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
+/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC

@@ -40,14 +40,14 @@ void slice_plots(const bool normaliseByBinWidth) {
     auto& fpm = FilePropertiesManager::Instance();
     fpm.load_file_properties( "nuwro_file_properties.txt" );
     auto* syst_ptr = new MCC9SystematicsCalculator(
-      "/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_9/univmake_output_nuwro_6Dec23.root",
+      "/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_overflow_all_13Jan23.root",
       "systcalc_unfold_fd_min.conf" );
     std::string nameExtension = "_fd";
   #else
-    auto* syst_ptr = new MCC9SystematicsCalculator(
-    "...",
-    "systcalc.conf" );
-    std::string nameExtension = "_bnb";
+    // auto* syst_ptr = new MCC9SystematicsCalculator(
+    // "...",
+    // "systcalc.conf" );
+    // std::string nameExtension = "_bnb";
   #endif
 
   std::cout<<"DEBUG tutorial_slice_plots Point 1"<<std::endl;
@@ -81,7 +81,7 @@ void slice_plots(const bool normaliseByBinWidth) {
   auto* matrix_map_ptr = syst.get_covariances().release();
   auto& matrix_map = *matrix_map_ptr;
 
-  auto* sb_ptr = new SliceBinning( "ubcc1pi_slice_config.txt" );
+  auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" );
   auto& sb = *sb_ptr;
 
   for (const auto& pair : matrix_map) {
@@ -222,7 +222,7 @@ void slice_plots(const bool normaliseByBinWidth) {
 
     slice_bnb->hist_->Draw( "same e" );
     lg->AddEntry( slice_bnb->hist_.get(), "Data (beam on)", "lp" );
-    slice_bnb->hist_->SetTitle("Selected #nu_{#mu}CC1#pi^{#pm}Np, N #geq 0 Events");
+    slice_bnb->hist_->SetTitle("Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
     const std::string y_title = normaliseByBinWidth ? "Events / Bin width" : "Events";
     slice_bnb->hist_->GetYaxis()->SetTitle(y_title.c_str());
 
@@ -348,7 +348,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     total_frac_err_hist->SetLineStyle( 9 );
     total_frac_err_hist->SetLineWidth( 3 );
     total_frac_err_hist->Draw( "hist" );
-    total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Np, N #geq 0 Events");
+    total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
     total_frac_err_hist->GetYaxis()->SetTitle("Fractional Uncertainty");
 
     std::cout<<"DEBUG tutorial_slice_plots Point 7.3"<<std::endl;

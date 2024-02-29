@@ -389,10 +389,10 @@ SystematicsCalculator::SystematicsCalculator(
     const std::string &respmat_tdirectoryfile_name)
     : syst_config_file_name_(syst_cfg_file_name)
 {
-  // std::cout<<"DEBUG SystematicsCalculator Point 1"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 1"<<std::endl;
   // Get access to the FilePropertiesManager singleton class
   const auto &fpm = FilePropertiesManager::Instance();
-  // std::cout<<"DEBUG SystematicsCalculator Point 2"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 2"<<std::endl;
 
   // If the user didn't specify a particular systematics configuration file
   // to use when calculating covariance matrices, then use the default one
@@ -403,7 +403,7 @@ SystematicsCalculator::SystematicsCalculator(
     syst_config_file_name_ = fpm.analysis_path() + "/systcalc.conf";
   }
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 3"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 3"<<std::endl;
 
   // Open in "update" mode so that we can save POT-summed histograms
   // for the combination of all analysis ntuples. Otherwise, we won't
@@ -411,7 +411,7 @@ SystematicsCalculator::SystematicsCalculator(
   // TODO: consider adjusting this to be less dangerous
   TFile in_tfile(input_respmat_file_name.c_str(), "update");
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 4"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 4"<<std::endl;
 
   TDirectoryFile *root_tdir = nullptr;
 
@@ -431,7 +431,7 @@ SystematicsCalculator::SystematicsCalculator(
     throw std::runtime_error("Invalid root TDirectoryFile!");
   }
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 6"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 6"<<std::endl;
 
   // Construct the "total subfolder name" using the constant prefix
   // and the name of the FilePropertiesManager configuration file that
@@ -444,7 +444,7 @@ SystematicsCalculator::SystematicsCalculator(
 
   std::string total_subfolder_name = TOTAL_SUBFOLDER_NAME_PREFIX + fpm_config_file;
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 7"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 7"<<std::endl;
 
   // Check whether a set of POT-summed histograms for each universe
   // is already present in the input response matrix file. This is
@@ -454,7 +454,7 @@ SystematicsCalculator::SystematicsCalculator(
   root_tdir->GetObject(total_subfolder_name.c_str(), total_subdir);
 
   // std::cout<<"DEBUG SystematicsCalculator Point 8"<<std::endl;
-  if (true){//!total_subdir) { // true //todo figure out why this is not working
+  if (!total_subdir) { // true //todo figure out why this is not working
     // std::cout<<"DEBUG SystematicsCalculator Point 9"<<std::endl;
     // We couldn't find the pre-computed POT-summed universe histograms,
     // so make them "on the fly" and store them in this object
@@ -472,7 +472,7 @@ SystematicsCalculator::SystematicsCalculator(
       root_tdir->rmdir(total_subfolder_name.c_str());
     }
 
-    // std::cout<<"DEBUG SystematicsCalculator Point 10"<<std::endl;
+    std::cout<<"DEBUG SystematicsCalculator Point 10"<<std::endl;
 
     // Create a new TDirectoryFile as a subfolder to hold the POT-summed
     // universe histograms
@@ -493,7 +493,7 @@ SystematicsCalculator::SystematicsCalculator(
     // std::cout<<"DEBUG SystematicsCalculator Point 13"<<std::endl;
   }
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 14"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 14"<<std::endl;
 
   // Also load the configuration of true and reco bins used to create the
   // universes
@@ -520,7 +520,7 @@ SystematicsCalculator::SystematicsCalculator(
     true_bins_.push_back(temp_true_bin);
   }
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 15"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 15"<<std::endl;
 
   num_ordinary_reco_bins_ = 0u;
   std::istringstream iss_reco(*reco_bin_spec);
@@ -534,7 +534,7 @@ SystematicsCalculator::SystematicsCalculator(
     reco_bins_.push_back(temp_reco_bin);
   }
 
-  // std::cout<<"DEBUG SystematicsCalculator Point 16"<<std::endl;
+  std::cout<<"DEBUG SystematicsCalculator Point 16"<<std::endl;
 
 }
 
@@ -1574,14 +1574,14 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
   // definition contains at least a name and a type specifier
   std::ifstream config_file(syst_config_file_name_);
   std::string name, type;
-  // std::cout << "\rDEBUG get_covariances - Y 0 - syst_config_file_name_: " << syst_config_file_name_ << std::endl;
+  std::cout << "\rDEBUG get_covariances - Y 0 - syst_config_file_name_: " << syst_config_file_name_ << std::endl;
   while (config_file >> name >> type)
   {
-    // std::cout << "\rDEBUG get_covariances - Y 1 - name: " << name << " type: " << type << std::endl;
+    std::cout << "\rDEBUG get_covariances - Y 1 - name: " << name << " type: " << type << std::endl;
 
     CovMatrix temp_cov_mat = this->make_covariance_matrix(name);
 
-    // std::cout << "\rDEBUG get_covariances - Y 2" << std::flush;
+    std::cout << "\rDEBUG get_covariances - Y 2" << std::flush;
     // If the current covariance matrix is defined as a sum of others, then
     // just add the existing ones together to compute it
     if (type == "sum")
@@ -1627,7 +1627,7 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
 
     else if (type == "BNBstat" || type == "EXTstat")
     {
-      // std::cout << "\rDEBUG get_covariances - Y 7" << std::flush;
+      std::cout << "\rDEBUG get_covariances - Y 7" << std::flush;
 
       bool use_ext = false;
       if (type == "EXTstat")
@@ -1652,7 +1652,7 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
 
     else if (type == "MCFullCorr")
     {
-      // std::cout << "\rDEBUG get_covariances - Y 9" << std::flush;
+      std::cout << "\rDEBUG get_covariances - Y 9" << std::flush;
       // Read in the fractional uncertainty from the configuration file
       double frac_unc = 0.;
       config_file >> frac_unc;
@@ -1684,7 +1684,7 @@ std::unique_ptr<CovMatrixMap> SystematicsCalculator::get_covariances() const
 
     else if (type == "DV")
     {
-      // std::cout << "\rDEBUG get_covariances - Y 11" << std::flush;
+      std::cout << "\rDEBUG get_covariances - Y 11" << std::flush;
       // Get the detector variation type represented by the current universe
       std::string ntuple_type_str;
       config_file >> ntuple_type_str;

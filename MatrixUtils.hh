@@ -10,6 +10,7 @@
 
 // ROOT includes
 #include "TDecompQRH.h"
+#include "TDecompLU.h"
 #include "TMatrixD.h"
 
 constexpr double DEFAULT_MATRIX_INVERSION_TOLERANCE = 1e-4;
@@ -54,12 +55,25 @@ std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
   TDecompQRH qr_decomp( *inverse_matrix, DBL_EPSILON );
   qr_decomp.Invert( *inverse_matrix );
 
+  // Do the inversion using TDecompLU
+  // TDecompLU lu_decomp( *inverse_matrix, DBL_EPSILON);
+  // lu_decomp.Invert( *inverse_matrix );
+
   // Undo the scaling by re-applying it to the inverse matrix
   inverse_matrix->operator*=( scaling_factor );
 
   // Double-check that we get a unit matrix by multiplying the
   // original by its inverse
   TMatrixD unit_mat( mat, TMatrixD::kMult, *inverse_matrix );
+
+  std::cout << "\n\nDEBUG original cov mat muliplied by its inverse:" << std::endl;
+  for (int i = 0; i < unit_mat.GetNrows(); ++i) {
+    for (int j = 0; j < unit_mat.GetNcols(); ++j) {
+      std::cout << unit_mat(i, j) << " ";
+    }
+    std::cout << std::endl;
+  }
+
   for ( int a = 0; a < num_bins; ++a ) {
     for ( int b = 0; b < num_bins; ++b ) {
       double element = unit_mat( a, b );
@@ -67,7 +81,7 @@ std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
       if ( a == b ) expected_element = 1.;
       double abs_diff = std::abs( element - expected_element );
       if ( abs_diff > inversion_tolerance ) {
-        throw std::runtime_error( "Matrix inversion failed" );
+        throw std::runtime_error( "Matrix inversion failed abs_diff: " + std::to_string(abs_diff) + " > inversion_tolerance: " + std::to_string(inversion_tolerance) + " at a: " + std::to_string(a) + " b: " + std::to_string(b) );
       }
     }
   }

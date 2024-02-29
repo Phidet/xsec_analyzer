@@ -127,14 +127,14 @@ class EventCategoryInterpreter {
     std::map< EventCategory, Color_t > event_category_to_color_map_ = {
       { kUnknown, kGray },
       { kNumuCC1PiChargedGolden,  kGreen },
-      { kNumuCC1PiChargedNonGolden, kGreen + 1 },
+      { kNumuCC1PiChargedNonGolden, kViolet},
       { kNumuCC1PiNonSignal , kOrange + 5 },
       { kNumuCC0PiSignal, kYellow - 6},
       { kNumuCC0Pi, kYellow },
       { kNumuCC1PiZero, kOrange - 4 },
       { kNumuCCOther, kOrange - 3 },
       { kNue, kBlue },
-      { kNC, kViolet },
+      { kNC, kBlue+10 },
       { kDirt, kOrange+3 },
       { kNonFiducial, kBlack },
       { kExternal, kBlack }

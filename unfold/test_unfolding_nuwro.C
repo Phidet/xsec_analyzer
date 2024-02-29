@@ -11,7 +11,7 @@
 
 // STV analysis includes
 #include "../FilePropertiesManager.hh"
-// #include "../DAgostiniUnfolder.hh"
+#include "../DAgostiniUnfolder.hh"
 #include "../FiducialVolume.hh"
 #include "../MatrixUtils.hh"
 #include "../MCC9SystematicsCalculator.hh"
@@ -232,11 +232,22 @@ void test_unfolding_nuwro()
     // const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
 
     fpm.load_file_properties("../nuwro_file_properties.txt");
-    const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_9/univmake_output_nuwro_sidband_reduced_28Dec23.root");
-    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_9/univmake_output_nuwro_with_sidband_22Dec23.root");
+
+    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_noOverflow_13Jan23.root");
+    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_noOverflow_noGolden_13Jan23.root");
+    const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_overflow_all_13Jan23.root");
+
+    // const std::string postfix = "_run1_reduced";
+    // const std::string postfix = "_with_Overflow_onlyGolden";
+    const std::string postfix = "";
+
+    // Plot slices of the unfolded result
+    // auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config_reduced.txt");
+    auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config.txt");
+    auto &sb = *sb_ptr;
+
     // Do the systematics calculations in preparation for unfolding
     const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_min.conf");
-
     const auto &syst = *syst_ptr;
 
     // Get the tuned GENIE CV prediction in each true bin (including the
@@ -371,7 +382,7 @@ void test_unfolding_nuwro()
     // footnote->SetTextAlign(22); // Center alignment
     footnote2->Draw();
 
-    cm2->SaveAs("plots/plot_slice_entire_corr_nuwro.pdf");
+    cm2->SaveAs(("plots/plot_slice_entire_corr_nuwro" + postfix + ".pdf").c_str());
 
     std::cout<<"DEBUG U0.1"<<std::endl;
 
@@ -510,7 +521,7 @@ void test_unfolding_nuwro()
     // footnote->SetTextAlign(22); // Center alignment
     footnote1->Draw();
 
-    cm1->SaveAs("plots/plot_unfolded_slice_entire_corr_nuwro.pdf");
+    cm1->SaveAs(("plots/plot_unfolded_slice_entire_corr_nuwro" + postfix + ".pdf").c_str());
 
     // Add the blockwise decomposed matrices into the map
     // unfolded_cov_matrix_map["total_blockwise_norm"] = std::make_unique<TMatrixD>(bd_ns_covmat.norm_);
@@ -652,7 +663,7 @@ void test_unfolding_nuwro()
     footnote3->Draw();
 
 
-    c_ac->SaveAs("plots/plot_entire_additional_smearing_matrix_nuwro.pdf");
+    c_ac->SaveAs(("plots/plot_entire_additional_smearing_matrix_nuwro" + postfix + ".pdf").c_str());
 
     std::cout<<"DEBUG U3"<<std::endl;
 
@@ -701,9 +712,6 @@ void test_unfolding_nuwro()
 
     lg->Draw("same");
 
-    // Plot slices of the unfolded result
-    auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config_reduced.txt");
-    auto &sb = *sb_ptr;
 
     // Get the factors needed to convert to cross-section units
     double total_pot = syst.total_bnb_data_pot_;
@@ -752,7 +760,7 @@ void test_unfolding_nuwro()
     cv_hist_2d->Draw("colz");
     gPad->SetLogz();
     util::CreateWhiteToBlueColorPalette(20);
-    c_cv_hist_2d->SaveAs("plots/entire_cv_hist_2d_nuwro.pdf");
+    c_cv_hist_2d->SaveAs(("plots/entire_cv_hist_2d_nuwro" + postfix + ".pdf").c_str());
 
     for (size_t sl_idx = 0u; sl_idx < sb.slices_.size(); ++sl_idx)
     {
@@ -945,7 +953,7 @@ void test_unfolding_nuwro()
             }
         }
 
-        c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro.pdf").c_str());
+        c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
 
 
         if(using_fake_data)
@@ -979,7 +987,7 @@ void test_unfolding_nuwro()
                 }
             }
 
-            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro.pdf").c_str());
+            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
         }
 
 
@@ -1008,7 +1016,7 @@ void test_unfolding_nuwro()
         ac_hist->GetYaxis()->SetLabelSize(0.05);
 
         TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
-        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro.pdf").c_str());
+        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
 
         // Plot for trimmed_corr_unf_hist
         TCanvas* c_corr_unf_slice = new TCanvas("c_corr_unf_slice", "c correlation matrix", 800, 600);
@@ -1030,7 +1038,7 @@ void test_unfolding_nuwro()
         trimmed_corr_unf_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_corr_unf_hist->GetYaxis()->SetLabelSize(0.05);
 
-        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro.pdf").c_str());
+        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
 
         // Plot for trimmed_corr_hist
         TCanvas* c_corr_slice = new TCanvas(("c_corr_slice slice "+std::to_string(sl_idx)).c_str(), "c correlation matrix", 800, 600);
@@ -1052,7 +1060,7 @@ void test_unfolding_nuwro()
         trimmed_corr_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_corr_hist->GetYaxis()->SetLabelSize(0.05);
 
-        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro.pdf").c_str());
+        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
 
 
         // TMatrixD* matrix = result.cov_matrix_.get();
@@ -1444,7 +1452,7 @@ void test_unfolding_nuwro()
         c1->Update();
         std::cout << "DEBUG test_unfolding_nuwro - Point 8" << std::endl;
 
-        std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro.pdf";
+        std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf";
         c1->SaveAs(out_pdf_name.c_str());
 
 
@@ -1493,14 +1501,14 @@ void test_unfolding_nuwro()
         // TCanvas *c2 = new TCanvas("c2", "Canvas", 800, 600);
         // cov_matrix->Draw("COLZ");
         // cov_matrix->SetTitle("Covariance matrix");
-        // std::string out_pdf_name_cov = "plots/plot_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf";
+        // std::string out_pdf_name_cov = "plots/plot_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "" + postfix + ".pdf";
         // c2->SaveAs(out_pdf_name_cov.c_str());
 
         // const auto unfolded_cov_matrix = slice_gen_map.at("Unfolded NuWro Reco")->cmat_.cov_matrix_.get();
         // TCanvas *c3 = new TCanvas("c3", "Canvas", 800, 600);
         // unfolded_cov_matrix->Draw("COLZ");
         // unfolded_cov_matrix->SetTitle("Unfolded covariance matrix");
-        // std::string out_pdf_name_unf_cov = "plots/plot_unfolded_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf";
+        // std::string out_pdf_name_unf_cov = "plots/plot_unfolded_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "" + postfix + ".pdf";
         // c3->SaveAs(out_pdf_name_unf_cov.c_str());
         // delete cov_matrix;
 

@@ -25,7 +25,7 @@ class SliceHistogram {
     static SliceHistogram* make_slice_histogram( TH1D& reco_bin_histogram,
       const Slice& slice, const CovMatrix* input_cov_mat = nullptr );
 
-    static SliceHistogram* make_slice_histogram( TMatrixD& reco_bin_counts,
+    static SliceHistogram* make_slice_histogram( const TMatrixD& reco_bin_counts,
       const Slice& slice, const TMatrixD* input_cov_mat );
 
     // TODO: revisit this implementation
@@ -176,7 +176,7 @@ SliceHistogram* SliceHistogram::make_slice_histogram( TH1D& reco_bin_histogram,
 }
 
 SliceHistogram* SliceHistogram::make_slice_histogram(
-  TMatrixD& reco_bin_counts, const Slice& slice,
+  const TMatrixD& reco_bin_counts, const Slice& slice,
   const TMatrixD* input_cov_mat )
 {
   // TODO: reduce code duplication between this function and the overloaded

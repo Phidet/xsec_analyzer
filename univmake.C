@@ -104,28 +104,28 @@ int main( int argc, char* argv[] ) {
 
     UniverseMaker univ_maker( univmake_config_file_name );
 
-    std::cout<<"DEBUG univmake.C Point 1"<<std::endl;
+    // std::cout<<"DEBUG univmake.C Point 1"<<std::endl;
 
     univ_maker.add_input_file( input_file_name.c_str() );
 
-    std::cout<<"DEBUG univmake.C Point 2"<<std::endl;
+    // std::cout<<"DEBUG univmake.C Point 2"<<std::endl;
 
     bool has_event_weights = is_reweightable_mc_ntuple( input_file_name );
 
     if ( has_event_weights ) {
       // If the check above was successful, then run all of the histogram
       // calculations in the usual way
-      std::cout<<"DEBUG univmake.C Point 3"<<std::endl;
+      // std::cout<<"DEBUG univmake.C Point 3"<<std::endl;
       univ_maker.build_universes();
-      std::cout<<"DEBUG univmake.C Point 4"<<std::endl;
+      // std::cout<<"DEBUG univmake.C Point 4"<<std::endl;
     }
     else {
       // Passing in the fake list of explicit branch names below instructs
       // the UniverseMaker class to ignore all event weights while
       // processing the current ntuple
-      std::cout<<"DEBUG univmake.C Point 5"<<std::endl;
+      // std::cout<<"DEBUG univmake.C Point 5"<<std::endl;
       univ_maker.build_universes( { "FAKE_BRANCH_NAME" } );
-      std::cout<<"DEBUG univmake.C Point 6"<<std::endl;
+      // std::cout<<"DEBUG univmake.C Point 6"<<std::endl;
     }
 
     std::cout<<"Starting with saving histograms"<<std::endl;
@@ -138,7 +138,7 @@ int main( int argc, char* argv[] ) {
       tdirfile_name = univ_maker.dir_name();
       set_tdirfile_name = true;
     }
-    std::cout<<"DEBUG univmake.C Point 9"<<std::endl;
+    // std::cout<<"DEBUG univmake.C Point 9"<<std::endl;
   } // loop over input files
 
   // Use a temporary MCC9SystematicsCalculator object to automatically calculate the total
@@ -147,7 +147,7 @@ int main( int argc, char* argv[] ) {
   // systematics configuration file used doesn't matter. The empty string
   // passed as the second argument to the constructor just instructs the
   // MCC9SystematicsCalculator class to use the default systematics configuration file.
-  std::cout<<"DEBUG univmake.C Point 10"<<std::endl;
+  // std::cout<<"DEBUG univmake.C Point 10"<<std::endl;
   MCC9SystematicsCalculator unfolder( output_file_name, "", tdirfile_name );
   std::cout<<"--- All done ---"<<std::endl;
   return 0;

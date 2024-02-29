@@ -3,6 +3,7 @@
 // Standard library includes
 #include <algorithm>
 #include <stdexcept>
+#include <iomanip>
 
 // STV analysis includes
 #include "MatrixUtils.hh"
@@ -393,12 +394,12 @@ MeasuredEvents ConstrainedCalculator::get_measured_events() const
   std::cout << "sideband_cov_mat:" << std::endl;
   for (int i = 0; i < sideband_cov_mat.GetNrows(); ++i) {
     for (int j = 0; j < sideband_cov_mat.GetNcols(); ++j) {
-      std::cout << sideband_cov_mat(i, j) << " ";
+      std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << sideband_cov_mat(i, j) << " ";
     }
     std::cout << std::endl;
   }
 
-  auto inverse_sideband_cov_mat = invert_matrix( sideband_cov_mat );
+  auto inverse_sideband_cov_mat = invert_matrix( sideband_cov_mat);
   std::cout<<"DEBUG (ConstrainedCalculator) Point 2.6"<<std::endl;
 
   // We're ready. Apply the sideband constraint to the prediction vector first.
