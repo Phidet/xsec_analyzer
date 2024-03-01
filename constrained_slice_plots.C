@@ -141,8 +141,9 @@ void slice_plots(const bool normaliseByBinWidth)
     auto &fpm = FilePropertiesManager::Instance();
     fpm.load_file_properties("nuwro_file_properties_run1.txt");
     const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_sidband_run1_reduced_23Feb23_muonCosTheta.root");
+    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_sidband_run1_reduced_22Feb23_muonCosAndMom2.root");
 
-    std::string nameExtension = "_fd_reduced_constrained_withoutLast3";
+    std::string nameExtension = "_fd_reduced_constrained";
     const bool using_fake_data = true;
 #else
     auto *syst_ptr = new MCC9SystematicsCalculator(
@@ -152,7 +153,8 @@ void slice_plots(const bool normaliseByBinWidth)
     const bool using_fake_data = false;
 #endif
 
-    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta_withoutLast3.txt" );
+    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
+    // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced.txt" ); // muonCosTheta and muonMomentum
     auto& sb = *sb_ptr;
 
     // ******************************************************************************************************************
@@ -214,22 +216,108 @@ void slice_plots(const bool normaliseByBinWidth)
 
 
     // ******************************************************************************************************************
-    // Get the total covariance matrices for the unconstrained case *****************************************************
+    // Get the total covariance matrices for the unconstrained **********************************************************
     // ******************************************************************************************************************
     const auto total_covmat = matrix_map.at("total").cov_matrix_.get();
     // Plot the matrix as a colz plot
     TCanvas* cCovTotal = new TCanvas;
-    auto total_corrmat = util::CovarianceMatrixToCorrelationMatrix( *total_covmat );
-    total_corrmat.Draw("colz");
+    total_covmat->Draw("colz");
+    // Remove x and y axis titles
+    total_covmat->GetXaxis()->SetTitle("");
+    total_covmat->GetYaxis()->SetTitle("");
     gStyle->SetOptStat(0); // Add this line to remove the stats box
+
+    // Draw dotted lines to separate the sideband and the signal region
+    // use the size of the TMatrixD total_covmat_tmatrixd and draw a vertical and a horizontal line between half the bins
+    const auto nSignalBins = total_covmat->GetXaxis()->GetNbins() / 2;
+    TLine *l_0_1 = new TLine(0, nSignalBins, 2*nSignalBins, nSignalBins);
+    l_0_1->SetLineStyle(2);
+    l_0_1->Draw();
+    TLine *l_0_2 = new TLine(nSignalBins, 0, nSignalBins, 2*nSignalBins);
+    l_0_2->SetLineStyle(2);
+    l_0_2->Draw();
+
+    // Add labels to the x-axis
+    TLatex *ltx_0_X1 = new TLatex();
+    ltx_0_X1->SetTextSize(0.03);
+    ltx_0_X1->SetTextAlign(22);
+    ltx_0_X1->DrawLatex(0.5*nSignalBins, -0.12*nSignalBins, "Signal reco bins");
+    TLatex *ltx_0_X2 = new TLatex();
+    ltx_0_X2->SetTextSize(0.03);
+    ltx_0_X2->SetTextAlign(22);
+    ltx_0_X2->DrawLatex(1.5*nSignalBins, -0.12*nSignalBins, "Sideband reco bins");
+
+    // Add labels to the y-axis
+    TLatex *ltx_0_Y1 = new TLatex();
+    ltx_0_Y1->SetTextSize(0.03);
+    ltx_0_Y1->SetTextAlign(22);
+    ltx_0_Y1->SetTextAngle(90); // Rotate the text by 90 degrees
+    ltx_0_Y1->DrawLatex(-0.12*nSignalBins, 0.5*nSignalBins, "Signal reco bins");
+    TLatex *ltx_0_Y2 = new TLatex();
+    ltx_0_Y2->SetTextSize(0.03);
+    ltx_0_Y2->SetTextAlign(22);
+    ltx_0_Y2->SetTextAngle(90); // Rotate the text by 90 degrees
+    ltx_0_Y2->DrawLatex(-0.12*nSignalBins, 1.5*nSignalBins, "Sideband reco bins");
+    
 
     // Add a title to the plot
     TPaveText *ptTotal = new TPaveText(0.1, 0.94, 0.9, 0.98, "brNDC");
-    ptTotal->AddText("Unconstrained Total Correlation Matrix");
+    ptTotal->AddText("Unconstrained Total Covariance Matrix");
     ptTotal->Draw();
 
-    std::string out_pdf_name_cov_total = "plots/corr_matrix_total_unconstrained.pdf";
+    std::string out_pdf_name_cov_total = "plots/cov_matrix_total_unconstrained.pdf";
     cCovTotal->SaveAs(out_pdf_name_cov_total.c_str());
+    
+
+    // ******************************************************************************************************************
+    // Get the total covariance matrices for the unconstrained case as a correlation matrix *****************************
+    // ******************************************************************************************************************
+    // Plot the matrix as a colz plot
+    TCanvas* cCorrTotal = new TCanvas;
+    const auto total_covmat_tmatrixd = util::TH2DToTMatrixD(*total_covmat);
+    auto total_corrmat = util::CovarianceMatrixToCorrelationMatrix( total_covmat_tmatrixd );
+    total_corrmat.Draw("colz");
+    gStyle->SetOptStat(0); // Add this line to remove the stats box
+
+    // Draw dotted lines to separate the sideband and the signal region
+    // use the size of the TMatrixD total_covmat_tmatrixd and draw a vertical and a horizontal line between half the bins
+    TLine *l1 = new TLine(0, nSignalBins, 2*nSignalBins, nSignalBins);
+    l1->SetLineStyle(2);
+    l1->Draw();
+    TLine *l2 = new TLine(nSignalBins, 0, nSignalBins, 2*nSignalBins);
+    l2->SetLineStyle(2);
+    l2->Draw();
+
+    // Add labels to the x-axis
+    TLatex *ltxX1 = new TLatex();
+    ltxX1->SetTextSize(0.03);
+    ltxX1->SetTextAlign(22);
+    ltxX1->DrawLatex(0.5*nSignalBins, -0.12*nSignalBins, "Signal bins");
+    TLatex *ltxX2 = new TLatex();
+    ltxX2->SetTextSize(0.03);
+    ltxX2->SetTextAlign(22);
+    ltxX2->DrawLatex(1.5*nSignalBins, -0.12*nSignalBins, "Sideband bins");
+
+    // Add labels to the y-axis
+    TLatex *ltxY1 = new TLatex();
+    ltxY1->SetTextSize(0.03);
+    ltxY1->SetTextAlign(22);
+    ltxY1->SetTextAngle(90); // Rotate the text by 90 degrees
+    ltxY1->DrawLatex(-0.12*nSignalBins, 0.5*nSignalBins, "Signal bins");
+    TLatex *ltxY2 = new TLatex();
+    ltxY2->SetTextSize(0.03);
+    ltxY2->SetTextAlign(22);
+    ltxY2->SetTextAngle(90); // Rotate the text by 90 degrees
+    ltxY2->DrawLatex(-0.12*nSignalBins, 1.5*nSignalBins, "Sideband bins");
+    
+
+    // Add a title to the plot
+    TPaveText *ptTotalCorr = new TPaveText(0.1, 0.94, 0.9, 0.98, "brNDC");
+    ptTotalCorr->AddText("Unconstrained Total Correlation Matrix");
+    ptTotalCorr->Draw();
+
+    std::string out_pdf_name_corr_total = "plots/corr_matrix_total_unconstrained.pdf";
+    cCorrTotal->SaveAs(out_pdf_name_corr_total.c_str());
     
 
     // ******************************************************************************************************************

@@ -3,49 +3,49 @@
 # file_name run file_type [triggers POT (for data only)]
 #
 ##### Beam-off data
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380080 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root 4 extBNB 210851430 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root 5 extBNB 107494728 0
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380080 0
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root 4 extBNB 210851430 0
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root 5 extBNB 107494728 0
 #
 ##### Full beam-on data
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run1_C1_ubcc1pi.root 1 onBNB 37094047 1.6690e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 onBNB 61882879 2.6160e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 onBNB 63576878 2.6420e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_on_peleeTuple_uboone_run4bcd_ubcc1pi.root 4 onBNB 63623500 2.7405e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_75_run5_ubcc1pi.root 5 onBNB 35265730 1.4750e20
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run1_C1_ubcc1pi.root 1 onBNB 37094047 1.6690e20
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 onBNB 61882879 2.6160e20
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 onBNB 63576878 2.6420e20
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_on_peleeTuple_uboone_run4bcd_ubcc1pi.root 4 onBNB 63623500 2.7405e20
+/exp/uboone/data/users/jdetje/22Feb24/bnb_beam_on_peleeTuple_uboone_v08_00_00_75_run5_ubcc1pi.root 5 onBNB 35265730 1.4750e20
 #
 ##### Dirt MC samples
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root 1 dirtMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root 2 dirtMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run3_dirt_ubcc1pi.root 3 dirtMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_run4bcd_dirt_ubcc1pi.root 4 dirtMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_ubcc1pi.root 5 dirtMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root 1 dirtMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root 2 dirtMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run3_dirt_ubcc1pi.root 3 dirtMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_run4bcd_dirt_ubcc1pi.root 4 dirtMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_ubcc1pi.root 5 dirtMC
 #
 ##### Numu MC samples
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root 4 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root 5 numuMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root 4 numuMC
+/exp/uboone/data/users/jdetje/22Feb24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root 5 numuMC
 #
 ##### DetVar MC samples
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_CVextra_ubcc1pi.root 3 detVarCVExtra
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_CV_virtualParentsFix_ubcc1pi.root 3 detVarCV
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYAtteNuation_ubcc1pi.root 3 detVarLYatten
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYDown_ubcc1pi.root 3 detVarLYdown
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYRayleigh_virtualParentsFix_ubcc1pi.root 3 detVarLYrayl
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_Recomb2_ubcc1pi.root 3 detVarRecomb2
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_SCE_ubcc1pi.root 3 detVarSCE
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaXZ_ubcc1pi.root 3 detVarWMAngleXZ
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaYZ_ubcc1pi.root 3 detVarWMAngleYZ
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModX_virtualParentsFix_ubcc1pi.root 3 detVarWMX
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModYZ_ubcc1pi.root 3 detVarWMYZ
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_CVextra_ubcc1pi.root 3 detVarCVExtra
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_CV_virtualParentsFix_ubcc1pi.root 3 detVarCV
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYAtteNuation_ubcc1pi.root 3 detVarLYatten
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYDown_ubcc1pi.root 3 detVarLYdown
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_LYRayleigh_virtualParentsFix_ubcc1pi.root 3 detVarLYrayl
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_Recomb2_ubcc1pi.root 3 detVarRecomb2
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_SCE_ubcc1pi.root 3 detVarSCE
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaXZ_ubcc1pi.root 3 detVarWMAngleXZ
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModThetaYZ_ubcc1pi.root 3 detVarWMAngleYZ
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModX_virtualParentsFix_ubcc1pi.root 3 detVarWMX
+/exp/uboone/data/users/jdetje/22Feb24/detvar_run3_peleeTuple_uboone_v08_00_00_73_WireModYZ_ubcc1pi.root 3 detVarWMYZ
 #
 ##### NuWro numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run4_pelee_ubcc1pi.root 4 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run5_pelee_ubcc1pi.root 5 altCVMC
+/exp/uboone/data/users/jdetje/22Feb24/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
+/exp/uboone/data/users/jdetje/22Feb24/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
+/exp/uboone/data/users/jdetje/22Feb24/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
+/exp/uboone/data/users/jdetje/22Feb24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run4_pelee_ubcc1pi.root 4 altCVMC
+/exp/uboone/data/users/jdetje/22Feb24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run5_pelee_ubcc1pi.root 5 altCVMC

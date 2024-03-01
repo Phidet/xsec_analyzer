@@ -24,6 +24,11 @@
 // to have this branch.
 bool is_reweightable_mc_ntuple( const std::string& input_file_name ) {
   TFile temp_file( input_file_name.c_str(), "read" );
+  // Check if file was successfully opened
+  if (!temp_file.IsOpen()) {
+    throw std::runtime_error("Failed to open the input ROOT file " + input_file_name);
+  }
+
   TTree* stv_tree = nullptr;
   temp_file.GetObject( "stv_tree", stv_tree );
   if ( !stv_tree ) throw std::runtime_error( "Missing TTree \"stv_tree\" in"
@@ -86,7 +91,7 @@ int main( int argc, char* argv[] ) {
   std::cout << "Processing systematic universes for a total of "
     << input_files.size() << " input ntuple files\n";
 
-  ROOT::EnableImplicitMT();
+  // ROOT::EnableImplicitMT();
 
   // Store the name of the root TDirectoryFile created by the UniverseMaker
   // objects below. We will use it to ensure that the MCC9SystematicsCalculator
@@ -96,6 +101,9 @@ int main( int argc, char* argv[] ) {
   bool set_tdirfile_name = false;
 
   for ( const auto& input_file_name : input_files ) {
+    if (!std::ifstream(input_file_name)) {
+      throw std::runtime_error("Input file " + input_file_name + " does not exist");
+    }
 
     std::cout << "Calculating systematic universes for ntuple input file "
       << input_file_name << '\n';

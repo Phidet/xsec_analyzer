@@ -29,8 +29,8 @@ std::string get_legend_title( double bnb_pot ) {
   // If there's a leading '+' in the exponent, erase that too
   if ( pot_str.front() == '+' ) pot_str.erase( 0, 1u );
 
-  std::string legend_title = "MicroBooNE " + pot_digits_str + " #times 10^{"
-    + pot_str + "} POT, INTERNAL";
+  // std::string legend_title = "MicroBooNE " + pot_digits_str + " #times 10^{"+ pot_str + "} POT, INTERNAL";
+  std::string legend_title = "POT: " + pot_digits_str + " #times 10^{"+ pot_str + "}";
 
   return legend_title;
 }

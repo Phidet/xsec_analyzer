@@ -134,7 +134,7 @@ class EventCategoryInterpreter {
       { kNumuCC1PiZero, kOrange - 4 },
       { kNumuCCOther, kOrange - 3 },
       { kNue, kBlue },
-      { kNC, kBlue+10 },
+      { kNC, kBlue+2 },
       { kDirt, kOrange+3 },
       { kNonFiducial, kBlack },
       { kExternal, kBlack }
