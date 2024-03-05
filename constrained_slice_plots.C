@@ -20,7 +20,7 @@
 
 using NFT = NtupleFileType;
 
-#define USE_FAKE_DATA "yes"
+// #define USE_FAKE_DATA "yes"
 
 
 void plot_frac_slice( const Slice& slice, const std::map< std::string, CovMatrix >& matrix_map, TH1D* reco_mc_plus_ext_hist, const int sl_idx, const std::string nameExtension ){
@@ -109,8 +109,10 @@ void plot_frac_slice( const Slice& slice, const std::map< std::string, CovMatrix
 
     std::string frac_out_pdf_name = "plots/plot_frac_slice_";
     if ( sl_idx < 10 ) frac_out_pdf_name += "0";
-    frac_out_pdf_name += std::to_string( sl_idx ) + nameExtension +".pdf";
-    c2->SaveAs( frac_out_pdf_name.c_str() );
+    frac_out_pdf_name += std::to_string( sl_idx ) + nameExtension;
+    c2->SaveAs( (frac_out_pdf_name + ".pdf").c_str() );
+    c2->SaveAs( (frac_out_pdf_name + ".png").c_str() );
+    c2->SaveAs( (frac_out_pdf_name + ".C").c_str() );
     std::cout << "########################## Saved " << frac_out_pdf_name << " ##########################" << std::endl;
 }
 
@@ -140,31 +142,38 @@ void slice_plots(const bool normaliseByBinWidth)
     // Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
     fpm.load_file_properties("nuwro_file_properties_run1.txt");
-    const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_sidband_run1_reduced_23Feb23_muonCosTheta.root");
+    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_sidband_run1_reduced_23Feb23_muonCosTheta.root");
     // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_sidband_run1_reduced_22Feb23_muonCosAndMom2.root");
 
     std::string nameExtension = "_fd_reduced_constrained";
     const bool using_fake_data = true;
 #else
-    auto *syst_ptr = new MCC9SystematicsCalculator(
-        "...",
-        "systcalc.conf");
-    std::string nameExtension = "_bnb";
+    auto &fpm = FilePropertiesManager::Instance();
+    fpm.load_file_properties("file_properties_run1.txt");   
+    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_reduced_muonCosTheta_run1_3Mar24.root");
+    std::string nameExtension = "_bnb_reduced_constrained";
     const bool using_fake_data = false;
 #endif
 
-    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
-    // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced.txt" ); // muonCosTheta and muonMomentum
+    // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
+    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" ); // muonCosTheta and muonMomentum
     auto& sb = *sb_ptr;
 
     // ******************************************************************************************************************
     // Get the unconstrained objects ************************************************************************************
     // ******************************************************************************************************************
     // Get the object constaining all the selection and uncertainty information
+#ifdef USE_FAKE_DATA
     auto *syst_ptr = new MCC9SystematicsCalculator(
         respmat_file_name,
         "systcalc_unfold_fd_min.conf");
     auto &syst = *syst_ptr;
+#else
+    auto *syst_ptr = new MCC9SystematicsCalculator(
+        respmat_file_name,
+        "systcalc.conf");
+    auto &syst = *syst_ptr;
+#endif
 
     // Get the measured events from the systematics calculator
     const auto meas = syst.get_measured_events();
@@ -190,10 +199,17 @@ void slice_plots(const bool normaliseByBinWidth)
     // Get the constrained objects **************************************************************************************
     // ******************************************************************************************************************
     // Get the object constaining all the selection and uncertainty information for the constrained calculator
+#ifdef USE_FAKE_DATA
     auto* syst_ptr_constr = new ConstrainedCalculator(
-      respmat_file_name,
-      "systcalc_unfold_fd_min.conf" );
+    respmat_file_name,
+    "systcalc_unfold_fd_min.conf" );
     auto &syst_constr = *syst_ptr_constr;
+#else
+    auto* syst_ptr_constr = new ConstrainedCalculator(
+    respmat_file_name,
+    "systcalc.conf" );
+    auto &syst_constr = *syst_ptr_constr;
+#endif
 
     // Get the constrained reco ext & mc + ext histograms
     TH1D* reco_ext_hist_constr = syst_constr.data_hists_.at( NFT::kExtBNB ).get();
@@ -265,8 +281,10 @@ void slice_plots(const bool normaliseByBinWidth)
     ptTotal->AddText("Unconstrained Total Covariance Matrix");
     ptTotal->Draw();
 
-    std::string out_pdf_name_cov_total = "plots/cov_matrix_total_unconstrained.pdf";
-    cCovTotal->SaveAs(out_pdf_name_cov_total.c_str());
+    std::string out_pdf_name_cov_total = "plots/cov_matrix_total_unconstrained" + nameExtension;
+    cCovTotal->SaveAs((out_pdf_name_cov_total + ".pdf").c_str());
+    cCovTotal->SaveAs((out_pdf_name_cov_total + ".png").c_str());
+    cCovTotal->SaveAs((out_pdf_name_cov_total + ".C").c_str());
     
 
     // ******************************************************************************************************************
@@ -316,8 +334,10 @@ void slice_plots(const bool normaliseByBinWidth)
     ptTotalCorr->AddText("Unconstrained Total Correlation Matrix");
     ptTotalCorr->Draw();
 
-    std::string out_pdf_name_corr_total = "plots/corr_matrix_total_unconstrained.pdf";
-    cCorrTotal->SaveAs(out_pdf_name_corr_total.c_str());
+    std::string out_pdf_name_corr_total = "plots/corr_matrix_total_unconstrained" + nameExtension;
+    cCorrTotal->SaveAs((out_pdf_name_corr_total + ".pdf").c_str());
+    cCorrTotal->SaveAs((out_pdf_name_corr_total + ".png").c_str());
+    cCorrTotal->SaveAs((out_pdf_name_corr_total + ".C").c_str());
     
 
     // ******************************************************************************************************************
@@ -357,8 +377,10 @@ void slice_plots(const bool normaliseByBinWidth)
 
         std::string out_pdf_name_cov = "plots/corr_matrix_";
         if ( sl_idx < 10 ) out_pdf_name_cov += "0";
-        out_pdf_name_cov += std::to_string( sl_idx )+"_unconstrained.pdf";
-        cCov->SaveAs(out_pdf_name_cov.c_str());
+        out_pdf_name_cov += std::to_string( sl_idx )+"_unconstrained" + nameExtension;
+        cCov->SaveAs((out_pdf_name_cov + ".pdf").c_str());
+        cCov->SaveAs((out_pdf_name_cov + ".png").c_str());
+        cCov->SaveAs((out_pdf_name_cov + ".C").c_str());
 
         //  Create plot for the constrained covariance matrix
         TCanvas* cCovConstr = new TCanvas;
@@ -374,8 +396,11 @@ void slice_plots(const bool normaliseByBinWidth)
 
         std::string out_pdf_name_cov_constr = "plots/corr_matrix_";
         if ( sl_idx < 10 ) out_pdf_name_cov_constr += "0";
-        out_pdf_name_cov_constr += std::to_string( sl_idx )+"_constrained.pdf";
-        cCovConstr->SaveAs(out_pdf_name_cov_constr.c_str());
+        out_pdf_name_cov_constr += std::to_string( sl_idx )+"_constrained" + nameExtension;
+        cCovConstr->SaveAs((out_pdf_name_cov_constr + ".pdf").c_str());
+        cCovConstr->SaveAs((out_pdf_name_cov_constr + ".png").c_str());
+        cCovConstr->SaveAs((out_pdf_name_cov_constr + ".C").c_str());
+
 
         // Get chi2
         const auto chi2 = slice_reco_signal_plus_bkgd->get_chi2(*slice_mc_plus_ext);
@@ -389,12 +414,13 @@ void slice_plots(const bool normaliseByBinWidth)
 
         TCanvas* c = new TCanvas;
         // Set the color and line thickness of the histograms
-        slice_mc_plus_ext->hist_->SetLineColor(kBlue);
-        slice_mc_plus_ext->hist_->SetLineWidth(3);
+        slice_mc_plus_ext->hist_->SetLineColor(kOrange);
+        slice_mc_plus_ext->hist_->SetLineWidth(4);
         slice_reco_signal_plus_bkgd->hist_->SetLineColor(kBlack);
-        slice_reco_signal_plus_bkgd->hist_->SetLineWidth(4);
+        slice_reco_signal_plus_bkgd->hist_->SetLineWidth(1);
 
         slice_mc_plus_ext_constr->hist_->SetLineColor(kGreen);
+        slice_mc_plus_ext_constr->hist_->SetLineWidth(2);
         // slice_mc_plus_ext_constr->hist_->SetLineStyle(2);
         // slice_reco_signal_plus_bkgd_constr->hist_->SetLineColor(kRed);
         // slice_reco_signal_plus_bkgd_constr->hist_->SetLineStyle(2);
@@ -405,10 +431,23 @@ void slice_plots(const bool normaliseByBinWidth)
         slice_mc_plus_ext_constr->hist_->SetMinimum(0.0);
         // slice_reco_signal_plus_bkgd_constr->hist_->SetMinimum(0.0);
 
+        // Create copies of the histograms
+        TH1* slice_mc_plus_ext_hist_copy = (TH1*)slice_mc_plus_ext->hist_->Clone();
+        TH1* slice_mc_plus_ext_constr_hist_copy = (TH1*)slice_mc_plus_ext_constr->hist_->Clone();
+
+        // Apply fill styles to the copies
+        slice_mc_plus_ext_hist_copy->SetFillStyle(3004);
+        slice_mc_plus_ext_hist_copy->SetFillColor(kOrange);
+        slice_mc_plus_ext_constr_hist_copy->SetFillStyle(3005);
+        slice_mc_plus_ext_constr_hist_copy->SetFillColor(kGreen);
+
         // Draw the histograms
-        slice_reco_signal_plus_bkgd->hist_->Draw("E");
-        slice_mc_plus_ext->hist_->Draw("E hist same");
-        slice_mc_plus_ext_constr->hist_->Draw("E hist same");
+        slice_mc_plus_ext_hist_copy->Draw("E2");
+        slice_mc_plus_ext->hist_->Draw("hist same");
+        slice_mc_plus_ext_constr_hist_copy->Draw("E2 same");
+        slice_mc_plus_ext_constr->hist_->Draw("hist same");
+        slice_reco_signal_plus_bkgd->hist_->Draw("E1 same");
+
         // slice_reco_signal_plus_bkgd_constr->hist_->Draw("E hist same");
 
         // Convert chi2 values to strings
@@ -425,8 +464,10 @@ void slice_plots(const bool normaliseByBinWidth)
 
         std::string out_pdf_name = "plots/constrained_plots_slice_";
         if ( sl_idx < 10 ) out_pdf_name += "0";
-        out_pdf_name += std::to_string( sl_idx )+".pdf";
-        c->SaveAs(out_pdf_name.c_str());
+        out_pdf_name += std::to_string( sl_idx ) + nameExtension;
+        c->SaveAs((out_pdf_name + ".pdf").c_str());
+        c->SaveAs((out_pdf_name + ".png").c_str());
+        c->SaveAs((out_pdf_name + ".C").c_str());
         std::cout << "########################## Saved " << out_pdf_name << " ##########################" << std::endl;
         delete c;
 
@@ -499,10 +540,10 @@ void slice_plots(const bool normaliseByBinWidth)
         if(cov_mat_constr->GetBinContent(rb + 1, rb + 1) < 0 || cov_mat->GetBinContent(rb + 1, rb + 1) < 0)
             throw std::runtime_error("Negative diagonal covariance matrix element");
 
-        const double err_constr = std::sqrt(
-            std::max( 0., cov_mat_constr->GetBinContent(rb + 1, rb + 1) )
-        );
-        reco_mc_and_ext_hist->SetBinError( rb + 1, err_constr );
+        // const double err_constr = std::sqrt(
+        //     std::max( 0., cov_mat_constr->GetBinContent(rb + 1, rb + 1) )
+        // );
+        // reco_mc_and_ext_hist->SetBinError( rb + 1, err_constr );
 
         const double err = std::sqrt(
             std::max( 0., cov_mat->GetBinContent(rb + 1, rb + 1) )
@@ -514,8 +555,8 @@ void slice_plots(const bool normaliseByBinWidth)
             double data_evts = reco_data_hist->GetBinContent( rb + 1 );
             reco_constrained_hist->SetBinContent( rb + 1, data_evts );
             reco_constrained_hist->SetBinError( rb + 1, 0. );
-            reco_mc_and_ext_hist_no_constr->SetBinContent( rb + 1, data_evts );
-            reco_mc_and_ext_hist_no_constr->SetBinError( rb + 1, 0 );
+            // reco_mc_and_ext_hist_no_constr->SetBinContent( rb + 1, data_evts );
+            // reco_mc_and_ext_hist_no_constr->SetBinError( rb + 1, 0 );
         }
         else 
         {
@@ -545,37 +586,53 @@ void slice_plots(const bool normaliseByBinWidth)
     reco_data_hist->SetLineColor( kBlack );
     reco_data_hist->SetLineWidth( 1 );
 
-    reco_mc_and_ext_hist->SetLineColor( kRed );
-    reco_mc_and_ext_hist->SetLineStyle( 2 );
-    reco_mc_and_ext_hist->SetLineWidth( 3 );
+    // reco_mc_and_ext_hist->SetLineColor( kRed );
+    // reco_mc_and_ext_hist->SetLineStyle( 2 );
+    // reco_mc_and_ext_hist->SetLineWidth( 3 );
 
-    reco_constrained_hist->SetLineColor( kBlue );
-    reco_constrained_hist->SetLineStyle( 9 );
+    reco_mc_and_ext_hist_no_constr->SetLineColor( kOrange );
+    // reco_mc_and_ext_hist_no_constr->SetLineStyle( 2 );
+    reco_mc_and_ext_hist_no_constr->SetLineWidth( 4 );
+
+    reco_constrained_hist->SetLineColor( kGreen );
+    // reco_constrained_hist->SetLineStyle( 9 );
     reco_constrained_hist->SetLineWidth( 2 );
 
-    reco_mc_and_ext_hist_no_constr->SetLineColor( kGreen );
-    reco_mc_and_ext_hist_no_constr->SetLineStyle( 2 );
-    reco_mc_and_ext_hist_no_constr->SetLineWidth( 3 );
 
-    // Set the x-axis range to the first num_ordinary_reco_bins bins
+    // Create copies of the histograms
+    TH1* reco_mc_and_ext_hist_no_constr_copy = (TH1*)reco_mc_and_ext_hist_no_constr->Clone();
+    TH1* reco_constrained_hist_copy = (TH1*)reco_constrained_hist->Clone();
+
+        // Set the x-axis range to the first num_ordinary_reco_bins bins
     reco_data_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
-    reco_mc_and_ext_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+    // reco_mc_and_ext_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
     reco_constrained_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+    reco_mc_and_ext_hist_no_constr->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+    reco_mc_and_ext_hist_no_constr_copy->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+    reco_constrained_hist_copy->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+
+    // Apply fill styles to the copies
+    reco_mc_and_ext_hist_no_constr_copy->SetFillStyle(3004);
+    reco_mc_and_ext_hist_no_constr_copy->SetFillColor(kOrange);
+    reco_constrained_hist_copy->SetFillStyle(3005);
+    reco_constrained_hist_copy->SetFillColor(kGreen);
 
     // Draw the histograms
-    reco_data_hist->Draw( "e" );
-    reco_mc_and_ext_hist->Draw( "same hist e" );
-    // reco_mc_and_ext_hist_no_constr->Draw( "same hist e" );
-    reco_constrained_hist->Draw( "same hist e" );
-    reco_data_hist->Draw( "same e" );
+    reco_mc_and_ext_hist_no_constr_copy->Draw("e2");
+    reco_mc_and_ext_hist_no_constr->Draw("same hist");
+    // reco_constrained_hist_copy->Draw("same e2");
+    reco_constrained_hist->Draw("same hist");
+    reco_data_hist->Draw("same E1");
 
     TLegend* lg2 = new TLegend( 0.15, 0.7, 0.3, 0.85 );
     lg2->AddEntry( reco_data_hist, using_fake_data ? "fake data" : "data", "l" );
-    lg2->AddEntry( reco_mc_and_ext_hist, "uB tune + EXT", "l" );
-    lg2->AddEntry( reco_constrained_hist, "post-constraint", "l" );
+    lg2->AddEntry( reco_mc_and_ext_hist_no_constr, "uB tune + EXT", "l" );
+    lg2->AddEntry( reco_constrained_hist, "uB tune + EXT (constrained)", "l" );
     lg2->Draw( "same" );
-    c2->SaveAs("plots/constrained_plots_reco_sideband.pdf");
-    std::cout << "########################## Saved " << "plots/constrained_plots_reco_sideband.pdf" << " ##########################" << std::endl;
+    c2->SaveAs(("plots/constrained_plots_reco_sideband" + nameExtension + ".pdf").c_str());
+    c2->SaveAs(("plots/constrained_plots_reco_sideband" + nameExtension + ".png").c_str());
+    c2->SaveAs(("plots/constrained_plots_reco_sideband" + nameExtension + ".C").c_str());
+    std::cout << "########################## Saved " << "plots/constrained_plots_reco_sideband" + nameExtension + ".pdf" << " ##########################" << std::endl;
 
 
     // ******************************************************************************************************************
@@ -583,46 +640,59 @@ void slice_plots(const bool normaliseByBinWidth)
     // ******************************************************************************************************************
     TCanvas* c3 = new TCanvas;
 
-    reco_data_hist->SetLineColor( kBlack );
-    reco_data_hist->SetLineWidth( 1 );
+    // reco_data_hist->SetLineColor( kBlack );
+    // reco_data_hist->SetLineWidth( 1 );
 
-    reco_mc_and_ext_hist->SetLineColor( kRed );
-    reco_mc_and_ext_hist->SetLineStyle( 2 );
-    reco_mc_and_ext_hist->SetLineWidth( 3 );
+    // // reco_mc_and_ext_hist->SetLineColor( kGreen );
+    // // reco_mc_and_ext_hist->SetLineStyle( 2 );
+    // // reco_mc_and_ext_hist->SetLineWidth( 3 );
 
-    reco_mc_and_ext_hist_no_constr->SetLineColor( kGreen );
-    reco_mc_and_ext_hist_no_constr->SetLineStyle( 2 );
-    reco_mc_and_ext_hist_no_constr->SetLineWidth( 1 );
+    // reco_mc_and_ext_hist_no_constr->SetLineColor( kOrange );
+    // // reco_mc_and_ext_hist_no_constr->SetLineStyle( 2 );
+    // reco_mc_and_ext_hist_no_constr->SetLineWidth( 4 );
 
-    reco_constrained_hist->SetLineColor( kBlue );
-    reco_constrained_hist->SetLineStyle( 9 );
-    reco_constrained_hist->SetLineWidth( 2 );
+    // reco_constrained_hist->SetLineColor( kGreen );
+    // // reco_constrained_hist->SetLineStyle( 9 );
+    // reco_constrained_hist->SetLineWidth( 2 );
 
     // Set the x-axis range to the first num_ordinary_reco_bins bins
-    reco_data_hist->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
-    reco_mc_and_ext_hist->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
-    reco_mc_and_ext_hist_no_constr->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+    // reco_mc_and_ext_hist->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+    // reco_mc_and_ext_hist_no_constr->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
     reco_constrained_hist->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+    reco_constrained_hist_copy->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+    reco_data_hist->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+    reco_mc_and_ext_hist_no_constr->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+    reco_mc_and_ext_hist_no_constr_copy->GetXaxis()->SetRange(1, num_ordinary_reco_bins);
+
+    // // Create copies of the histograms
+    // TH1* reco_mc_and_ext_hist_no_constr_copy = (TH1*)reco_mc_and_ext_hist_no_constr->Clone();
+    // TH1* reco_constrained_hist_copy = (TH1*)reco_constrained_hist->Clone();
+
+    // // Apply fill styles to the copies
+    // reco_mc_and_ext_hist_no_constr_copy->SetFillStyle(3004);
+    // reco_mc_and_ext_hist_no_constr_copy->SetFillColor(kOrange);
+    // reco_constrained_hist_copy->SetFillStyle(3005);
+    // reco_constrained_hist_copy->SetFillColor(kGreen);
 
     // Draw the histograms
-    reco_data_hist->Draw( "e" );
-    reco_mc_and_ext_hist->Draw( "same hist e" );
-    // reco_mc_and_ext_hist_no_constr->Draw( "same hist e" );
-    reco_constrained_hist->Draw( "same hist e" );
-    reco_data_hist->Draw( "same e" );
+    reco_mc_and_ext_hist_no_constr_copy->Draw("e2");
+    reco_mc_and_ext_hist_no_constr->Draw("same hist");
+    reco_constrained_hist_copy->Draw("same e2");
+    reco_constrained_hist->Draw("same hist");
+    reco_data_hist->Draw("same E1");
 
     TLegend* lg3 = new TLegend( 0.15, 0.7, 0.3, 0.85 );
     lg3->AddEntry( reco_data_hist, using_fake_data ? "fake data" : "data", "l" );
-    lg3->AddEntry( reco_mc_and_ext_hist, "uB tune + EXT", "l" );
+    lg3->AddEntry( reco_mc_and_ext_hist_no_constr, "uB tune + EXT", "l" );
     // lg3->AddEntry( reco_mc_and_ext_hist_no_constr, "uB tune + EXT (safety check)", "l" );
     lg3->AddEntry( reco_constrained_hist, "uB tune + EXT (constrained)", "l" );
     lg3->Draw( "same" );
 
-    
 
-
-    c3->SaveAs("plots/constrained_plots_reco.pdf");
-    std::cout << "########################## Saved " << "plots/constrained_plots_reco.pdf" << " ##########################" << std::endl;
+    c3->SaveAs(("plots/constrained_plots_reco" + nameExtension + ".pdf").c_str());
+    c3->SaveAs(("plots/constrained_plots_reco" + nameExtension + ".png").c_str());
+    c3->SaveAs(("plots/constrained_plots_reco" + nameExtension + ".C").c_str());
+    std::cout << "########################## Saved " << "plots/constrained_plots_reco" + nameExtension + ".pdf" << " ##########################" << std::endl;
 
     delete data_signal_plus_bkgd, data_signal_plus_bkgd_constr, syst_ptr, syst_ptr_constr, sb_ptr;
 }
