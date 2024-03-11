@@ -91,7 +91,7 @@ int main( int argc, char* argv[] ) {
   std::cout << "Processing systematic universes for a total of "
     << input_files.size() << " input ntuple files\n";
 
-  // ROOT::EnableImplicitMT();
+  ROOT::EnableImplicitMT();
 
   // Store the name of the root TDirectoryFile created by the UniverseMaker
   // objects below. We will use it to ensure that the MCC9SystematicsCalculator

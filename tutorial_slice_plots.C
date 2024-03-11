@@ -17,7 +17,7 @@
 
 using NFT = NtupleFileType;
 
-#define USE_FAKE_DATA "yes"
+// #define USE_FAKE_DATA "yes"
 
 void scale_by_bin_width(SliceHistogram* pSlice)
 {
@@ -40,18 +40,25 @@ void slice_plots(const bool normaliseByBinWidth) {
     auto& fpm = FilePropertiesManager::Instance();
     fpm.load_file_properties( "nuwro_file_properties.txt" );
     auto* syst_ptr = new MCC9SystematicsCalculator(
-      "/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_overflow_all_13Jan23.root",
+      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_6Mar24.root", // <-- Yes the name is wrong and should say nuwro
       "systcalc_unfold_fd_min.conf" );
     std::string nameExtension = "_fd";
   #else
-    // auto* syst_ptr = new MCC9SystematicsCalculator(
-    // "...",
-    // "systcalc.conf" );
-    // std::string nameExtension = "_bnb";
+    auto &fpm = FilePropertiesManager::Instance();
+    fpm.load_file_properties("file_properties.txt");   
+    auto* syst_ptr = new MCC9SystematicsCalculator(
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_goldenPionBDTScore_cut_run1234bcd5.root", // golden pion cut plot with full uncertainties
+    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root",
+    "systcalc.conf" );
+    std::string nameExtension = "_bnb_gardiner";
+    // std::string nameExtension = "_bnb_golden_pion_cut";
   #endif
 
   std::cout<<"DEBUG tutorial_slice_plots Point 1"<<std::endl;
   auto& syst = *syst_ptr;
+
+  auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_goldenPionBDTScore.txt" );
 
   // Get access to the relevant histograms owned by the SystematicsCalculator
   // object. These contain the reco bin counts that we need to populate the
@@ -81,7 +88,6 @@ void slice_plots(const bool normaliseByBinWidth) {
   auto* matrix_map_ptr = syst.get_covariances().release();
   auto& matrix_map = *matrix_map_ptr;
 
-  auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" );
   auto& sb = *sb_ptr;
 
   for (const auto& pair : matrix_map) {
@@ -182,6 +188,7 @@ void slice_plots(const bool normaliseByBinWidth) {
 
     TCanvas* c1 = new TCanvas;
     c1->SetRightMargin(0.252); // Allow space for the legend
+    c1->SetLeftMargin(0.1); // Allow a bit more space for the y axis label on the left
     slice_bnb->hist_->SetLineColor( kBlack );
     slice_bnb->hist_->SetLineWidth( 3 );
     slice_bnb->hist_->SetMarkerStyle( kFullCircle );
@@ -227,7 +234,8 @@ void slice_plots(const bool normaliseByBinWidth) {
     slice_bnb->hist_->GetYaxis()->SetTitle(y_title.c_str());
 
     std::ostringstream oss;
-    auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
+    // auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
+    auto chi2_result = slice_mc_plus_ext->get_chi2( *slice_bnb );
     oss << "#splitline{#chi^{2} = " << std::setprecision( 3 ) << chi2_result.chi2_ << " / "
     << chi2_result.num_bins_ << " bin";
     if ( chi2_result.num_bins_ > 1 ) oss << "s";
@@ -271,8 +279,8 @@ void slice_plots(const bool normaliseByBinWidth) {
     // included in the output pgfplots file regardless of whether they appear
     // in this vector.
     
-    // std::vector< std::string > cov_mat_keys = { "total", "detVar_total", "flux", "reint", "xsec_total", "POT", "numTargets", "MCstats", "EXTstats", "BNBstats"};
-    std::vector< std::string > cov_mat_keys = { "total", "detVar_total", "flux", "reint", "xsec_multi", "xsec_AxFFCCQEshape", "xsec_DecayAngMEC", "xsec_NormCCCOH", "xsec_NormNCCOH", "xsec_RPA_CCQE", "xsec_ThetaDelta2NRad", "xsec_Theta_Delta2Npi", "xsec_VecFFCCQEshape", "xsec_XSecShape_CCMEC", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie", "POT", "numTargets", "MCstats", "EXTstats", "BNBstats"};
+    std::vector< std::string > cov_mat_keys = { "total", "detVar_total", "flux", "reint", "xsec_total", "POT", "numTargets", "MCstats", "EXTstats"};
+    // std::vector< std::string > cov_mat_keys = { "total", "detVar_total", "flux", "reint", "xsec_multi", "xsec_AxFFCCQEshape", "xsec_DecayAngMEC", "xsec_NormCCCOH", "xsec_NormNCCOH", "xsec_RPA_CCQE", "xsec_ThetaDelta2NRad", "xsec_Theta_Delta2Npi", "xsec_VecFFCCQEshape", "xsec_XSecShape_CCMEC", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie", "POT", "numTargets", "MCstats", "EXTstats", "BNBstats"};
 
     #ifdef USE_FAKE_DATA
     // cov_mat_keys = { "total", "xsec_total", "MCstats", "EXTstats", "BNBstats"};

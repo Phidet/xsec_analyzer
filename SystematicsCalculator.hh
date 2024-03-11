@@ -647,7 +647,7 @@ void SystematicsCalculator::load_universes(TDirectoryFile &total_subdir)
       if (!rw_universes_.count(univ_name))
       {
         rw_universes_[univ_name] = std::vector<std::unique_ptr<Universe>>();
-        // std::cout << "DEBUG SystematicsCalculator rw_universes_ Point 0" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator rw_universes_ Point 0" << std::endl;
       }
 
       // Move this universe into the map. Note that the automatic
@@ -655,9 +655,8 @@ void SystematicsCalculator::load_universes(TDirectoryFile &total_subdir)
       // universe ordering remains correct. We'll double-check that
       // below, though, just in case.
       auto &univ_vec = rw_universes_.at(univ_name);
-      // std::cout << "DEBUG SystematicsCalculator rw_universes_ Point 1" << std::endl;
+      std::cout << "DEBUG SystematicsCalculator rw_universes_ Point 1" << std::endl;
       univ_vec.emplace_back(std::move(temp_univ));
-      // std::cout << "DEBUG SystematicsCalculator rw_universes_ Point 1.1 rw_universes_.at(univ_name).index_: " << univ_vec.back()->index_ << std::endl;
 
       // Verify that the new universe is placed in the expected
       // position in the vector. If there's a mismatch, something has
@@ -716,7 +715,7 @@ void SystematicsCalculator::load_universes(TDirectoryFile &total_subdir)
 
 void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
 {
-  // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 1" << std::endl;
+  std::cout << "DEBUG SystematicsCalculator::build_universes() Point 1" << std::endl;
   // Set default values of flags used to signal the presence of fake data. If
   // fake data are detected, corresponding truth information will be stored and
   // a check will be performed to prevent mixing real and fake data together.
@@ -728,55 +727,57 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
   std::map<int, double> run_to_bnb_trigs_map;
   std::map<int, double> run_to_ext_trigs_map;
 
-  // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 2" << std::endl;
+  std::cout << "DEBUG SystematicsCalculator::build_universes() Point 2" << std::endl;
   const auto &fpm = FilePropertiesManager::Instance();
   const auto &data_norm_map = fpm.data_norm_map();
-  // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 3" << std::endl;
+  std::cout << "DEBUG SystematicsCalculator::build_universes() Point 3" << std::endl;
   for (const auto &run_and_type_pair : fpm.ntuple_file_map())
   {
-    // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 4" << std::endl;
+    std::cout << "DEBUG SystematicsCalculator::build_universes() Point 4" << std::endl;
     int run = run_and_type_pair.first;
+    std::cout<<"DEBUG SystematicsCalculator::build_universes() run: "<<run<<std::endl;
     const auto &type_map = run_and_type_pair.second;
+    std::cout<<"DEBUG SystematicsCalculator::build_universes() type_map.size(): "<<type_map.size()<<std::endl;
 
     const auto &bnb_file_set = type_map.at(NFT::kOnBNB);
-    // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 5" << std::endl;
+    std::cout << "DEBUG SystematicsCalculator::build_universes() Point 5" << std::endl;
     for (const std::string &bnb_file : bnb_file_set)
     {
-      // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 6" << std::endl;
+      std::cout << "DEBUG SystematicsCalculator::build_universes() Point 6 - bnb_file: " << bnb_file << std::endl;
       const auto &pot_and_trigs = data_norm_map.at(bnb_file);
 
       if (!run_to_bnb_pot_map.count(run))
       {
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 7" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 7" << std::endl;
         run_to_bnb_pot_map[run] = 0.;
         run_to_bnb_trigs_map[run] = 0.;
       }
 
-      // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 8" << std::endl;
+      std::cout << "DEBUG SystematicsCalculator::build_universes() Point 8" << std::endl;
       run_to_bnb_pot_map.at(run) += pot_and_trigs.pot_;
       run_to_bnb_trigs_map.at(run) += pot_and_trigs.trigger_count_;
-      // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 9" << std::endl;
+      std::cout << "DEBUG SystematicsCalculator::build_universes() Point 9" << std::endl;
 
     } // BNB data files
 
     // try // TODO remove try catch ? 
     // {    
       const auto &ext_file_set = type_map.at(NFT::kExtBNB);
-      // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 10" << std::endl;
+      std::cout << "DEBUG SystematicsCalculator::build_universes() Point 10" << std::endl;
       for (const std::string &ext_file : ext_file_set)
       {
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 11" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 11" << std::endl;
         const auto &pot_and_trigs = data_norm_map.at(ext_file);
 
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 12" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 12" << std::endl;
         if (!run_to_ext_trigs_map.count(run))
         {
           run_to_ext_trigs_map[run] = 0.;
         }
 
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 13" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 13" << std::endl;
         run_to_ext_trigs_map.at(run) += pot_and_trigs.trigger_count_;
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 14" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 14" << std::endl;
       } // EXT files
     // }
     // catch(const std::exception& e)
@@ -786,7 +787,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
 
   } // runs
 
-  // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 15" << std::endl;
+  std::cout << "DEBUG SystematicsCalculator::build_universes() Point 15" << std::endl;
   // Now that we have the accumulated POT over all BNB data runs, sum it
   // into a single number. This will be used to normalize the detVar MC
   // samples.
@@ -799,10 +800,10 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
   // Loop through the ntuple files for the various run / ntuple file type
   // pairs considered in the analysis. We will react differently in a run-
   // and type-dependent way.
-  // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 16" << std::endl;
+  std::cout << "DEBUG SystematicsCalculator::build_universes() Point 16" << std::endl;
   for (const auto &run_and_type_pair : fpm.ntuple_file_map())
   {
-    // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 17" << std::endl;
+    std::cout << "DEBUG SystematicsCalculator::build_universes() Point 17" << std::endl;
 
     int run = run_and_type_pair.first;
     const auto &type_map = run_and_type_pair.second;
@@ -819,7 +820,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
 
       for (const std::string &file_name : file_set)
       {
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 18" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 18" << std::endl;
 
         std::cout << "PROCESSING universes for " << file_name << '\n';
 
@@ -862,15 +863,15 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
         std::string subdir_name = ntuple_subfolder_from_file_name(
             file_name);
 
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 23 - subdir_name: " << subdir_name << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 23 - subdir_name: " << subdir_name << std::endl;
         TDirectoryFile *subdir = nullptr;
         root_tdir.GetObject(subdir_name.c_str(), subdir);
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 23.1" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 23.1" << std::endl;
         if (!subdir)
           throw std::runtime_error(
               "Missing TDirectoryFile " + subdir_name);
 
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 23.2" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 23.2" << std::endl;
         // For data, just add the reco-space event counts to the total,
         // scaling to the beam-on triggers in the case of EXT data
         if (!is_mc)
@@ -973,7 +974,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
 
         } // data ntuple files
 
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 25" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 25" << std::endl;
         // If we've made it here, then we're working with an MC ntuple
         // file. For these, all four histograms for the "unweighted"
         // universe are always evaluated. Use this to determine the number
@@ -987,7 +988,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
         int num_reco_bins = temp_2d_hist->GetYaxis()->GetNbins();
 
         // Let's handle the fake BNB data samples first.
-        // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 26" << std::endl;
+        std::cout << "DEBUG SystematicsCalculator::build_universes() Point 26" << std::endl;
         if (is_fake_data)
         {
           std::cout << "DEBUG SystematicsCalculator::build_universes() Point 27" << std::endl;
@@ -1327,7 +1328,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
 
   } // run
 
-  // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 39" << std::endl;
+  std::cout << "DEBUG SystematicsCalculator::build_universes() Point 39" << std::endl;
 
   // Everything is ready to go with one possible exception: if we're working
   // with fake data ntuples, then the "data" histograms of reco-space event
@@ -1337,7 +1338,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
   // histograms.
   if (using_fake_data)
   {
-    // std::cout << "DEBUG SystematicsCalculator::build_universes() Point 40" << std::endl;
+    std::cout << "DEBUG SystematicsCalculator::build_universes() Point 40" << std::endl;
 
     const TH1D *ext_hist = data_hists_.at(NFT::kExtBNB).get(); // EXT data
     TH1D *bnb_hist = data_hists_.at(NFT::kOnBNB).get();
@@ -1492,7 +1493,7 @@ void make_cov_mat(const SystematicsCalculator &sc, CovMatrix &cov_mat,
   // Get the expected observable values in each reco bin in the CV universe
   std::vector<double> cv_reco_obs(num_cm_bins, 0.);
 
-  // std::cout << "DEBUG cv_reco_obs: ";
+  std::cout << "DEBUG cv_reco_obs: ";
   for (size_t rb = 0u; rb < num_cm_bins; ++rb)
   {
     cv_reco_obs.at(rb) = sc.evaluate_observable(cv_univ, rb);
@@ -1518,7 +1519,7 @@ void make_cov_mat(const SystematicsCalculator &sc, CovMatrix &cov_mat,
     // current universe.
     std::vector<double> univ_reco_obs(num_cm_bins, 0.);
 
-    // std::cout << "DEBUG univ_reco_obs: ";
+    std::cout << "DEBUG univ_reco_obs: ";
     for (size_t rb = 0u; rb < num_cm_bins; ++rb)
     {
       univ_reco_obs.at(rb) = sc.evaluate_observable(*univ, rb, flux_u_idx);

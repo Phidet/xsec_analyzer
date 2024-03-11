@@ -140,8 +140,8 @@ void BDTStudy1DParticleInputVar()
         // tree->SetBranchAddress("true_golden_cc1pi", &isTrueGoldenPion);
 
         // Get the total number of entries
-        std::cout<<"WARNING - Only using 1% of the entries!!!!!!!!!"<<std::endl;
-        const auto nEntries = tree->GetEntries()/100;
+        // std::cout<<"WARNING - Only using 1% of the entries!!!!!!!!!"<<std::endl;
+        const auto nEntries = tree->GetEntries();
 
         // Loop over the entries in the tree
         for (Long64_t i = 0; i < nEntries; i++)
@@ -280,7 +280,7 @@ void BDTStudy1DParticleInputVar()
                     std::string title = variableName + " for " + runName;
                     h->SetTitle(("True CC1#pi Events Passing the #nu_#mu Preselection for " + runName).c_str());
                     // Set the y axis label
-                    std::string yAxisLabel = "# Events (area normalised)";
+                    std::string yAxisLabel = "# Reconstructed particles (area normalised)";
                     h->SetYTitle(yAxisLabel.c_str());
                     // Set the x axis label
                     std::string xAxisLabel = variableName;

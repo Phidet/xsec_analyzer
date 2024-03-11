@@ -104,9 +104,8 @@ void MakePlot(TH1D* hist, const std::string& name)
     delete c1;
 }
 
-void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = false, const bool axisTicks = true)
+void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = false, const bool axisTicks = true, const bool drawText = false)
 {
-
     // Set the color and line thickness of the histograms
     hist->SetLineColor(kGreen);
     hist->SetLineWidth(3);
@@ -123,7 +122,19 @@ void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = f
         hist->GetYaxis()->SetNdivisions(hist->GetNbinsY(), kFALSE);
     }
 
-    hist->Draw("COLZ");
+    if (drawText)
+    {
+        // Set the text format to 2 digits after the decimal point
+        gStyle->SetPaintTextFormat("4.2f");
+        // Increase the text size
+        gStyle->SetTextSize(0.2);
+        // Draw the histogram with text
+        hist->Draw("COLZ TEXT");
+    }
+    else
+    {
+        hist->Draw("COLZ");
+    }
 
     if (drawDiagonal)
     {
@@ -139,6 +150,9 @@ void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = f
         line->Draw("same");          // Draw line on the same canvas
     }
 
+    // Add more space on the right side of the plot for the z-axis labels
+    gStyle->SetPadRightMargin(0.15);
+
     c1->SaveAs(("plots/muonPIDStudy_" + name + ".pdf").c_str());
 
     // Delete the TCanvas
@@ -148,7 +162,7 @@ void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = f
 void muonPIDStudy() 
 {
     // List of files
-    const std::string rootPath = "/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/";
+    const std::string rootPath = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/";
     // tuple: type, run, file path, run weight
     const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
         std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
@@ -207,9 +221,12 @@ void muonPIDStudy()
     for (int f = 0; f < files.size(); f++)
     {
         const auto [sampleType, run, filePath, runWeight] = files.at(f);
+        std::cout<<"DEBUG - filePath: "<<filePath<<std::endl;
         // Open the file and get the tree
         TFile* tFile = TFile::Open(filePath.c_str());
         TTree* tree = (TTree*)tFile->Get("stv_tree");
+
+        std::cout<<"DEBUG - Point X0"<<std::endl;
 
         // Disable all branches
         tree->SetBranchStatus("*", 0);
@@ -222,6 +239,8 @@ void muonPIDStudy()
         tree->SetBranchStatus("spline_weight", 1);
         tree->SetBranchStatus("tuned_cv_weight", 1);
 
+        std::cout<<"DEBUG - Point X0.1"<<std::endl;
+
         // FillHistogram(tree, pdg_backtrackedMuon,
         // /*variable*/ "cc1pi_backtracked_muonPDG",
         // /*Condition*/ "cc1pi_signal && cc1pi_selected_generic", runWeight);
@@ -230,6 +249,9 @@ void muonPIDStudy()
         /*variable1*/ "cc1pi_truth_muonMomentum",
         /*variable2*/ "cc1pi_truth_pionMomentum", 
         /*Condition*/ "cc1pi_signal && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
+
+        std::cout<<"DEBUG - Point X0.2"<<std::endl;
+
         FillHistogram2D(tree, muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon, 
         /*variable1*/ "cc1pi_truth_muonMomentum",
         /*variable2*/ "cc1pi_truth_pionMomentum", 
@@ -257,6 +279,7 @@ void muonPIDStudy()
         // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_truePion, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal", runWeight);
 
 
+        std::cout<<"DEBUG - Point X1"<<std::endl;
 
         std::vector<int> *pBacktracked_absTruePDG = nullptr;
         std::vector<bool> *pIsContained = nullptr;
@@ -278,30 +301,37 @@ void muonPIDStudy()
         tree->SetBranchAddress("spline_weight", &spline_weight);
         tree->SetBranchAddress("tuned_cv_weight", &tuned_cv_weight);
 
+        std::cout<<"DEBUG - Point X2"<<std::endl;
         // Check if values is null
         if (!pMuonBDTScore || !pProtonBDTScore) throw std::runtime_error("Error: Branchnot found in the tree.");
 
-        std::cout << "Warning - Only using 3\% of the events for testing purposes." << std::endl;
-        const auto nEvents = tree->GetEntries()/33;
+        std::cout << "Warning - Only using 1\% of the events for testing purposes." << std::endl;
+        const auto nEvents = tree->GetEntries()/100;
         // Loop over the entries in the tree
         for (Long64_t i = 0; i < nEvents; i++)
         {
+            std::cout<<"DEBUG - Point X3"<<std::endl;
             tree->GetEntry(i);
+            std::cout<<"DEBUG - Point X3.1"<<std::endl;
 
             // Update the progress bar at every percent
-            if (i % (nEntries / 100) == 0)
+            if (i % (nEvents / 100) == 0)
             {
-                const auto progress = static_cast<int>(100.0 * i / nEntries);
+                const auto progress = static_cast<int>(100.0 * i / nEvents);
                 std::cout << "\r[" << std::string(progress, '|') << std::string(100 - progress, ' ') << "] " << progress << "%" << std::flush;
             }
+
+            std::cout<<"DEBUG - Point X3.2"<<std::endl;
 
             auto eventWeight = std::isfinite(spline_weight*tuned_cv_weight) && spline_weight*tuned_cv_weight >= 0 && spline_weight*tuned_cv_weight <= 30 ? spline_weight*tuned_cv_weight : 1;
             eventWeight *= runWeight; // Apply the run weight
 
+            std::cout<<"DEBUG - Point X4"<<std::endl;
             // std::cout << "DEBUG FillParticleHistogram Point pMuonBDTScore->size(): " << pMuonBDTScore->size() << std::endl;
             // Apply the condition
             if (tree->GetLeaf("cc1pi_signal")->GetValue() == true)
             {
+                std::cout<<"DEBUG - Point X5"<<std::endl;
                 // Loop over the values in the vector and fill the histogram
                 for (Long64_t v = 0; v< pProtonBDTScore->size(); v++)
                 {
@@ -346,13 +376,18 @@ void muonPIDStudy()
                         muonBDTVSrange_truePion_trueCC1pi->Fill(pTrackLength->at(v), pMuonBDTScore->at(v), eventWeight);
                         muonBDTVSTrueRange_truePion_trueCC1pi->Fill(pBacktracked_TrackLength->at(v), pMuonBDTScore->at(v), eventWeight);
                     }
+                    std::cout<<"DEBUG - Point X6"<<std::endl;
                 }
             }
+            std::cout<<"DEBUG - Point X7"<<std::endl;
         }
+        std::cout<<"DEBUG - Done with event loop"<<std::endl;
 
 
         tFile->Close();
+        std::cout<<"DEBUG - Done with file"<<std::endl;
     }
+    std::cout<<"DEBUG - Done with file loop"<<std::endl;
 
     // Area normalise
     trueCC1pi_muonBDT_trueMuon->Scale(1.0 / trueCC1pi_muonBDT_trueMuon->Integral());
@@ -527,9 +562,9 @@ void muonPIDStudy()
     // Calculate ratio
     TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio = (TH2D*)muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon->Clone("muonContainedVSMuonTrackLargerThanPionTrack_trueCC1pi_correctRecoMuon_ratio");
     muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio->Divide(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi);
-    MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio", false, false);
+    MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio", false, false, true);
 
-    MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", false, false);
+    MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", false, false, true);
 
     // Print out the values of muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio
     std::cout<<"muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio:"<<std::endl;

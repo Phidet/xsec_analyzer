@@ -381,13 +381,13 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
   }
 
   TH2D* hist2D = other.cmat_.cov_matrix_.get();
-  // std::cout<<"DEBUG chi2 other.cmat_.cov_matrix_: "<<std::endl;
-  // for (int i = 1; i <= hist2D->GetNbinsX(); i++) {
-  //     for (int j = 1; j <= hist2D->GetNbinsY(); j++) {
-  //         std::cout << hist2D->GetBinContent(i, j) << " ";
-  //     }
-  //     std::cout << std::endl;
-  // }
+  std::cout<<"DEBUG chi2 other.cmat_.cov_matrix_: "<<std::endl;
+  for (int i = 1; i <= hist2D->GetNbinsX(); i++) {
+      for (int j = 1; j <= hist2D->GetNbinsY(); j++) {
+          std::cout << hist2D->GetBinContent(i, j) << " ";
+      }
+      std::cout << std::endl;
+  }
 
   // The total covariance matrix on the difference between the
   // two histograms is just the sum of each individual SliceHistogram's
@@ -399,25 +399,26 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
   // Get access to a TMatrixD object representing the covariance matrix.
   auto cov_matrix = cov_mat.get_matrix();
 
-  // std::cout<<"DEBUG chi2 covariance matrix: "<<std::endl;
-  // for (int i = 0; i < cov_matrix->GetNrows(); ++i) {
-  //   for (int j = 0; j < cov_matrix->GetNcols(); ++j) {
-  //     std::cout << cov_matrix->operator()(i, j) << " ";
-  //   }
-  //   std::cout << std::endl;
-  // }
+  std::cout<<"DEBUG chi2 covariance matrix: "<<std::endl;
+  for (int i = 0; i < cov_matrix->GetNrows(); ++i) {
+    for (int j = 0; j < cov_matrix->GetNcols(); ++j) {
+      std::cout << cov_matrix->operator()(i, j) << " ";
+    }
+    std::cout << std::endl;
+  }
 
   // Invert the covariance matrix
   auto inverse_cov_matrix = invert_matrix( *cov_matrix, inversion_tol );
 
-  // std::cout<<"DEBUG chi2 inverse covariance matrix: "<<std::endl;
-  // for (int i = 0; i < inverse_cov_matrix->GetNrows(); ++i) {
-  //   for (int j = 0; j < inverse_cov_matrix->GetNcols(); ++j) {
-  //     std::cout << inverse_cov_matrix->operator()(i, j) << " ";
-  //   }
-  //   std::cout << std::endl;
-  // }
+  std::cout<<"DEBUG chi2 inverse covariance matrix: "<<std::endl;
+  for (int i = 0; i < inverse_cov_matrix->GetNrows(); ++i) {
+    for (int j = 0; j < inverse_cov_matrix->GetNcols(); ++j) {
+      std::cout << inverse_cov_matrix->operator()(i, j) << " ";
+    }
+    std::cout << std::endl;
+  }
 
+  std::cout<<"DEBUG diff_vec: ";
   // Create a 1D vector containing the difference between the two slice
   // histograms in each bin
   TMatrixD diff_vec( 1, num_bins );
@@ -425,11 +426,24 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
     // Note the one-based bin indices used for ROOT histograms
     double counts = hist_->GetBinContent( a + 1 );
     double other_counts = other.hist_->GetBinContent( a + 1 );
+
+    // if(a <10 || a>28)
+    // {
+    //   std::cout<<" !!!!!!!!!! WARNING !!!!!!!!!!: Skipping bins in chi2 calculation."<<std::endl;
+    //   counts = other_counts;
+    // }
+
     diff_vec( 0, a ) = counts - other_counts;
+
+    std::cout<<" "<<diff_vec( 0, a )<<"("<<std::sqrt(hist2D->GetBinContent(a+1, a+1))<<")";
 
     // Print out the counts for each bin
     // std::cout << "DEBUG chi2 bin " << a + 1 << ": " << counts << " " << other_counts << " diff: "<< diff_vec( 0, a ) << std::endl;
   }
+  std::cout<<std::endl;
+
+  // std::cout<<" !!!!!!!!!! WARNING !!!!!!!!!!: Skipping bins in chi2 calculation."<<std::endl;
+  // num_bins--; // Removes the last bin from the calculation
 
   // Multiply diff * covMat^{-1} * diff^{T} to get chi-squared
   TMatrixD temp1( diff_vec, TMatrixD::kMult, *inverse_cov_matrix );

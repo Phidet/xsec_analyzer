@@ -149,14 +149,20 @@ void slice_plots(const bool normaliseByBinWidth)
     const bool using_fake_data = true;
 #else
     auto &fpm = FilePropertiesManager::Instance();
-    fpm.load_file_properties("file_properties_run1.txt");   
-    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_reduced_muonCosTheta_run1_3Mar24.root");
-    std::string nameExtension = "_bnb_reduced_constrained";
+    fpm.load_file_properties("file_properties.txt");   
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_reduced_muonCosTheta_run1_3Mar24.root");
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_reduced_muonCosTheta_run1234bcd5_5Mar24.root");
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noExtraBDTCuts_reduced_muonCosTheta_run1234bcd5_5Mar24.root");
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24.root");
+    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root");
+    // std::string nameExtension = "_bnb_reduced_constrained";
+    std::string nameExtension = "_bnb_constrained_allRuns";
     const bool using_fake_data = false;
 #endif
 
+    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" ); // all
     // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
-    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" ); // muonCosTheta and muonMomentum
+    // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" ); // muonCosTheta and muonMomentum
     auto& sb = *sb_ptr;
 
     // ******************************************************************************************************************
@@ -179,8 +185,8 @@ void slice_plots(const bool normaliseByBinWidth)
     const auto meas = syst.get_measured_events();
     const auto &data_signal = meas.reco_signal_; // Background-subtracted data event counts in the ordinary reco bins
     const auto &data_bkgd = meas.reco_bkgd_; // Background that was subtracted from each reco bin to form the signal measurement
-    const auto &data_mc_plus_ext = meas.reco_mc_plus_ext_; // Total MC+EXT prediction in each reco bin
-    const auto &data_covmat = meas.cov_matrix_; // Covariance matrix for the background-subtracted data
+    const auto &mc_plus_ext = meas.reco_mc_plus_ext_; // Total MC+EXT prediction in each reco bin
+    const auto &mc_plus_ext_covmat = meas.cov_matrix_; // Covariance matrix for the mc+ext prediction
     const auto *data_signal_plus_bkgd = new TMatrixD(*data_signal, TMatrixD::EMatrixCreatorsOp2::kPlus, *data_bkgd);
 
     // Get the unconstrained reco ext & mc + ext histograms
@@ -189,6 +195,8 @@ void slice_plots(const bool normaliseByBinWidth)
     reco_ext_hist->Clone("reco_mc_plus_ext_hist") );
     reco_mc_plus_ext_hist->SetDirectory( nullptr );
     reco_mc_plus_ext_hist->Add( syst.cv_universe().hist_reco_.get() );
+
+    TH1D* reco_bnb_hist = syst.data_hists_.at( NFT::kOnBNB ).get();
 
     // Get the map of covariance matrices
     const auto* matrix_map_ptr = syst.get_covariances().release();
@@ -222,8 +230,8 @@ void slice_plots(const bool normaliseByBinWidth)
     const auto meas_constr = syst_constr.get_measured_events();
     const auto &data_signal_constr = meas_constr.reco_signal_;
     const auto &data_bkgd_constr = meas_constr.reco_bkgd_;
-    const auto &data_mc_plus_ext_constr = meas_constr.reco_mc_plus_ext_;
-    const auto &data_covmat_constr = meas_constr.cov_matrix_;
+    const auto &mc_plus_ext_constr = meas_constr.reco_mc_plus_ext_;
+    const auto &mc_plus_ext_covmat_constr = meas_constr.cov_matrix_;
     const auto *data_signal_plus_bkgd_constr = new TMatrixD(*data_signal_constr, TMatrixD::EMatrixCreatorsOp2::kPlus, *data_bkgd_constr);
 
     // Get the map of covariance matrices (identical to unconstrained map)
@@ -349,15 +357,21 @@ void slice_plots(const bool normaliseByBinWidth)
         const auto &slice = sb.slices_.at(sl_idx);
 
         // Make histograms in slice space.
-        SliceHistogram *slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
-            *data_mc_plus_ext, slice, data_covmat.get());
+        // SliceHistogram *slice_mc_plus_ext = SliceHistogram::make_slice_histogram( // <-- Using get_meas_events() instead (same as constraint); Has a normalisation issue
+        //     *mc_plus_ext, slice, mc_plus_ext_covmat.get());
+
+        SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
+          *reco_mc_plus_ext_hist, slice, &matrix_map.at("total") );
 
         SliceHistogram *slice_reco_signal_plus_bkgd = SliceHistogram::make_slice_histogram(
             *data_signal_plus_bkgd, slice, matrix_map.at("BNBstats").get_matrix().get());
 
+        SliceHistogram* slice_reco_bnb = SliceHistogram::make_slice_histogram(
+          *reco_bnb_hist, slice, &matrix_map.at("BNBstats") );
+
         // Make constrained versions of the histograms
         SliceHistogram *slice_mc_plus_ext_constr= SliceHistogram::make_slice_histogram(
-            *data_mc_plus_ext_constr, slice, data_covmat_constr.get());
+            *mc_plus_ext_constr, slice, mc_plus_ext_covmat_constr.get());
 
         SliceHistogram *slice_reco_signal_plus_bkgd_constr = SliceHistogram::make_slice_histogram(
             *data_signal_plus_bkgd_constr, slice, matrix_map_constr.at("BNBstats").get_matrix().get() );
@@ -365,8 +379,8 @@ void slice_plots(const bool normaliseByBinWidth)
 
         // Create plot for the unconstrained covariance matrix
         TCanvas* cCov = new TCanvas;
-        auto data_corrmat = util::CovarianceMatrixToCorrelationMatrix( *data_covmat );
-        // Plot the TMatrixD data_covmat as a colz plot
+        auto data_corrmat = util::CovarianceMatrixToCorrelationMatrix( *mc_plus_ext_covmat );
+        // Plot the TMatrixD mc_plus_ext_covmat as a colz plot
         data_corrmat.Draw("colz");
         gStyle->SetOptStat(0); // Add this line to remove the stats box
 
@@ -384,8 +398,8 @@ void slice_plots(const bool normaliseByBinWidth)
 
         //  Create plot for the constrained covariance matrix
         TCanvas* cCovConstr = new TCanvas;
-        auto data_corrmat_constr = util::CovarianceMatrixToCorrelationMatrix( *data_covmat_constr );
-        // Plot the TMatrixD data_covmat as a colz plot
+        auto data_corrmat_constr = util::CovarianceMatrixToCorrelationMatrix( *mc_plus_ext_covmat_constr );
+        // Plot the TMatrixD mc_plus_ext_covmat as a colz plot
         data_corrmat_constr.Draw("colz");
         gStyle->SetOptStat(0); // Add this line to remove the stats box
 
@@ -411,6 +425,7 @@ void slice_plots(const bool normaliseByBinWidth)
         if(normaliseByBinWidth) scale_by_bin_width(slice_reco_signal_plus_bkgd);
         if(normaliseByBinWidth) scale_by_bin_width(slice_mc_plus_ext_constr);
         if(normaliseByBinWidth) scale_by_bin_width(slice_reco_signal_plus_bkgd_constr);
+        if(normaliseByBinWidth) scale_by_bin_width(slice_reco_bnb);
 
         TCanvas* c = new TCanvas;
         // Set the color and line thickness of the histograms
@@ -419,17 +434,22 @@ void slice_plots(const bool normaliseByBinWidth)
         slice_reco_signal_plus_bkgd->hist_->SetLineColor(kBlack);
         slice_reco_signal_plus_bkgd->hist_->SetLineWidth(1);
 
+        slice_reco_bnb->hist_->SetLineColor(kBlue);
+        slice_reco_bnb->hist_->SetLineWidth(2);
+
         slice_mc_plus_ext_constr->hist_->SetLineColor(kGreen);
         slice_mc_plus_ext_constr->hist_->SetLineWidth(2);
         // slice_mc_plus_ext_constr->hist_->SetLineStyle(2);
-        // slice_reco_signal_plus_bkgd_constr->hist_->SetLineColor(kRed);
-        // slice_reco_signal_plus_bkgd_constr->hist_->SetLineStyle(2);
+        slice_reco_signal_plus_bkgd_constr->hist_->SetLineColor(kRed);
+        slice_reco_signal_plus_bkgd_constr->hist_->SetLineStyle(2);
 
         // Set the minimum value of the y-axis to 0
         slice_mc_plus_ext->hist_->SetMinimum(0.0);
         slice_reco_signal_plus_bkgd->hist_->SetMinimum(0.0);
         slice_mc_plus_ext_constr->hist_->SetMinimum(0.0);
-        // slice_reco_signal_plus_bkgd_constr->hist_->SetMinimum(0.0);
+        slice_reco_signal_plus_bkgd_constr->hist_->SetMinimum(0.0);
+        slice_reco_bnb->hist_->SetMinimum(0.0);
+        
 
         // Create copies of the histograms
         TH1* slice_mc_plus_ext_hist_copy = (TH1*)slice_mc_plus_ext->hist_->Clone();
@@ -449,6 +469,7 @@ void slice_plots(const bool normaliseByBinWidth)
         slice_reco_signal_plus_bkgd->hist_->Draw("E1 same");
 
         // slice_reco_signal_plus_bkgd_constr->hist_->Draw("E hist same");
+        // slice_reco_bnb->hist_->Draw("E hist same");
 
         // Convert chi2 values to strings
         std::string chi2Str = " - Chi2: " + std::to_string(chi2.chi2_);
@@ -460,6 +481,7 @@ void slice_plots(const bool normaliseByBinWidth)
         legendSlice->AddEntry(slice_mc_plus_ext_constr->hist_.get(), ("MC+EXT (constr)" + chi2ConstStr).c_str(), "l");
         legendSlice->AddEntry(slice_reco_signal_plus_bkgd->hist_.get(), "Data", "l");
         // legendSlice->AddEntry(slice_reco_signal_plus_bkgd_constr->hist_.get(), "Data (constr)", "l");
+        // legendSlice->AddEntry(slice_reco_bnb->hist_.get(), "BNB", "l");
         legendSlice->Draw();
 
         std::string out_pdf_name = "plots/constrained_plots_slice_";

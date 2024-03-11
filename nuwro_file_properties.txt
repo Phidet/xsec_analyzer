@@ -3,21 +3,29 @@
 # file_name run file_type [triggers POT (for data only)]
 #
 ##### Beam-off data
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380078 0
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root 1 extBNB 65744587 0
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root 2 extBNB 153928909 0
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root 3 extBNB 207380080 0
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root 4 extBNB 210851430 0
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root 5 extBNB 107494728 0
 #
-##### Full beam-on data
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 onBNB 68603417 3.08672e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 onBNB 74407431 3.14546e20
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 onBNB 75564514 3.154e20
+##### Full beam-on data (nuwro)
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 onBNB 68603317 3.08672e20
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 onBNB 74407538 3.14546e20
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 onBNB 75897605 3.154e20
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run4_pelee_ubcc1pi.root 4 onBNB 80699114 3.47601e20
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run5_pelee_ubcc1pi.root 5 onBNB 88073949 3.68372e20
 #
 ##### Numu MC samples
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root 1 numuMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root 2 numuMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root 3 numuMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root 4 numuMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root 5 numuMC
 #
 ##### NuWro numuMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
-/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/100Percent_10/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/nuwro_fakedata_peleeTuple_uboone_run1_ubcc1pi.root 1 altCVMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/nuwro_fakedata_peleeTuple_uboone_run2_ubcc1pi.root 2 altCVMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/nuwro_fakedata_peleeTuple_uboone_run3_ubcc1pi.root 3 altCVMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run4_pelee_ubcc1pi.root 4 altCVMC
+/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/high_stat_prodgenie_bnb_nu_nuwro_overlay_run5_pelee_ubcc1pi.root 5 altCVMC
