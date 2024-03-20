@@ -149,20 +149,27 @@ void slice_plots(const bool normaliseByBinWidth)
     const bool using_fake_data = true;
 #else
     auto &fpm = FilePropertiesManager::Instance();
-    fpm.load_file_properties("file_properties.txt");   
+    fpm.load_file_properties("file_properties_testingOnly.txt");
     // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_reduced_muonCosTheta_run1_3Mar24.root");
     // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_reduced_muonCosTheta_run1234bcd5_5Mar24.root");
     // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noExtraBDTCuts_reduced_muonCosTheta_run1234bcd5_5Mar24.root");
     // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24.root");
-    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root");
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root");
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noExtraBDTCuts_noGolden_run1234bcd5_12Mar24.root");
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noGolden_noProton_run1234bcd5_12Mar24.root");
+
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_18Mar24_noExtraBDTCuts_noGolden_noProton.root");
+    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_18Mar24_noGolden_noProton.root");
     // std::string nameExtension = "_bnb_reduced_constrained";
-    std::string nameExtension = "_bnb_constrained_allRuns";
+    // std::string nameExtension = "_bnb_noExtraBDTCuts_noGolden_noProton";
+    std::string nameExtension = "_bnb_noGolden_noProton";
     const bool using_fake_data = false;
 #endif
 
-    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" ); // all
+    // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" ); // all
     // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
     // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" ); // muonCosTheta and muonMomentum
+    auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_noGolden_noProton.txt" ); // no pion momentum and proton multipllcity
     auto& sb = *sb_ptr;
 
     // ******************************************************************************************************************
@@ -302,8 +309,24 @@ void slice_plots(const bool normaliseByBinWidth)
     TCanvas* cCorrTotal = new TCanvas;
     const auto total_covmat_tmatrixd = util::TH2DToTMatrixD(*total_covmat);
     auto total_corrmat = util::CovarianceMatrixToCorrelationMatrix( total_covmat_tmatrixd );
-    total_corrmat.Draw("colz");
+    // total_corrmat.Draw("colz");
     gStyle->SetOptStat(0); // Add this line to remove the stats box
+
+    // Convert the TMatrixT<double> to a TH2D
+    int nRows = total_corrmat.GetNrows();
+    int nCols = total_corrmat.GetNcols();
+    TH2D h("h", "", nCols, 0, nCols, nRows, 0, nRows);
+    for (int i = 1; i <= nRows; i++) {
+        for (int j = 1; j <= nCols; j++) {
+            h.SetBinContent(j, i, total_corrmat(i-1, j-1));
+        }
+    }
+
+    // Set the range of the z-axis
+    h.GetZaxis()->SetRangeUser(-1, 1);
+
+    // Draw the histogram
+    h.Draw("colz");
 
     // Draw dotted lines to separate the sideband and the signal region
     // use the size of the TMatrixD total_covmat_tmatrixd and draw a vertical and a horizontal line between half the bins
@@ -535,26 +558,30 @@ void slice_plots(const bool normaliseByBinWidth)
     const auto& cv_univ = syst_constr.cv_universe();
     int num_reco_bins = reco_data_hist->GetNbinsX();
 
-    std::cout << "DEBUG constrained_slice_plots Point 8" << std::endl;
-    // Clone the reco data hist twice. We will fill the clones with the CV
-    // MC+EXT prediction and the constrained one
-    TH1D* reco_mc_and_ext_hist = dynamic_cast< TH1D* >(
-    reco_data_hist->Clone( "reco_mc_and_ext_hist" )
-    );
+    // std::cout << "DEBUG constrained_slice_plots Point 8" << std::endl;
+    // // Clone the reco data hist twice. We will fill the clones with the CV
+    // // MC+EXT prediction and the constrained one
+    // TH1D* reco_mc_and_ext_hist = dynamic_cast< TH1D* >(
+    // reco_data_hist->Clone( "reco_mc_and_ext_hist" )
+    // );
 
-    reco_mc_and_ext_hist->Reset();
-    reco_mc_and_ext_hist->Add( reco_ext_hist );
-    reco_mc_and_ext_hist->Add( cv_univ.hist_reco_.get() );
+    // reco_mc_and_ext_hist->Reset();
+    // reco_mc_and_ext_hist->Add( reco_ext_hist );
+    // reco_mc_and_ext_hist->Add( cv_univ.hist_reco_.get() );
 
     TH1D* reco_constrained_hist = dynamic_cast< TH1D* >(
     reco_data_hist->Clone( "reco_constrained_hist" )
     );
     reco_constrained_hist->Reset();
 
-    // reco_mc_and_ext_hist_no_constr serves as a safety check that
-    // reco_mc_and_ext_hist uncertainties do not change when set the same way as reco_constrained_hist
+    // // reco_mc_and_ext_hist_no_constr serves as a safety check that
+    // // reco_mc_and_ext_hist uncertainties do not change when set the same way as reco_constrained_hist
+    // TH1D* reco_mc_and_ext_hist_no_constr = dynamic_cast< TH1D* >(
+    //     reco_mc_and_ext_hist->Clone( "reco_mc_and_ext_hist_no_constr" )
+    // );
+
     TH1D* reco_mc_and_ext_hist_no_constr = dynamic_cast< TH1D* >(
-        reco_mc_and_ext_hist->Clone( "reco_mc_and_ext_hist_no_constr" )
+        reco_mc_plus_ext_hist->Clone( "reco_mc_and_ext_hist_no_constr" )
     );
 
     // Get the post-constraint event counts and covariance matrix in the signal region
@@ -590,14 +617,26 @@ void slice_plots(const bool normaliseByBinWidth)
             reco_constrained_hist->SetBinContent( rb + 1, constr_pred );
             reco_constrained_hist->SetBinError( rb + 1, constr_err );
 
-            double pred = meas.reco_mc_plus_ext_->operator()( rb, 0 );
-            double err = std::sqrt(
-            std::max( 0., meas.cov_matrix_->operator()(rb, rb) )
-            );
-            reco_mc_and_ext_hist_no_constr->SetBinContent( rb + 1, pred );
-            reco_mc_and_ext_hist_no_constr->SetBinError( rb + 1, err );
+            // double pred = meas.reco_mc_plus_ext_->operator()( rb, 0 );
+            // double err = std::sqrt(
+            // std::max( 0., meas.cov_matrix_->operator()(rb, rb) )
+            // );
+            // reco_mc_and_ext_hist_no_constr->SetBinContent( rb + 1, pred );
+            // reco_mc_and_ext_hist_no_constr->SetBinError( rb + 1, err );
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // ******************************************************************************************************************
@@ -625,11 +664,10 @@ void slice_plots(const bool normaliseByBinWidth)
     TH1* reco_mc_and_ext_hist_no_constr_copy = (TH1*)reco_mc_and_ext_hist_no_constr->Clone();
     TH1* reco_constrained_hist_copy = (TH1*)reco_constrained_hist->Clone();
 
-        // Set the x-axis range to the first num_ordinary_reco_bins bins
+    // Set the x-axis range to the first num_ordinary_reco_bins bins
     reco_data_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
-    // reco_mc_and_ext_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
-    reco_constrained_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
-    reco_mc_and_ext_hist_no_constr->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+    // reco_constrained_hist->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
+    // reco_mc_and_ext_hist_no_constr->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
     reco_mc_and_ext_hist_no_constr_copy->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
     reco_constrained_hist_copy->GetXaxis()->SetRange(num_ordinary_reco_bins+1, 2*num_ordinary_reco_bins);
 
@@ -643,7 +681,7 @@ void slice_plots(const bool normaliseByBinWidth)
     reco_mc_and_ext_hist_no_constr_copy->Draw("e2");
     reco_mc_and_ext_hist_no_constr->Draw("same hist");
     // reco_constrained_hist_copy->Draw("same e2");
-    reco_constrained_hist->Draw("same hist");
+    reco_constrained_hist_copy->Draw("same hist");
     reco_data_hist->Draw("same E1");
 
     TLegend* lg2 = new TLegend( 0.15, 0.7, 0.3, 0.85 );

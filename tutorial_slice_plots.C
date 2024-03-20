@@ -17,7 +17,7 @@
 
 using NFT = NtupleFileType;
 
-// #define USE_FAKE_DATA "yes"
+#define USE_FAKE_DATA "yes"
 
 void scale_by_bin_width(SliceHistogram* pSlice)
 {
@@ -38,19 +38,22 @@ void slice_plots(const bool normaliseByBinWidth) {
     // Initialize the FilePropertiesManager and tell it to treat the NuWro
     // MC ntuples as if they were data
     auto& fpm = FilePropertiesManager::Instance();
-    fpm.load_file_properties( "nuwro_file_properties.txt" );
+    // fpm.load_file_properties( "nuwro_file_properties.txt" );
+    fpm.load_file_properties( "nuwro_file_properties_testingOnly.txt" );
     auto* syst_ptr = new MCC9SystematicsCalculator(
-      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_6Mar24.root", // <-- Yes the name is wrong and should say nuwro
+      // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_6Mar24.root", // <-- Yes the name is wrong and should say nuwro
+      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_14Mar24_testingOnly.root",  // <-- Yes the name is wrong and should say nuwro
       "systcalc_unfold_fd_min.conf" );
-    std::string nameExtension = "_fd";
+    std::string nameExtension = "_fd_testingOnly";
   #else
     auto &fpm = FilePropertiesManager::Instance();
     fpm.load_file_properties("file_properties.txt");   
     auto* syst_ptr = new MCC9SystematicsCalculator(
     // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_goldenPionBDTScore_cut_run1234bcd5.root", // golden pion cut plot with full uncertainties
-    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root",
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root",
+    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noExtraBDTCuts_reduced_muonCosTheta_run1234bcd5_5Mar24.root"
     "systcalc.conf" );
-    std::string nameExtension = "_bnb_gardiner";
+    std::string nameExtension = "_bnb_noExtraBDTCuts";
     // std::string nameExtension = "_bnb_golden_pion_cut";
   #endif
 
@@ -59,6 +62,7 @@ void slice_plots(const bool normaliseByBinWidth) {
 
   auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" );
   // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_goldenPionBDTScore.txt" );
+  // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
 
   // Get access to the relevant histograms owned by the SystematicsCalculator
   // object. These contain the reco bin counts that we need to populate the
@@ -188,7 +192,7 @@ void slice_plots(const bool normaliseByBinWidth) {
 
     TCanvas* c1 = new TCanvas;
     c1->SetRightMargin(0.252); // Allow space for the legend
-    c1->SetLeftMargin(0.1); // Allow a bit more space for the y axis label on the left
+    c1->SetLeftMargin(0.13); // Allow a bit more space for the y axis label on the left
     slice_bnb->hist_->SetLineColor( kBlack );
     slice_bnb->hist_->SetLineWidth( 3 );
     slice_bnb->hist_->SetMarkerStyle( kFullCircle );
@@ -218,17 +222,21 @@ void slice_plots(const bool normaliseByBinWidth) {
     slice_pred_stack->Draw( "hist same" );
 
     slice_mc_plus_ext->hist_->SetLineWidth( 3 );
-    slice_mc_plus_ext->hist_->SetFillColor(kGray + 2);
-    slice_mc_plus_ext->hist_->SetFillStyle(3003);
+    slice_mc_plus_ext->hist_->SetFillColor(kGray + 1);
+    slice_mc_plus_ext->hist_->SetFillStyle(3244);
     slice_mc_plus_ext->hist_->Draw( "same E2" );
     // Create a dummy histogram with the same style as slice_mc_plus_ext
     TH1F *dummy = new TH1F(*(TH1F*)slice_mc_plus_ext->hist_.get());
-    dummy->SetFillColor(kGray + 2);
-    dummy->SetFillStyle(3003);
+    dummy->SetFillColor(kGray + 1);
+    dummy->SetFillStyle(3244);
     lg->AddEntry(dummy, "MC & EXT Uncertainties", "f");
 
     slice_bnb->hist_->Draw( "same e" );
-    lg->AddEntry( slice_bnb->hist_.get(), "Data (beam on)", "lp" );
+    #ifdef USE_FAKE_DATA
+      lg->AddEntry( slice_bnb->hist_.get(), "NuWro Fake-data", "lp" );
+    #else
+      lg->AddEntry( slice_bnb->hist_.get(), "Data (Beam On)", "lp" );
+    #endif
     slice_bnb->hist_->SetTitle("Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
     const std::string y_title = normaliseByBinWidth ? "Events / Bin width" : "Events";
     slice_bnb->hist_->GetYaxis()->SetTitle(y_title.c_str());

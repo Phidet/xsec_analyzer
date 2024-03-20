@@ -427,7 +427,7 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
     double counts = hist_->GetBinContent( a + 1 );
     double other_counts = other.hist_->GetBinContent( a + 1 );
 
-    // if(a <10 || a>28)
+    // if(a==num_bins-1)
     // {
     //   std::cout<<" !!!!!!!!!! WARNING !!!!!!!!!!: Skipping bins in chi2 calculation."<<std::endl;
     //   counts = other_counts;
