@@ -28,11 +28,17 @@ void BDTStudy1DVsData()
         std::make_tuple("beam off", "4bcd", rootPath + "bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root", 0.30175),
         std::make_tuple("beam off", "5",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root", 0.32807),
 
-        std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
-        std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
-        std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
-        std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
-        std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
+        // std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
+        // std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
+        // std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
+        // std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
+        // std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
+
+        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011*2.0), // Times two because the scaling is for the full MC and this is only half
+        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750*2.0),
+        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113*2.0),
+        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074*2.0),
+        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196*2.0),
 
         std::make_tuple("dirt mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root", 0.52806),
         std::make_tuple("dirt mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root", 0.27521),
@@ -41,7 +47,7 @@ void BDTStudy1DVsData()
         std::make_tuple("dirt mc", "5",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_ubcc1pi.root", 0.41280),
     };
 
-    const std::vector<std::string> runs {"0", "1", "2", "3", "4bcd", "5"}; // Here 0 is the full set of all runs
+    const std::vector<std::string> runs = {"0", "1", "2", "3", "4bcd", "5"}; // Here 0 is the full set of all runs
     const std::vector<std::string> bdts = {"muonBDTScore", "protonBDTScore", "goldenPionBDTScore", "logBragg_pToMIP", "logBragg_piToMIP", "truncMeandEdx", "wiggliness", "trackScore", "nDescendents"};
     // const std::vector<std::string> types = {"EXT", "Dirt", "E", "Photon", "K", "P", "Mu", "Pi", "Golden Pi", "Beam On"};
     const std::vector<std::string> types = {"Other", "P", "Mu", "Pi", "Golden Pi", "Beam On"};
@@ -312,8 +318,10 @@ void BDTStudy1DVsData()
     std::cout << "DEBUG: Finished setting particle colors" << std::endl;
     for (const auto& run : runs)
     {
+        std::cout << "DEBUG Point Y - run " << run << std::endl;
         for (const auto& bdt : bdts)
         {
+            std::cout << "DEBUG Point X - bdt " << bdt << std::endl;
             const auto [nBinsBDT, xMin, xMax, xAxisLog] = binningInfo.at(bdt);
             std::cout << "DEBUG Point Z0" << std::endl;
             const auto outName = "BDTStudy1DVsData_run" + run + "_" + bdt;
@@ -457,9 +465,9 @@ void BDTStudy1DVsData()
             }
             std::cout << "DEBUG Point Z5" << std::endl;
 
-            c->SaveAs(("plots/" + outName + ".pdf").c_str());
-            // c->SaveAs(("plots2/" + outName + ".png").c_str());
-            // c->SaveAs(("plots2/" + outName + ".C").c_str());
+            c->SaveAs(("plots/" + outName + "_onlyTesting.pdf").c_str());
+            // c->SaveAs(("plots/" + outName + "_onlyTesting.png").c_str());
+            // c->SaveAs(("plots/" + outName + "_onlyTesting.C").c_str());
         }
     }
 }

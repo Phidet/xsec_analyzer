@@ -87,7 +87,7 @@ void plot_frac_slice( const Slice& slice, const std::map< std::string, CovMatrix
     total_frac_err_hist->SetLineStyle( 9 );
     total_frac_err_hist->SetLineWidth( 3 );
     total_frac_err_hist->Draw( "hist" );
-    total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Np, N #geq 0 Events");
+    total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Xp, N #geq 0 Events");
     total_frac_err_hist->GetYaxis()->SetTitle("Fractional Uncertainty");
 
     lg2->AddEntry( total_frac_err_hist, "total", "l" );

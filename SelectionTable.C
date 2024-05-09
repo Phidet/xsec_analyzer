@@ -19,17 +19,11 @@ void SelectionTable()
         std::make_tuple("beam off", "4bcd", rootPath + "bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root", 0.30175),
         std::make_tuple("beam off", "5",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root", 0.32807),
 
-        // std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
-        // std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
-        // std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
-        // std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
-        // std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
-
-        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011/2.0),
-        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750/2.0),
-        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113/2.0),
-        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074/2.0),
-        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196/2.0),
+        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011*2.0), // Times two because the scaling is for the full MC and this is only half
+        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750*2.0),
+        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113*2.0),
+        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074*2.0),
+        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196*2.0),
 
         std::make_tuple("dirt mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root", 0.52806),
         std::make_tuple("dirt mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root", 0.27521),
@@ -38,32 +32,39 @@ void SelectionTable()
         std::make_tuple("dirt mc", "5",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_ubcc1pi.root", 0.41280),
     };
 
-    std::vector<std::string> cuts {
-        "all", // <-- All
-        "passed_particleTrackScore",
-        "passed_particleVertexDistance",
-        "passed_particleGeneration",
-        "passed_particleTrackLength",
-        "passed_particleProtonChi2",
-        "passed_particleMuonChi2",
-        "passed_particleProtonChi2OverMuonChi2",
-        "passed_pandoraNuPDGIsNumu",
-        "passed_daughterVerticesContained",
-        "passed_nuVertexFiducial",
-        "passed_topologicalOrFlashMatch",
-        "passed_topologicalScoreCC",
-        "passed_min2Tracks",
-        "passed_max1Uncontained",
-        "passed_2NonProtons",
-        "passed_pionHasValiddEdx",
-        "passed_pionNotInGap",
-        "passed_muonNotInGap",
-        "passed_topologicalScore",
-        "passed_startNearVertex",
-        "passed_openingAngle",
-        "passed_likelyGoldenPion"
+    // Vector of pairs; pair: stop when cut is failed, cut formula
+    std::vector<std::pair<bool, std::string>> cuts {
+        {true, "all"}, // <-- All
+        {true, "passed_particleTrackScore"},
+        {true, "passed_particleVertexDistance"},
+        {true, "passed_particleGeneration"},
+        {true, "passed_particleTrackLength"},
+        {true, "passed_particleProtonChi2"},
+        {true, "passed_particleMuonChi2"},
+        {true, "passed_particleProtonChi2OverMuonChi2"},
+        //{true, "passed_pandoraNuPDGIsNumu"},
+        {true, "passed_daughterVerticesContained"},
+        {true, "passed_nuVertexFiducial"},
+        {true, "passed_topologicalOrFlashMatch"},
+        //{true, "passed_topologicalScoreCC"},
+        {true, "passed_min2Tracks"},
+        {true, "passed_max1Uncontained"},
+        {true, "passed_2NonProtons"},
+        {true, "passed_pionHasValiddEdx"},
+        {true, "passed_pionNotInGap"},
+        {true, "passed_muonNotInGap"},
+        {true, "passed_topologicalScore"},
+        {true, "passed_startNearVertex"},
+        {true, "passed_openingAngle"},
+        {true, "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15"},
+        {true, "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1"},
+        // Contained Muon Selection
+        {false, "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1 && cc1pi_recoMuon_IsContained"},
+        // Golden pion selection
+        {true, "passed_likelyGoldenPion && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1"}, // Opening angle cut is already applied to passed_likelyGoldenPion
     };
 
+    // Vector of pairs; pair: show in latex, cut name
     std::vector<std::pair<bool, std::string>> cutsLatex {
         {true, "all"},
         {true, "trackScore"},
@@ -73,11 +74,12 @@ void SelectionTable()
         {true, "protonChi2"},
         {true, "muonChi2"},
         {true, "protonChi2OverMuonChi2"},
-        {false, "\\sout{pandoraNuPDGIsNumu}"},
+        // {false, "\\sout{pandoraNuPDGIsNumu}"},
         {true, "daughterVerticesContained"},
         {true, "nuVertexFiducial"},
-        {true, "topological\\sout{OrFlashMatch}"},
-        {false, "\\sout{topologicalScore}"},
+        {true, "topologicalScore"},
+        // {true, "topological\\sout{OrFlashMatch}"},
+        // {false, "\\sout{topologicalScore}"},
         {true, "min2Tracks"},
         {true, "max1Uncontained"},
         {true, "2NonProtons"},
@@ -87,17 +89,22 @@ void SelectionTable()
         {true, "topologicalScore"},
         {true, "startNearVertex"},
         {true, "openingAngle"},
-        {true, "likelyGoldenPion"}
+        {true, "muonMomentum"},
+        {true, "pionMomentum"},
+        // Contained Muon Selection
+        {true, "containedMuon"},
+        // Golden pion selection
+        {true, "likelyGoldenPion"},
     };
 
     // Map for all events; map: event type, cut, run
-    std::map<std::string, std::map<std::string, std::map<std::string, float>>> eventCountMap;
+    std::map<std::string, std::map<std::string, std::map<std::string, double>>> eventCountMap;
 
     // Map for signal events; map: cut, run
-    std::map<std::string, std::map<std::string, float>> signalCountMap, goldenCountMap;
+    std::map<std::string, std::map<std::string, double>> signalCountMap, goldenCountMap;
     std::vector<std::string> runs = {"0", "1", "2", "3", "4bcd", "5"}; // 0 is the total of all runs
 
-    for (const auto& cut : cuts) {
+    for (const auto& [stopOnFailedCut, cut] : cuts) {
         for (const auto& run : runs) {
             eventCountMap["bnb"][cut][run] = 0.0f;
             eventCountMap["mc"][cut][run] = 0.0f;
@@ -106,6 +113,7 @@ void SelectionTable()
         }
     }
 
+    double totalMCSum0 = 0.f;
     // Loop over the files
     for (const auto &[fileType, run, path, fileWeight] : files)
     {
@@ -130,32 +138,32 @@ void SelectionTable()
         tree->SetBranchAddress("true_cc1pi", &isTrueCC1pi);
         tree->SetBranchAddress("true_golden_cc1pi", &isTrueGoldenPion);
 
+        // std::cout << "\033[1;31mWARNING - Only processing 10% of events!!!\033[0m" << std::endl;
         const auto nEntries = tree->GetEntries();
-        // std::cout << "\033[1;31mWARNING - Only processing 5% of events!!!\033[0m" << std::endl;
         for (Long64_t i = 0; i < nEntries; i++)
         {
-            // Print progress bar
-            if (i % (nEntries / 100) == 0) { // Update progress bar for every 1% progress
-                std::cout << "\r" // Move cursor to the beginning of the line
-                          << "[" // Start of progress bar
-                          << std::string(i / (nEntries / 100), '=') // Progress
-                          << std::string(100 - i / (nEntries / 100), ' ') // Remaining
-                          << "]" // End of progress bar
-                          << " " << i / (nEntries / 100) << "%" // Percentage
-                          << std::flush; // Flush output
-            }
-
+            if(i%(nEntries/100)==0) std::cout<<"\r"<<(100*i)/nEntries<<"%"<<std::flush;
             tree->GetEntry(i);
 
-            // Calculate weight
-            double weight = std::isfinite(spline_weight*tuned_cv_weight) && spline_weight*tuned_cv_weight >= 0 && spline_weight*tuned_cv_weight <= 30 ? spline_weight*tuned_cv_weight : 1;
-            // std::cout << "DEBUG entry for run: " << run << " of fileType: " << fileType << " with event weight: " << weight << " and file weight: " << fileWeight << " and total weight: " << weight*fileWeight << " and spline_weight: " << spline_weight << " and tuned_cv_weight: " << tuned_cv_weight << std::endl;
-            weight *= fileWeight;
-
-            for ( const auto& cut : cuts)
+            for ( const auto& [stopOnFailedCut, cut] : cuts)
             {
-                if (cut == "all" || tree->GetLeaf(cut.c_str())->GetValue())
+                bool passed = false;
+                if (cut == "all")
                 {
+                    passed = true;
+                }
+                else
+                {
+                    TTreeFormula formula("formula", cut.c_str(), tree);
+                    passed = formula.EvalInstance();
+                }
+                
+                if (passed)
+                // if (cut == "all" || tree->GetLeaf(cut.c_str())->GetValue())
+                {
+                    // Calculate weight
+                    double weight = std::isfinite(spline_weight*tuned_cv_weight) && spline_weight*tuned_cv_weight >= 0 && spline_weight*tuned_cv_weight <= 30 ? spline_weight*tuned_cv_weight : 1;
+                    weight *= fileWeight;
                     eventCountMap.at(eventType).at(cut).at(run) += weight;
                     eventCountMap.at(eventType).at(cut).at("0") += weight;
                     if(isTrueCC1pi)
@@ -171,10 +179,16 @@ void SelectionTable()
                 }
                 else
                 {
-                    break;
+                    if(stopOnFailedCut)
+                        break;
                 }
             } // End of loop over cuts
         } // End of loop over events
+        // std::cout<<"\n 0---->"<<eventCountMap.at("mc").at("all").at("0")<<std::endl;
+        // std::cout<<" run---->"<<eventCountMap.at("mc").at("all").at(run)<<std::endl;
+        // std::cout<<" diff---->"<<eventCountMap.at("mc").at("all").at("0")-eventCountMap.at("mc").at("all").at(run)<<std::endl;
+        // if(eventType == "mc") totalMCSum0 += eventCountMap.at("mc").at("all").at(run);
+        // std::cout<<" tot---->"<<totalMCSum0<<"\n"<<std::endl;
     } // End of loop over files
 
     std::cout<<std::endl;
@@ -184,27 +198,27 @@ void SelectionTable()
     // *********************************
     for (const auto& run : runs) {
         // Open the output file
-        std::ofstream outputFileLatex("eventCountTable_fixed_run" + run + "_onlyTesting.tex");
+        std::ofstream outputFileLatex("eventCountTable_run" + run + "_onlyTesting_lowPiMomThreshold_fixed_muonContainedOption.tex");
 
         // Write the header row
         std::string header = 
 R"(
-\begin{tabular}{lcccccccc}
-\textbf{Cuts for Run%s} & \rotatebox{90}{\textbf{Signal}} & \rotatebox{90}{\textbf{Background}} & \rotatebox{90}{\textbf{Efficiency} ($E$)} & \rotatebox{90}{\textbf{Purity} ($P$)} & \rotatebox{90}{$E \times P$} & \rotatebox{90}{\textbf{Golden Fraction}} & \rotatebox{90}{\textbf{Data}} & \rotatebox{90}{\textbf{Data/MC Ratio}} \\
+\begin{tabular}{lrrrrrrrr}
+\large{\textbf{Generic Selection}} \vspace{1mm}\\
+\textbf{Cuts for Run%s} & \rot{\textbf{Signal}} & \rot{\textbf{Background}} & \rot{\textbf{Efficiency} ($E$)} & \rot{\textbf{Purity} ($P$)} & \rot{$E \times P$} & \rot{\textbf{Golden Fraction}} & \rot{\textbf{Data}} & \rot{\textbf{Ratio}} \\
 \midrule
-\textbf{CC Inclusive Preselection} \\
-\textbf{Particle-level Cuts} & & & & & & & &\\
+\textbf{Particle-level Preselection} \\
 \midrule
 )";
         char buffer[512];
-        std::string runStr = run == "0" ? "s 1-5" : " "+run;  
+        std::string runStr = run == "0" ? "s 1-5" : " "+run;
         sprintf(buffer, header.c_str(), runStr.c_str());
         outputFileLatex << buffer;
 
         // Write the data rows
         for (int i = 0; i < cuts.size(); i++)
         {
-            const auto cut = cuts.at(i);
+            const auto cut = cuts.at(i).second;
             const auto cutLatexLabel = cutsLatex.at(i).second;
             const auto cutLatexShow = cutsLatex.at(i).first;
             const auto dataMCRatio = eventCountMap.at("mc").at(cut).at(run) != 0 ? eventCountMap.at("bnb").at(cut).at(run)/eventCountMap.at("mc").at(cut).at(run) : 0;
@@ -235,20 +249,40 @@ R"(
             if(cut == "passed_particleProtonChi2OverMuonChi2")
             {
                 outputFileLatex << "\\midrule\n";
-                outputFileLatex << "\\textbf{CC Inclusive Preselection}";
-                outputFileLatex << " \\\\\n\\textbf{Event-level Cuts} & & & & & & & &";
+                outputFileLatex << "\\textbf{Event-level Preselection}";
                 outputFileLatex << " \\\\\n\\midrule\n";
-            } else if(cut == "passed_topologicalScoreCC")
+            } else if(cut == "passed_topologicalOrFlashMatch")
+            // else if(cut == "passed_topologicalScoreCC")
             {
                 outputFileLatex << "\\midrule\n";
                 outputFileLatex << "\\textbf{Charged Pion Selection}";
                 outputFileLatex << " \\\\\n\\midrule\n";
-            } else if(cut == "passed_openingAngle")
+            } else if(cut == "passed_startNearVertex")
             {
                 outputFileLatex << "\\midrule\n";
-                outputFileLatex << "\\textbf{Golden Pion Selection}";
+                outputFileLatex << "\\textbf{Phase Space Cuts}";
                 outputFileLatex << " \\\\\n\\midrule\n";
+            } else if(cut == "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1")
+            {
+                outputFileLatex << "\\\\ [3mm] \\midrule\n"; // Add 5mm of vertical space and a midrule
+                outputFileLatex << "\\textbf{Subset 1: Muon Momentum}\\\\\n";
+                outputFileLatex << "Cut applied to generic selection";
+                outputFileLatex << " \\\\\\midrule\n";
+            } else if(cut == "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1 && cc1pi_recoMuon_IsContained")
+            {
+                outputFileLatex << "\\\\ [1mm] \\midrule\n"; // Add 5mm of vertical space and a midrule
+                outputFileLatex << "\\textbf{Subset 2: Pion Momentum}\\\\\n";
+                outputFileLatex << "Cut applied to generic selection";
+                outputFileLatex << " \\\\\\midrule\n";
             }
+
+
+            // else if(cut == "passed_openingAngle")
+            // {
+            //     outputFileLatex << "\\midrule\n";
+            //     outputFileLatex << "\\textbf{Golden Pion Selection}";
+            //     outputFileLatex << " \\\\\n\\midrule\n";
+            // }
         }
 
         // End the tabular environment
@@ -257,6 +291,20 @@ R"(
         // Close the output file
         outputFileLatex.close();
     }
+
+    // Print out eventCountMap.at("mc").at(cut).at(run) and signalCountMap.at(cut).at(run) for all runs at cut "all"
+    double totalMCSum = 0;
+    double totalSignalSum = 0;
+    for (const auto& run : runs) {
+        std::cout << "Event count for run " << run << " at cut \"all\": " << eventCountMap.at("mc").at("all").at(run) << std::endl;
+        std::cout << "Signal count for run " << run << " at cut \"all\": " << signalCountMap.at("all").at(run) << std::endl;
+        if (run != "0") {
+            totalMCSum += eventCountMap.at("mc").at("all").at(run);
+            totalSignalSum += signalCountMap.at("all").at(run);
+        }
+    }
+    std::cout << "Total MC sum runs 1-5: " << totalMCSum << std::endl;
+    std::cout << "Total Signal sum runs 1-5: " << totalSignalSum << std::endl;
 
     std::cout<<"Done! Output written to eventCountTable_run*.tex"<<std::endl;
 }

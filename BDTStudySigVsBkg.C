@@ -11,9 +11,7 @@ void BDTStudySigVsBkg()
 {
 
     const std::vector versions = {""};
-    
     const auto version = versions.at(0);
-
 
     // List of files; map: run, path
     std::vector<std::tuple<std::string, std::string>> files = {

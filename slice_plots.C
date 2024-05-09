@@ -31,37 +31,150 @@ void scale_by_bin_width(SliceHistogram* pSlice)
     pSlice->transform(trans_mat);
 }
 
-void slice_plots(const bool normaliseByBinWidth) {
+struct inputFiles
+{
+  std::string rootFile;
+  std::string fileList;
+  std::string config;
+  std::string sliceConfig;
+  std::string nameExtension;
+};
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 0"<<std::endl;
+void make_slice_plots(const bool normaliseByBinWidth) {
+
+  // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section 
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_09Apr24_testingOnly_lowPiMomThreshold_containedMuon.root",
+  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+  //   "systcalc_fd_min.conf",
+  //   "ubcc1pi_neutral_slice_config.txt", // <-- This verion includes the _lowPiMomThreshold underflow bin removal
+  //   "_fd_testingOnly_lowPiMomThreshold_containedMuon"
+  // };
+
+  // inputFiles input{ // muon momentum bnb phase-space cut plot
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_generic_muon_momentum_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_containedMuon_11Apr24.root", // << "bdt_input_variables" is wrong in the name
+  //   "file_properties_testingOnly_lowPiMomThreshold.txt",
+  //   "systcalc.conf",
+  //   "bdt_input_slice_config_generic_muon_momentum_fewer_bins.txt",
+  //   "_bnb_generic_muon_mom_phase_space_containedMuon"
+  // };
+
+  // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section and modified bin size (muon momentum endind at 1.2GeV rather than 1.5)
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_15Apr24_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV.root",
+  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+  //   "systcalc_fd_min.conf",
+  //   "ubcc1pi_neutral_slice_config_muon1200MeV.txt", // <-- This verion includes the _lowPiMomThreshold underflow bin removal & muon momentum endind at 1.2GeV rather than 1.5
+  //   "_fd_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV"
+  // };
+
+  // inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal)
+  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_30Apr_pionMom_V2.root",
+  //     "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+  //     "systcalc_fd_min.conf",
+  //     "ubcc1pi_neutral_slice_config_pion_momentum_study.txt",
+  //     "_nuwro_pion_momentum_study"
+  // };
+
+  // inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal); Same as above but with cross-section binning
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_1May_pionMom_xsec_binning.root",
+  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+  //   "systcalc_fd_min.conf",
+  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning.txt",
+  //   "_nuwro_pion_momentum_study_xsec_binning"
+  // };
+
+  // inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal); Same as above but with cross-section binning; Only one slice
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_1May_pionMom_xsec_binning_slice3.root",
+  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+  //   "systcalc_fd_min.conf",
+  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning_only_slice1.txt",
+  //   "_nuwro_pion_momentum_study_xsec_binning_only_slice3"
+  // };
+
+  //   inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal); Same as above but with cross-section binning; Only one slice; Only run 1 and set same block number for truth and reco
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_3May_pionMom_xsec_binning_slice3_V2.root",
+  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+  //   "systcalc_fd_min.conf",
+  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning_only_slice1_underflow.txt",
+  //   "_nuwro_pion_momentum_study_xsec_binning_signal_uncertainties_only_slice3"
+  // };
+
+  inputFiles input{ // Same as above but without NuWro uncertainty
+    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_3May_pionMom_xsec_binning_slice3_V2.root",
+    "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+    "systcalc_fd_min_noNuWro.conf",
+    "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning_only_slice1_underflow.txt",
+    "_nuwro_pion_momentum_study_xsec_binning_signal_uncertainties_only_slice3_noNuWroUncertainty"
+  };
+
+
   #ifdef USE_FAKE_DATA
     // Initialize the FilePropertiesManager and tell it to treat the NuWro
     // MC ntuples as if they were data
     auto& fpm = FilePropertiesManager::Instance();
     // fpm.load_file_properties( "nuwro_file_properties.txt" );
-    fpm.load_file_properties( "nuwro_file_properties_testingOnly.txt" );
+    // fpm.load_file_properties( "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt" );
+    fpm.load_file_properties( input.fileList );
     auto* syst_ptr = new MCC9SystematicsCalculator(
       // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_6Mar24.root", // <-- Yes the name is wrong and should say nuwro
-      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_14Mar24_testingOnly.root",  // <-- Yes the name is wrong and should say nuwro
-      "systcalc_unfold_fd_min.conf" );
-    std::string nameExtension = "_fd_testingOnly";
+      // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_14Mar24_testingOnly.root",  // <-- Yes the name is wrong and should say nuwro
+      // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_27Mar24_testingOnly_lowPiMomThreshold.root",
+      input.rootFile,
+      // "systcalc_fd_min.conf" );
+      input.config );
+    // std::string nameExtension = "_fd_testingOnly_lowPiMomThreshold";
   #else
     auto &fpm = FilePropertiesManager::Instance();
-    fpm.load_file_properties("file_properties.txt");   
+    // fpm.load_file_properties("file_properties_testingOnly_lowPiMomThreshold.txt");
+    fpm.load_file_properties(input.fileList);   
     auto* syst_ptr = new MCC9SystematicsCalculator(
+      input.rootFile,
+      input.config );
     // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_goldenPionBDTScore_cut_run1234bcd5.root", // golden pion cut plot with full uncertainties
     // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24_gardiner.root",
-    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noExtraBDTCuts_reduced_muonCosTheta_run1234bcd5_5Mar24.root"
-    "systcalc.conf" );
-    std::string nameExtension = "_bnb_noExtraBDTCuts";
-    // std::string nameExtension = "_bnb_golden_pion_cut";
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_noExtraBDTCuts_reduced_muonCosTheta_run1234bcd5_5Mar24.root"
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_goldenPionBDTScore_cut_run1234bcd5_testingOnly_lowPiMomThreshold_noPhaseSpace_4Apr24.root", // golden pion cut plot with full uncertainties
+
+    /* Phase space cut */
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_generic_opening_angle_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_4Apr24.root",
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_generic_muon_momentum_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_4Apr24.root",
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_generic_pion_momentum_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_4Apr24.root",
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_golden_opening_angle_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_4Apr24.root",
+    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_golden_muon_momentum_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_4Apr24.root",
+    // "pion momentum phase space is missing",
+    // "systcalc.conf" );
+    // std::string nameExtension = "_bnb_noExtraBDTCuts";
+    // std::string nameExtension = "_bnb_golden_pion_cut_onlyTesting_lowPiMomThreshold_noPhaseSpace";
+
+    /* Phase space cut */
+    // std::string nameExtension = "_bnb_generic_opening_angle_phase_space";
+    // std::string nameExtension = "_bnb_generic_muo_mom_phase_space";
+    // std::string nameExtension = "_bnb_generic_muo_mom_phase_space_reduced";
+    // std::string nameExtension = "_bnb_generic_pion_mom_phase_space";
+    // std::string nameExtension = "_bnb_golden_opening_angle_phase_space";
+    // std::string nameExtension = "_bnb_golden_muo_mom_phase_space";
+    // std::string nameExtension = "_bnb_golden_pion_mom_phase_space";
   #endif
+
+  std::string nameExtension = input.nameExtension;
 
   std::cout<<"DEBUG tutorial_slice_plots Point 1"<<std::endl;
   auto& syst = *syst_ptr;
 
-  auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" );
+  auto* sb_ptr = new SliceBinning( input.sliceConfig );
+  // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_lowPiMomThreshold.txt" );
   // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_goldenPionBDTScore.txt" );
+
+  /* Phase space cut */
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_generic_opening_angle.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_generic_muon_momentum.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_generic_muon_momentum_reduced.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_generic_pion_momentum.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_golden_opening_angle.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_golden_muon_momentum.txt" );
+  // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_golden_pion_momentum.txt" );
+
+
+
   // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
 
   // Get access to the relevant histograms owned by the SystematicsCalculator
@@ -291,8 +404,9 @@ void slice_plots(const bool normaliseByBinWidth) {
     // std::vector< std::string > cov_mat_keys = { "total", "detVar_total", "flux", "reint", "xsec_multi", "xsec_AxFFCCQEshape", "xsec_DecayAngMEC", "xsec_NormCCCOH", "xsec_NormNCCOH", "xsec_RPA_CCQE", "xsec_ThetaDelta2NRad", "xsec_Theta_Delta2Npi", "xsec_VecFFCCQEshape", "xsec_XSecShape_CCMEC", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie", "POT", "numTargets", "MCstats", "EXTstats", "BNBstats"};
 
     #ifdef USE_FAKE_DATA
-    // cov_mat_keys = { "total", "xsec_total", "MCstats", "EXTstats", "BNBstats"};
-    cov_mat_keys = { "total", "MCstats", "EXTstats", "BNBstats", "xsec_multi", "xsec_unisim", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie"};
+    // cov_mat_keys = { "total", "xsec_total", "MCstats"};//, "EXTstats", "BNBstats"};
+    cov_mat_keys = { "total", "MCstats", "xsec_multi", "xsec_unisim", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie"}; // removed ext + beam on stats
+    // cov_mat_keys = { "total", "MCstats", "EXTstats", "BNBstats", "xsec_multi", "xsec_unisim", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie"};
     // cov_mat_keys = { "total", "xsec_multi", "xsec_AxFFCCQEshape", "xsec_DecayAngMEC", "xsec_NormCCCOH", "xsec_NormNCCOH", "xsec_RPA_CCQE", "xsec_ThetaDelta2NRad", "xsec_Theta_Delta2Npi", "xsec_VecFFCCQEshape", "xsec_XSecShape_CCMEC", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie", "MCstats", "EXTstats", "BNBstats"};
     #endif
 
@@ -350,6 +464,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     std::cout<<"DEBUG tutorial_slice_plots Point 7"<<std::endl;
 
     TCanvas* c2 = new TCanvas;
+    // c2->SetLogy(); // Use this for golden Pion Cut variable plots
     // TLegend* lg2 = new TLegend( 0.7, 0.7, 0.9, 0.9 );
     TLegend* lg2 = new TLegend( 0.2, 0.3);
 
@@ -359,7 +474,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     std::cout<<"DEBUG tutorial_slice_plots Point 7.2"<<std::endl;
     total_frac_err_hist->SetStats( false );
     total_frac_err_hist->GetYaxis()->SetRangeUser( 0.,
-      total_frac_err_hist->GetMaximum() * 1.05 );
+    total_frac_err_hist->GetMaximum() * 1.05 );
     total_frac_err_hist->SetLineColor( kBlack );
     total_frac_err_hist->SetLineStyle( 9 );
     total_frac_err_hist->SetLineWidth( 3 );
@@ -406,11 +521,11 @@ void slice_plots(const bool normaliseByBinWidth) {
 
   } // slices
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 8"<<std::endl;
+  std::cout<<"-------- All done --------"<<std::endl;
 
 }
 
-int tutorial_slice_plots() {
-  slice_plots(true);
+int slice_plots() {
+  make_slice_plots(true);
   return 0;
 }

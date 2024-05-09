@@ -32,6 +32,9 @@ class SliceHistogram {
     static SliceHistogram* make_slice_efficiency_histogram(
       const TH1D& true_bin_histogram, const TH2D& hist_2d, const Slice& slice );
 
+    // For histograms that are already a single slice without covariance (e.g. generator predictions)
+    static SliceHistogram* slice_histogram_from_histogram ( TH1D& histogram );
+
     // Transform the bin contents by multiplying by the input TMatrixD, which
     // must be a square matrix with a number of columns equal to the number of
     // histogram bins. If present, the owned covariance matrix will also be
@@ -345,6 +348,17 @@ SliceHistogram* SliceHistogram::make_slice_efficiency_histogram(
   return result;
 }
 
+// Create a SliceHistogram object from a TH1D object
+SliceHistogram* SliceHistogram::slice_histogram_from_histogram(
+  TH1D& truth_histogram)
+{
+  auto* result = new SliceHistogram;
+  result->hist_.reset( dynamic_cast< TH1D* >( truth_histogram.Clone() ) );
+  result->hist_->SetDirectory( nullptr );
+  return result;
+}
+
+
 SliceHistogram::Chi2Result SliceHistogram::get_chi2(
   const SliceHistogram& other, const double inversion_tol ) const
 {
@@ -419,6 +433,7 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
   }
 
   std::cout<<"DEBUG diff_vec: ";
+
   // Create a 1D vector containing the difference between the two slice
   // histograms in each bin
   TMatrixD diff_vec( 1, num_bins );

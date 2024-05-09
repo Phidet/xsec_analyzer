@@ -5,14 +5,23 @@
 
 // Boundaries of the neutrino vertex fiducial volume (cm)
 // This is handled the same way for reco and in MC
-double FV_X_MIN =   21.5;
-double FV_X_MAX =  234.85;
+// double FV_X_MIN =   21.5;
+// double FV_X_MAX =  234.85;
 
-double FV_Y_MIN = -95.0;
-double FV_Y_MAX =  95.0;
+// double FV_Y_MIN = -95.0;
+// double FV_Y_MAX =  95.0;
 
-double FV_Z_MIN =   21.5;
-double FV_Z_MAX =  966.8;
+// double FV_Z_MIN =   21.5;
+// double FV_Z_MAX =  966.8;
+
+double FV_X_MIN = 0 + 10;
+double FV_X_MAX = 256.35 - 10;
+
+double FV_Y_MIN = -116.5 + 10;
+double FV_Y_MAX = 116.5 - 10;
+
+double FV_Z_MIN = 0 + 10;
+double FV_Z_MAX = 1036.8 - 50;
 
 // Use a template here so that this function can take float or double values as
 // input

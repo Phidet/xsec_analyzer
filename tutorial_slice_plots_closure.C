@@ -184,7 +184,7 @@ void slice_plots(const bool normaliseByBinWidth)
         slice_mc_plus_ext->hist_->Draw("same E2");
 
         slice_bnb->hist_->Draw("same e");
-        slice_bnb->hist_->SetTitle("Selected CC1#pi^{#pm}Np Events");
+        slice_bnb->hist_->SetTitle("Selected CC1#pi^{#pm}Xp Events");
 
         std::cout << "DEBUG Point 3" << std::endl;
 
@@ -321,7 +321,7 @@ void slice_plots(const bool normaliseByBinWidth)
         total_frac_err_hist->SetLineStyle(9);
         total_frac_err_hist->SetLineWidth(3);
         total_frac_err_hist->Draw("hist");
-        total_frac_err_hist->SetTitle("Fractional Uncertainty Selected CC1#pi^{#pm}Np Events");
+        total_frac_err_hist->SetTitle("Fractional Uncertainty Selected CC1#pi^{#pm}Xp Events");
 
         // const auto frac_ymax = 0.35;
         // total_frac_err_hist->GetYaxis()->SetRangeUser( 0., frac_ymax);

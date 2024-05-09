@@ -98,7 +98,7 @@ void MakePlot(TH1D* hist, const std::string& name)
     // legend->AddEntry(cc1pi_hist, "CC1pi", "l");
     // legend->Draw();
 
-    c1->SaveAs(("plots/muonPIDStudy_" + name + ".pdf").c_str());
+    c1->SaveAs(("plots/muonPIDStudy_" + name + "_testingOnly_lowPiMomThreshold.pdf").c_str());
 
     // Delete the TCanvas
     delete c1;
@@ -153,23 +153,31 @@ void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = f
     // Add more space on the right side of the plot for the z-axis labels
     gStyle->SetPadRightMargin(0.15);
 
-    c1->SaveAs(("plots/muonPIDStudy_" + name + ".pdf").c_str());
+    c1->SaveAs(("plots/muonPIDStudy_" + name + "_testingOnly_lowPiMomThreshold.pdf").c_str());
 
     // Delete the TCanvas
     delete c1;
 }
 
-void muonPIDStudy() 
+void MuonPIDStudy() 
 {
-    // List of files
-    const std::string rootPath = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/";
-    // tuple: type, run, file path, run weight
+    // // List of files
+    // const std::string rootPath = "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/";
+    // // tuple: type, run, file path, run weight
+    // const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
+    //     std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
+    //     std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
+    //     std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
+    //     std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
+    //     std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
+    // };
+
     const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
-        std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
-        std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
-        std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
-        std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
-        std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
+        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011*2.0), // Times two because the scaling is for the full MC and this is only half
+        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750*2.0),
+        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113*2.0),
+        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074*2.0),
+        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196*2.0),
     };
 
     // const std::vector<float> overlayPOT {1.28278e+21, 1.01592e+21, 1.31355e+21, 2.48772e+20, 7.64399e+20, 4.64842e+20, 8.66958e+20, 9.70631e+20}; // run 1, 2, 3, 4a, 4b, 4c, 4d, 5
@@ -205,8 +213,8 @@ void muonPIDStudy()
     TH1D* trueCC1pi_protonBDT_truePion_contained = new TH1D("trueCC1pi_protonBDT_truePion_contained", "trueCC1pi_protonBDT_truePion_contained", 20, -1.1, 1.1);
 
     // 2d histograms
-    TH2D* muonMomVSpionMom_selectedTrueCC1pi = new TH2D("muonMomVSpionMom_selectedTrueCC1pi", "Selected True CC1pi Events (and muon candidate has backtracked truth particle); True Muon Momentum (GeV/c); True Pion Momentum (GeV/c)", 20, 0, 1.5, 20, 0, 1.5);
-    TH2D* muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon = new TH2D("muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon", "Fraction of selected true CC1pi events with correctly identified muon; True Muon Momentum (GeV/c); True Pion Momentum (GeV/c)", 20, 0, 1.5, 20, 0, 1.5);
+    TH2D* muonMomVSpionMom_selectedTrueCC1pi = new TH2D("muonMomVSpionMom_selectedTrueCC1pi", "Selected True CC1pi Events (and muon candidate has backtracked truth particle); True Muon Momentum (GeV/c); True Pion Momentum (GeV/c)", 30, 0, 1.5, 30, 0, 1.5);
+    TH2D* muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon = new TH2D("muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon", "Fraction of selected true CC1pi events with correctly identified muon; True Muon Momentum (GeV/c); True Pion Momentum (GeV/c)", 30, 0, 1.5, 30, 0, 1.5);
 
     TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi = new TH2D("muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", "Selected True CC1pi Events (and muon candidate has backtracked truth particle); Muon Track Length > Pion Track Length; Muon Is Contained", 2, 0, 2, 2, 0, 2);
     TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon = new TH2D("muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon", "Fraction of selected true CC1pi events with correctly identified muon; Muon Track Length > Pion Track Length; Muon Is Contained", 2, 0, 2, 2, 0, 2);
@@ -243,40 +251,40 @@ void muonPIDStudy()
 
         // FillHistogram(tree, pdg_backtrackedMuon,
         // /*variable*/ "cc1pi_backtracked_muonPDG",
-        // /*Condition*/ "cc1pi_signal && cc1pi_selected_generic", runWeight);
+        // /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic", runWeight);
 
         FillHistogram2D(tree, muonMomVSpionMom_selectedTrueCC1pi, 
         /*variable1*/ "cc1pi_truth_muonMomentum",
         /*variable2*/ "cc1pi_truth_pionMomentum", 
-        /*Condition*/ "cc1pi_signal && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
 
         std::cout<<"DEBUG - Point X0.2"<<std::endl;
 
         FillHistogram2D(tree, muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon, 
         /*variable1*/ "cc1pi_truth_muonMomentum",
         /*variable2*/ "cc1pi_truth_pionMomentum", 
-        /*Condition*/ "cc1pi_signal && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
 
         FillHistogram2D(tree, muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, 
         /*variable1*/ "cc1pi_truthMuon_TrackLength>cc1pi_truthPion_TrackLength",
         /*variable2*/ "cc1pi_truthMuon_IsContained", 
-        /*Condition*/ "cc1pi_signal && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
 
         FillHistogram2D(tree, muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon,
         /*variable1*/ "cc1pi_truthMuon_TrackLength>cc1pi_truthPion_TrackLength",
         /*variable2*/ "cc1pi_truthMuon_IsContained", 
-        /*Condition*/ "cc1pi_signal && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
 
         // FillHistogram2D(tree, muonBDTVSrange_trueMuon_trueCC1pi, 
         // /*variable1*/ "cc1pi_recoMuon_TrackLength",
         // /*variable2*/ "cc1pi_recoMuon_muonBDTScore", 
-        // /*Condition*/ "cc1pi_signal && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
+        // /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
 
         // Particle plots
         // trueCC1pi_muonBDT
-        // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_trueMuon, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal", runWeight);
-        // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_trueProton, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal", runWeight);
-        // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_truePion, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal", runWeight);
+        // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_trueMuon, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", runWeight);
+        // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_trueProton, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", runWeight);
+        // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_truePion, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", runWeight);
 
 
         std::cout<<"DEBUG - Point X1"<<std::endl;
@@ -305,8 +313,8 @@ void muonPIDStudy()
         // Check if values is null
         if (!pMuonBDTScore || !pProtonBDTScore) throw std::runtime_error("Error: Branchnot found in the tree.");
 
-        std::cout << "Warning - Only using 1\% of the events for testing purposes." << std::endl;
-        const auto nEvents = tree->GetEntries()/100;
+        // std::cout << "Warning - Only using 1\% of the events for testing purposes." << std::endl;
+        const auto nEvents = tree->GetEntries();
         // Loop over the entries in the tree
         for (Long64_t i = 0; i < nEvents; i++)
         {
@@ -329,7 +337,8 @@ void muonPIDStudy()
             std::cout<<"DEBUG - Point X4"<<std::endl;
             // std::cout << "DEBUG FillParticleHistogram Point pMuonBDTScore->size(): " << pMuonBDTScore->size() << std::endl;
             // Apply the condition
-            if (tree->GetLeaf("cc1pi_signal")->GetValue() == true)
+            TTreeFormula formula("formula", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", tree);
+            if (formula.EvalInstance() != 0)
             {
                 std::cout<<"DEBUG - Point X5"<<std::endl;
                 // Loop over the values in the vector and fill the histogram
@@ -421,7 +430,7 @@ void muonPIDStudy()
     legend01->AddEntry(trueCC1pi_muonBDT_trueProton, "Proton", "l");
     legend01->AddEntry(trueCC1pi_muonBDT_truePion, "Pion", "l");
     legend01->Draw();
-    c01->SaveAs("plots/muonPIDStudy_trueCC1pi_muonBDT.pdf");
+    c01->SaveAs("plots/muonPIDStudy_trueCC1pi_muonBDT_testingOnly_lowPiMomThreshold.pdf");
 
 
     // Area normalise
@@ -453,7 +462,7 @@ void muonPIDStudy()
     legend011->AddEntry(trueCC1pi_muonBDT_trueProton_contained, "Proton", "l");
     legend011->AddEntry(trueCC1pi_muonBDT_truePion_contained, "Pion", "l");
     legend011->Draw();
-    c011->SaveAs("plots/muonPIDStudy_trueCC1pi_muonBDT_contained.pdf");
+    c011->SaveAs("plots/muonPIDStudy_trueCC1pi_muonBDT_contained_testingOnly_lowPiMomThreshold.pdf");
 
     // Area normalise
     trueCC1pi_muonBDT_trueMuon_uncontained->Scale(1.0 / trueCC1pi_muonBDT_trueMuon_uncontained->Integral());
@@ -483,7 +492,7 @@ void muonPIDStudy()
     legend012->AddEntry(trueCC1pi_muonBDT_trueProton_uncontained, "Proton", "l");
     legend012->AddEntry(trueCC1pi_muonBDT_truePion_uncontained, "Pion", "l");
     legend012->Draw();
-    c012->SaveAs("plots/muonPIDStudy_trueCC1pi_muonBDT_uncontained.pdf");
+    c012->SaveAs("plots/muonPIDStudy_trueCC1pi_muonBDT_uncontained_testingOnly_lowPiMomThreshold.pdf");
 
 
     // Area normalise
@@ -514,7 +523,7 @@ void muonPIDStudy()
     legend021->AddEntry(trueCC1pi_protonBDT_trueProton, "Proton", "l");
     legend021->AddEntry(trueCC1pi_protonBDT_truePion, "Pion", "l");
     legend021->Draw();
-    c021->SaveAs("plots/muonPIDStudy_trueCC1pi_protonBDT.pdf");    
+    c021->SaveAs("plots/muonPIDStudy_trueCC1pi_protonBDT_testingOnly_lowPiMomThreshold.pdf");    
 
 
     // Area normalise
@@ -545,7 +554,7 @@ void muonPIDStudy()
     legend02->AddEntry(trueCC1pi_protonBDT_trueProton_contained, "Proton", "l");
     legend02->AddEntry(trueCC1pi_protonBDT_truePion_contained, "Pion", "l");
     legend02->Draw();
-    c02->SaveAs("plots/muonPIDStudy_trueCC1pi_protonBDT_contained.pdf");
+    c02->SaveAs("plots/muonPIDStudy_trueCC1pi_protonBDT_contained_testingOnly_lowPiMomThreshold.pdf");
 
 
 

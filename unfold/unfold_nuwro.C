@@ -47,6 +47,19 @@ void multiply_1d_hist_by_matrix(TMatrixD *mat, TH1 *hist)
     }
 }
 
+
+std::string toLatexScientific(double value) {
+    std::stringstream stream;
+    stream << std::scientific << value;
+    std::string str = stream.str();
+    size_t pos = str.find('e');
+    if (pos != std::string::npos) {
+        str.replace(pos, 1, " \\times 10^{");
+        str += "}";
+    }
+    return str;
+}
+
 // const std::string SAMPLE_NAME = "MicroBooNE_CC1MuNp_XSec_2D_PpCosp_nu_MC";
 
 struct TruthFileInfo
@@ -66,7 +79,7 @@ struct TruthFileInfo
 std::map<std::string, TruthFileInfo> truth_file_map = {};
 
 std::map<std::string, std::string> samples_to_hist_names{
-    {"Unfolded NuWro Reco", "UnfData"},
+    {"Unfolded Selection", "UnfData"},
     {"MicroBooNE Tune", "uBTune"},
     {"NuWro Truth", "FakeData"}};
 
@@ -220,38 +233,145 @@ void dump_overall_results(const UnfoldedMeasurement &result,
     }
 }
 
-void test_unfolding_nuwro()
+TH1D* get_generator_hist(const TString& filePath, const unsigned int sl_idx, const float scaling = 1.f )
 {
+    // Open the file
+    TFile* file = new TFile(filePath, "readonly");
+
+    // Check if the file was successfully opened
+    if (!file || file->IsZombie()) {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return nullptr;
+    }
+
+    // Define the plot names
+    std::vector<TString> plotNames = {
+        "TrueMuonCosThetaPlot",
+        "TrueMuonPhiPlot",
+        "TrueMuonMomentumPlot",
+        "TruePionCosThetaPlot",
+        "TruePionPhiPlot",
+        "TruePionMomentumPlot",
+        "TrueMuonPionOpeningAnglePlot",
+        "TrueTotalPlot"
+    };
+
+    // Check if the index is valid
+    if (sl_idx >= plotNames.size()) {
+        std::cerr << "Invalid slice index: " << sl_idx << std::endl;
+        return nullptr;
+    }
+
+    // Get the histogram from the file
+    TH1D* hist = (TH1D*)file->Get(plotNames[sl_idx]);
+
+    // Check if the histogram was successfully retrieved
+    if (!hist) {
+        std::cerr << "Failed to retrieve histogram: " << plotNames[sl_idx] << std::endl;
+        return nullptr;
+    }
+
+    // Scale the histogram
+    hist->Scale(scaling);
+
+    // Apply the scaling and selection
+    // hist->SetLineWidth(4);
+    // hist->GetXaxis()->SetNdivisions(8);
+    // hist->GetYaxis()->SetNdivisions(6);
+    // hist->GetYaxis()->SetTitle("Cross Section [10^{-38} cm^{2}/Ar]");
+
+    return hist;
+}
+
+struct GeneratorInfo {
+    std::string path;
+    int color;
+    std::string name;
+    float scaling;
+};
+
+struct inputFiles
+{
+  std::string rootFile;
+  std::string fileList;
+  std::string config;
+  std::string sliceConfig;
+  std::string nameExtension;
+};
+
+void unfold_nuwro()
+{
+    // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_09Apr24_testingOnly_lowPiMomThreshold_containedMuon.root",
+    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+    //     "../systcalc_unfold_fd_min.conf",
+    //     "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal
+    //     "_fd_testingOnly_lowPiMomThreshold_containedMuon_withGenerators"
+    // };
+
+    // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section and modified bin size (muon momentum ending at 1.2GeV rather than 1.5)
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_15Apr24_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV.root",
+    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+    //     "../systcalc_unfold_fd_min.conf",
+    //     "../ubcc1pi_neutral_slice_config_muon1200MeV.txt", // <-- This verion includes the _lowPiMomThreshold underflow bin removal & muon momentum endind at 1.2GeV rather than 1.5
+    //     "_fd_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV"
+    // };
+
+    // inputFiles input{ // All nuwro cross-sections
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_28Mar24_testingOnly_lowPiMomThreshold.root",
+    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+    //     "../systcalc_unfold_fd_min.conf",
+    //     "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal
+    //     "_fd_testingOnly_lowPiMomThreshold_withGenerators"
+    // };
+
+    inputFiles input{ // All nuwro cross-sections; removed the nProton cross-section
+        "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_07May24_testingOnly_lowPiMomThreshold.root",
+        "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
+        "../systcalc_unfold_fd_min.conf",
+        "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal and remove nProton cross-section
+        "_fd_testingOnly_lowPiMomThreshold_withGenerators_08May24"
+    };
+
     // Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
-  
-    // fpm.load_file_properties("../nuwro_file_properties_closure.txt");
-    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/univmake_output_nuwro_v5_noext_nodirt_run1.root");
-    // // Do the systematics calculations in preparation for unfolding
-    // std::cout << "DEBUG test_unfolding_nuwro - Point 0" << std::endl;
-    // const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
 
     // fpm.load_file_properties("../nuwro_file_properties.txt");
-    fpm.load_file_properties("../nuwro_file_properties_testingOnly.txt");
+    // fpm.load_file_properties("../nuwro_file_properties_testingOnly.txt");
+    // fpm.load_file_properties("../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt");
+    fpm.load_file_properties( input.fileList );
 
     // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_noOverflow_13Jan23.root");
     // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_noOverflow_noGolden_13Jan23.root");
     // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_overflow_all_13Jan23.root");
     // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_6Mar24.root"); // <-- Yes the name is wrong and should say nuwro
-    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_14Mar24_testingOnly.root"); // <-- Yes the name is wrong and should say nuwro
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_14Mar24_testingOnly.root"); // <-- Yes the name is wrong and should say nuwro
+    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_28Mar24_testingOnly_lowPiMomThreshold.root");
+    const std::string respmat_file_name( input.rootFile );
 
     // const std::string postfix = "_run1_reduced";
     // const std::string postfix = "_with_Overflow_onlyGolden";
-    const std::string postfix = "_run12345_fd_testingOnly";
+    // const std::string postfix = "_fd_testingOnly";
+    // const std::string postfix = "_fd_testingOnly_lowPiMomThreshold";
+    const std::string postfix = input.nameExtension;
 
     // Plot slices of the unfolded result
-    // auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config_reduced.txt");
-    auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config.txt");
+    // auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config_withPionUnderflow.txt");
+    // auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config.txt");
+    auto *sb_ptr = new SliceBinning( input.sliceConfig );
     auto &sb = *sb_ptr;
 
     // Do the systematics calculations in preparation for unfolding
-    const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_min.conf");
+    // const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_min.conf");
+    const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, input.config);
     const auto &syst = *syst_ptr;
+
+    std::vector<GeneratorInfo> generators = {
+        {"/exp/uboone/app/users/jdetje/BuildEventGenerators/FlatTreeAnalyzer/OutputFiles/FlatTreeAnalyzerOutput_GENIE.root", kBlue+2, "GENIE 2.12.10", 1.f},
+        {"/exp/uboone/app/users/jdetje/BuildEventGenerators/FlatTreeAnalyzer/OutputFiles/FlatTreeAnalyzerOutput_NEUT.root", kRed+1, "NEUT 5.4.0.1", 1.f},
+        {"/exp/uboone/app/users/jdetje/BuildEventGenerators/FlatTreeAnalyzer/OutputFiles/FlatTreeAnalyzerOutput_GiBUU.root", kOrange+7, "GiBUU 3.0.6", 100.f},
+        {"/exp/uboone/app/users/jdetje/BuildEventGenerators/FlatTreeAnalyzer/OutputFiles/FlatTreeAnalyzerOutput_NuWro.root", kGreen+1, "NuWro 19.02.1", 1.f},
+    };
 
     // Get the tuned GENIE CV prediction in each true bin (including the
     // background true bins)
@@ -296,10 +416,10 @@ void test_unfolding_nuwro()
 
     // Define your custom labels and intervals
     const Int_t n = 9;
-    Double_t bins[n+1] = {0, 11, 26, 32, 39, 49, 55, 62, 65, 66};
-    const Int_t overUnderFlowN = 3;
-    Double_t overUnderFlowBins[overUnderFlowN] = {31, 49, 54};
-    const Char_t *labels[n] = {"cos(#theta_{#mu})", "#phi_{#mu}", "p_{#mu}", "cos(#theta_{#pi})", "#phi_{#pi}", "p_{#pi}^{**}", "#theta_{#pi #mu}", "N_{p}", "Total"};
+    Double_t bins[n+1] = {0, 11, 26, 32, 39, 49, 54, 61, 62};
+    const Int_t overUnderFlowN = 2;
+    Double_t overUnderFlowBins[overUnderFlowN] = {31, 53};
+    const Char_t *labels[n] = {"cos(#theta_{#mu})", "#phi_{#mu}", "p_{#mu}", "cos(#theta_{#pi})", "#phi_{#pi}", "p_{#pi}^{**}", "#theta_{#pi #mu}", "Total"};
 
     // Set the color palette
     util::CreateRedToBlueColorPalette(20);
@@ -442,7 +562,6 @@ void test_unfolding_nuwro()
     //         h2->SetBinContent(j, i, (*result.cov_matrix_)(i-1, j-1));
     //     }
     // }
-
 
     // Draw the TH2D object on the canvas
     TCanvas *cm1 = new TCanvas("cm1", "Canvas", 800, 600);
@@ -728,14 +847,14 @@ void test_unfolding_nuwro()
     // for each available generator model
     double conv_factor = (num_Ar * integ_flux) / 1e39;
     std::map<std::string, TMatrixD *> generator_truth_map = {}; // get_true_events_nuisance( sample_info, conv_factor );
-    std::cout << "DEBUG test_unfolding_nuwro - Point 2" << std::endl;
+    std::cout << "DEBUG unfold_nuwro - Point 2" << std::endl;
 
     // Dump overall results to text files. Total cross section units (10^{-39}
     // cm^2 / Ar) will be used throughout. Do this before adjusting the
     // truth-level prediction TMatrixD objects via multiplication by A_C
     // dump_overall_results(result, unfolded_cov_matrix_map, 1.0 / conv_factor, genie_cv_truth_vec, fake_data_truth, generator_truth_map, using_fake_data);
 
-    std::cout << "DEBUG test_unfolding_nuwro - Point 3" << std::endl;
+    std::cout << "DEBUG unfold_nuwro - Point 3" << std::endl;
 
     if (USE_ADD_SMEAR)
     {
@@ -754,7 +873,7 @@ void test_unfolding_nuwro()
             *pair.second = TMatrixD(A_C, TMatrixD::kMult, *pair.second);
     }
 
-    std::cout << "DEBUG test_unfolding_nuwro - Point 4" << std::endl;
+    std::cout << "DEBUG unfold_nuwro - Point 4" << std::endl;
 
     const auto cv_hist_2d = syst.get_cv_hist_2d();
 
@@ -769,9 +888,9 @@ void test_unfolding_nuwro()
     {
         // if (sl_idx != 4)
         //     continue; // TODO: remove !!!!!!!!!!!!!!!!!!!!!
-        std::cout << "DEBUG test_unfolding_nuwro - Point 5" << std::endl;
+        std::cout << "DEBUG unfold_nuwro - Point 5" << std::endl;
         const auto &slice = sb.slices_.at(sl_idx);
-        std::cout << "DEBUG test_unfolding_nuwro - Point 6" << std::endl;
+        std::cout << "DEBUG unfold_nuwro - Point 6" << std::endl;
 
         // Make a histogram showing the unfolded true event counts in the current slice
         SliceHistogram *slice_unf = SliceHistogram::make_slice_histogram(
@@ -807,7 +926,7 @@ void test_unfolding_nuwro()
 
         // Add over and underflow bins to additional smearing matrix plots
         if(sl_idx==2 || sl_idx==5) stop++; // Overflow bin
-        if(sl_idx==5) start--; // Underflow bin
+        // if(sl_idx==5) start--; // Underflow bin // Removed and replaced withh 100 MeV phase space restriction
         TMatrixD ac_hist_slice(stop - start + 1, stop - start + 1);
         for (int i = start; i <= stop; i++) {
             for (int j = start; j <= stop; j++) {
@@ -823,7 +942,7 @@ void test_unfolding_nuwro()
         // std::regex pattern("true (.*)");
         // title = std::regex_replace(title, pattern, "$1");
         const auto conf_title = std::string("Confusion Matrix") + title +";Truth Bins;Reco Bins";
-        const auto ac_title = std::string("Additional Smearing Matrix") + title +";Truth Bins;Reco Bins";
+        const auto ac_title = std::string("Additional Smearing Matrix") + title +";Truth Bins;Regularized Truth Bins";
         const auto corr_unf_title = std::string("Correlation Matrix for Unfolded Bins") + title +";Truth Bins;Truth Bins";
         const auto corr_title = std::string("Correlation Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
 
@@ -1005,12 +1124,14 @@ void test_unfolding_nuwro()
 
         // Set x and y axis labels to bin numbers
         for (int i = 1; i <= ac_hist->GetNbinsX(); i++) {
-            const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            // const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 5));
             const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             ac_hist->GetXaxis()->SetBinLabel(i, binLabel);
         }
         for (int i = 1; i <= ac_hist->GetNbinsY(); i++) {
-            const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            // const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 5));
             const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             ac_hist->GetYaxis()->SetBinLabel(i, binLabel);
         }
@@ -1113,7 +1234,7 @@ void test_unfolding_nuwro()
         auto *slice_gen_map_ptr = new std::map<std::string, SliceHistogram *>();
         auto &slice_gen_map = *slice_gen_map_ptr;
 
-        slice_gen_map["Unfolded NuWro Reco"] = slice_unf;
+        slice_gen_map["Unfolded Selection"] = slice_unf;
         slice_gen_map["MicroBooNE Tune"] = slice_cv;
 
         if (using_fake_data)
@@ -1164,9 +1285,11 @@ void test_unfolding_nuwro()
             }
         }
 
-        if(sl_idx == 8) var_count = 0; // TODO: Find a better way to do this
+        if(sl_idx == 7) var_count = 0; // TODO: Find a better way to do this
 
-        std::cout << "DEBUG test_unfolding_nuwro - Point 7" << std::endl;
+        std::cout << "DEBUG unfold_nuwro - Point 7" << std::endl;
+
+        if(other_var_width != 1.) throw std::runtime_error("Error: other_var_width is not 1.0 and has value " + std::to_string(other_var_width)); // Should not happen for this cross-section
 
         int num_slice_bins = slice_unf->hist_->GetNbinsX();
         TMatrixD trans_mat(num_slice_bins, num_slice_bins);
@@ -1209,29 +1332,40 @@ void test_unfolding_nuwro()
         //     slice_h->transform(trans_mat);
         // }
 
+        std::cout << "DEBUG unfold_nuwro - Point 8" << std::endl;
+
         std::map<std::string, SliceHistogram::Chi2Result> chi2_map;
         std::cout << '\n';
 
+        std::cout << "DEBUG unfold_nuwro - Point 9" << std::endl;
+
         for (const auto &pair : slice_gen_map)
         {
+            std::cout << "DEBUG unfold_nuwro - Point 10" << std::endl;
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
 
-            if (name == "Unfolded NuWro Reco")
+            if (name == "Unfolded Selection")
             {
                 chi2_map[name] = SliceHistogram::Chi2Result();
                 continue;
             }
 
-            const auto &chi2_result = chi2_map[name] = slice_h->get_chi2(*slice_gen_map.at("Unfolded NuWro Reco"));
+            std::cout << "DEBUG unfold_nuwro - Point 10.1" << std::endl;
 
-            double chi2_alt = slice_h->hist_->Chi2Test(slice_gen_map.at("Unfolded NuWro Reco")->hist_.get(), "UW CHI2");
+            const auto &chi2_result = chi2_map[name] = slice_h->get_chi2(*slice_gen_map.at("Unfolded Selection"));
+
+            std::cout << "DEBUG unfold_nuwro - Point 10.2" << std::endl;
+
+            double chi2_alt = slice_h->hist_->Chi2Test(slice_gen_map.at("Unfolded Selection")->hist_.get(), "UW CHI2");
             std::cout<<"DEBUG (slice "<<sl_idx<<") Chi-square alt: "<<chi2_alt<<std::endl;
 
 
             std::cout << "Slice " << sl_idx << ", " << name << ": \u03C7\u00b2 = "
                       << chi2_result.chi2_ << '/' << chi2_result.num_bins_ << " bin"
                       << (chi2_result.num_bins_ > 1 ? "s" : "") << ", p-value = " << chi2_result.p_value_ << '\n';
+
+            std::cout << "DEBUG unfold_nuwro - Point 11" << std::endl;
         }
 
         std::cout << "DEBUG Unfolding Point 4" << std::endl;
@@ -1244,14 +1378,17 @@ void test_unfolding_nuwro()
 
 
 
+        TCanvas *c1 = new TCanvas("c1", "c1", 800, 600); // 800x600 pixels
+        gStyle->SetLegendBorderSize(0);
+        const auto rightMargin = 0.25;
 
-
-        TCanvas *c1 = new TCanvas;
+        const auto noRatioPlot = (sl_idx == 7);
 
         TPad* pad2 = new TPad(("pad2 slice "+std::to_string(sl_idx)).c_str(), "", 0, 0.0, 1.0, 0.3);
         pad2->SetTopMargin(0.03);
-        pad2->SetBottomMargin(0.3);
-        pad2->Draw();
+        pad2->SetBottomMargin(0.35);
+        pad2->SetRightMargin(rightMargin);
+        if(!noRatioPlot) pad2->Draw();
         pad2->cd();
 
         // Create the ratio histogram
@@ -1282,6 +1419,7 @@ void test_unfolding_nuwro()
         line->SetLineWidth(2);
         line->SetLineStyle(5);
 
+
         h_ratio->Divide(h_cv_no_errors);
         h_ratio->SetLineWidth(2);
         h_ratio->SetLineColor(kBlack);
@@ -1289,27 +1427,91 @@ void test_unfolding_nuwro()
         h_ratio->SetMarkerSize(0.8);
         h_ratio->SetTitle("");
 
+
         // x-axis
         h_ratio->GetXaxis()->SetTitle(slice_unf->hist_->GetXaxis()->GetTitle());
-        // h_ratio->GetXaxis()->CenterTitle(true);
+        h_ratio->GetXaxis()->SetTitleOffset(1.3); // Hide x-axis        
+        h_ratio->GetXaxis()->CenterTitle(true);
         h_ratio->GetXaxis()->SetLabelSize(0.1);
         h_ratio->GetXaxis()->SetTitleSize(0.08);
         h_ratio->GetXaxis()->SetTickLength(0.05);
         // h_ratio->GetXaxis()->SetTitleOffset(0.9);
 
+        if(sl_idx == 7)
+        {
+            h_ratio->GetXaxis()->SetLabelOffset(999); // Hide x-axis labels
+            h_ratio->GetXaxis()->SetTickLength(0); // Hide x-axis ticks
+        }
+
         // y-axis
-        h_ratio->GetYaxis()->SetTitle("ratio");
+        h_ratio->GetYaxis()->SetTitle("Ratio");
         h_ratio->GetYaxis()->CenterTitle(true);
         h_ratio->GetYaxis()->SetLabelSize(0.08);
-        h_ratio->GetYaxis()->SetTitleSize(0.15);
-        // h_ratio->GetYaxis()->SetTitleOffset(0.35);
+        h_ratio->GetYaxis()->SetTitleSize(0.08);
+        h_ratio->GetYaxis()->SetTitleOffset(0.4);
 
         // Set y-axis range
-        double min = 0.9 * (h_ratio->GetBinContent(h_ratio->GetMinimumBin()) - h_ratio->GetBinError(h_ratio->GetMinimumBin()));
-        double max = 1.1 * (h_ratio->GetBinContent(h_ratio->GetMaximumBin()) + h_ratio->GetBinError(h_ratio->GetMaximumBin()));
+        double min = std::numeric_limits<double>::max();
+        double max = - std::numeric_limits<double>::max();
 
-        h_ratio->GetYaxis()->SetRangeUser(min, max);
+        for (int i = 1; i <= h_ratio->GetNbinsX(); ++i) {
+            double binContent = h_ratio->GetBinContent(i);
+            double binError = h_ratio->GetBinError(i);
+            if (binContent - binError < min) {
+                min = binContent - binError;
+            }
+            if (binContent + binError > max) {
+                max = binContent + binError;
+            }
+        }
+
+        h_ratio->GetYaxis()->SetRangeUser(0.95*min, 1.05*max);
         h_ratio->Draw("e");
+
+
+        for(const auto& generator : generators)
+        {
+            const auto gen_hist = get_generator_hist(generator.path, sl_idx, 1.0/generator.scaling);
+            if (gen_hist) {
+
+                if(USE_ADD_SMEAR) 
+                {
+                    multiply_1d_hist_by_matrix(&ac_hist_slice, gen_hist);
+                }
+
+                // Normalise by bin width
+                for (int i = 1; i <= gen_hist->GetNbinsX(); ++i) {
+                    double bin_content = gen_hist->GetBinContent(i);
+                    double bin_error = gen_hist->GetBinError(i);
+                    double bin_width = gen_hist->GetXaxis()->GetBinWidth(i);
+                    gen_hist->SetBinContent(i, bin_content / bin_width);
+                    gen_hist->SetBinError(i, bin_error / bin_width);
+                }
+
+                // Clone gen_hist and create a 'ratio' version and divide that by h_cv_no_errors
+                TH1D* gen_hist_ratio = dynamic_cast<TH1D*>(gen_hist->Clone("gen_hist_ratio"));
+                gen_hist_ratio->Divide(h_cv_no_errors);
+
+                // Update min and max based on gen_hist_ratio
+                for (int i = 1; i <= gen_hist_ratio->GetNbinsX(); ++i) {
+                    double binContent = gen_hist_ratio->GetBinContent(i);
+                    double binError = gen_hist_ratio->GetBinError(i);
+                    if (binContent - binError < min) {
+                        min = binContent - binError;
+                    }
+                    if (binContent + binError > max) {
+                        max = binContent + binError;
+                    }
+                }
+
+                gen_hist_ratio->SetLineColor(generator.color); // Set the line color
+                gen_hist_ratio->Draw("hist same");
+            }
+        }
+
+        h_ratio->GetYaxis()->SetRangeUser(0.95*min, 1.05*max);
+        h_ratio->Draw("e same");
+
 
         if (using_fake_data)
         {
@@ -1329,28 +1531,24 @@ void test_unfolding_nuwro()
             h_ratio_truth->Divide(h_cv_no_errors);
             h_ratio_truth->SetLineColor(kGreen);
             h_ratio_truth->SetLineWidth(2);
+            h_ratio_truth->SetLineStyle(5);
             min = TMath::Min(min, 0.9 * h_ratio_truth->GetMinimum());
             max = TMath::Max(max, 1.1 * h_ratio_truth->GetMaximum());
             h_ratio_truth->GetYaxis()->SetRangeUser(min, max);
             h_ratio_truth->Draw("hist same");
         }
 
-        // TH1D* statUncertHist = dynamic_cast<TH1D*>(sh_cov_map.at("DataStats")->hist_.get());
-        // TH1D* statUncertHist_ratio = dynamic_cast<TH1D*>(statUncertHist->Clone("statUncertHist_ratio"));
-        // statUncertHist_ratio->Divide(h_cv_no_errors);
-        // statUncertHist_ratio->SetLineWidth(2);
-        // statUncertHist_ratio->SetLineColor(kBlack);
-        // statUncertHist_ratio->Draw("E1 same");
-
         line->Draw();
+        h_ratio->Draw("e same"); // draw again to be over everything
 
 
         // Go back to the main canvas before creating the second pad
         c1->cd();
 
-        TPad* pad1 = new TPad(("pad1 slice "+std::to_string(sl_idx)).c_str(), "", 0.0, 0.3, 1.0, 1.0);
+        TPad* pad1 = new TPad(("pad1 slice "+std::to_string(sl_idx)).c_str(), "", 0.0, noRatioPlot ? 0.1 : 0.3, 1.0, 1.0);
         pad1->SetBottomMargin(0.03);
         pad1->SetTopMargin(0.1);
+        pad1->SetRightMargin(rightMargin);
         pad1->Draw();
         pad1->cd();
 
@@ -1367,16 +1565,30 @@ void test_unfolding_nuwro()
         double ymax = -DBL_MAX;
         slice_unf->hist_->Draw("e");
 
+        if(sl_idx == 7)
+        {
+            slice_unf->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis labels
+            slice_unf->hist_->GetXaxis()->SetTickLength(0); // Hide x-axis ticks
+        }
+
         for (const auto &pair : slice_gen_map)
         {
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
 
             double max = slice_h->hist_->GetMaximum();
-            if (max > ymax)
-                ymax = max;
+            // if (max > ymax)
+            //     ymax = max;
 
-            if (name == "Unfolded NuWro Reco" || name == "NuWro Truth" || name == "MicroBooNE Tune")
+            for (int i = 1; i <= slice_h->hist_->GetNbinsX(); ++i) {
+                double binContent = slice_h->hist_->GetBinContent(i);
+                double binError = (name == "Unfolded Selection") ? slice_h->hist_->GetBinError(i) : 0;
+                if (binContent + binError > ymax) {
+                    ymax = binContent + binError;
+                }
+            }
+
+            if (name == "Unfolded Selection" || name == "NuWro Truth" || name == "MicroBooNE Tune")
                 continue;
 
             const auto &file_info = truth_file_map.at(name);
@@ -1397,63 +1609,129 @@ void test_unfolding_nuwro()
             slice_truth->hist_->SetStats(false);
             slice_truth->hist_->SetLineColor(kGreen);
             slice_truth->hist_->SetLineWidth(2);
+            slice_truth->hist_->SetLineStyle(5);
             slice_truth->hist_->Draw("hist same");
         }
 
-        slice_unf->hist_->GetYaxis()->SetRangeUser(0., ymax * 1.07);
-        slice_unf->hist_->Draw("3 same");
-        slice_unf->hist_->SetTitle("Unfolded NuWro CC1#pi^{#pm}Np");
+        std::map<std::string, SliceHistogram::Chi2Result> gen_metrics;
+        for(const auto& generator : generators)
+        {
+            const auto gen_hist = get_generator_hist(generator.path, sl_idx, 1.0/generator.scaling);
+            if (gen_hist) {
+                
+                if(USE_ADD_SMEAR) 
+                {
+                    multiply_1d_hist_by_matrix(&ac_hist_slice, gen_hist);
+                }
+
+                // Normalise by bin width
+                for (int i = 1; i <= gen_hist->GetNbinsX(); ++i) {
+                    double bin_content = gen_hist->GetBinContent(i);
+                    double bin_error = gen_hist->GetBinError(i);
+                    double bin_width = gen_hist->GetXaxis()->GetBinWidth(i);
+                    gen_hist->SetBinContent(i, bin_content / bin_width);
+                    gen_hist->SetBinError(i, bin_error / bin_width);
+                }
+
+                // Create the generator slice with nullptr convariance matrix
+                SliceHistogram *gen_slice_h = SliceHistogram::slice_histogram_from_histogram(*gen_hist);
+
+                if (gen_slice_h->hist_->GetNbinsX() != slice_gen_map.at("Unfolded Selection")->hist_->GetNbinsX()) {
+                    std::ostringstream oss;
+                    oss << "Error: gen_slice_h->hist_->GetNbinsX() (" << gen_slice_h->hist_->GetNbinsX() << ") != slice_gen_map.at(\"Unfolded NuWro Reco\")->hist_->GetNbinsX() (" << slice_gen_map.at("Unfolded Selection")->hist_->GetNbinsX() << ")";
+                    throw std::runtime_error(oss.str());
+                }
+
+                // Compute chi2 to unfolded NuWro Reco
+                const auto metrics = gen_slice_h->get_chi2(*slice_gen_map.at("Unfolded Selection"));
+                gen_metrics[generator.name] = metrics;
+                delete gen_slice_h;
+
+
+                gen_hist->SetLineColor(generator.color); // Set the line color
+                gen_hist->Draw("hist same");
+                // gen_hist->Draw("E same");
+            }
+        }
+
+        slice_unf->hist_->GetYaxis()->SetRangeUser(0., ymax * 1.05);
+        std::cout<<"DEBUG ymax (sl_idx"<<sl_idx<<"): "<<ymax;
+        slice_unf->hist_->Draw("E same");
+        // slice_unf->hist_->SetTitle("Unfolded NuWro CC1#pi^{#pm}Xp");
+        slice_unf->hist_->SetTitle(""); // No title
         slice_unf->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis
         slice_unf->hist_->GetXaxis()->SetTitleOffset(999); // Hide x-axis title
 
-        // auto graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
-        // graph1_sys->Draw("[]");
+        c1->cd();
 
-        // for (const auto& key : {std::string("total_blockwise_norm"), std::string("total_blockwise_shape"), std::string("total_blockwise_mixed")}) {
-        //     TH1D* hist = dynamic_cast<TH1D*>(sh_cov_map.at(key)->hist_.get());
-        //     // Draw the histogram
-        //     if (key == std::string("total_blockwise_norm")) {
-        //         hist->SetFillColor(kBlue);
-        //         hist->SetLineWidth(2); // Set line width for this histogram
-        //     } else if (key == std::string("total_blockwise_shape")) {
-        //         hist->SetFillColor(kRed);
-        //         hist->SetLineWidth(3); // Set a different line width for this histogram
-        //     } else if (key == std::string("total_blockwise_mixed")) {
-        //         hist->SetFillColor(kGreen);
-        //         hist->SetLineWidth(4); // Set yet another line width for this histogram
-        //     }
-        //     hist->Draw("e same");
-        // }
-        
-        // statUncertHist->SetLineWidth(2);
-        // statUncertHist->SetLineColor(kBlack);
-        // statUncertHist->Draw("E1 same");
+        // TLegend *lg = new TLegend(0.6, 0.2);
+        TLegend *lg = new TLegend(1 - rightMargin + 0.02, 0.09, 1 - 0.02, 0.93);
 
+        // lg->AddEntry((TObject*)0, "Generator Predictions", "");
+        for(const auto& generator : generators)
+        {
+            const auto gen_hist = get_generator_hist(generator.path, sl_idx, 1.0/generator.scaling);
+            if (gen_hist) {
+                gen_hist->SetLineColor(generator.color); // Set the line color
 
-        std::cout << "DEBUG Unfolding Point 6" << std::endl;
+                const auto metrics = gen_metrics[generator.name];
+                // Format the chi2 values and append to the generator name
+                std::ostringstream oss;
+                oss << "#splitline{" << generator.name << "}{" 
+                    << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{"; 
+                
+                if (metrics.num_bins_ > 1)
+                    oss << "p = " << metrics.p_value_;
+                
+                oss << "}}";
+                const std::string label = oss.str();
 
-        TLegend *lg = new TLegend(0.6, 0.2);
+                lg->AddEntry(gen_hist, label.c_str(), "l");
+            }
+        }
+
+        // lg->AddEntry((TObject*)0, "Simulated/Data Samples", "");
         for (const auto &pair : slice_gen_map)
         {
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
 
-            std::string label = name;
+            // std::string label = name;
             const auto &chi2_result = chi2_map.at(name);
+            // std::ostringstream oss;
+            // oss << std::setprecision(3) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin";
+            // if (chi2_result.num_bins_ > 1)
+            //     oss << "s; p-value = " << chi2_result.p_value_;
+
+            // label += (name != "Unfolded Selection") ? ": #chi^{2} = " + oss.str() : "";
+
             std::ostringstream oss;
-            oss << std::setprecision(3) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin";
-            if (chi2_result.num_bins_ > 1)
-                oss << "s; p-value = " << chi2_result.p_value_;
+            if((name != "Unfolded Selection"))
+            {
+                oss << "#splitline{" << name << "}{" 
+                    << "#splitline{#chi^{2} = " << (chi2_result.chi2_>= 0.01 && chi2_result.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin" << (chi2_result.num_bins_ > 1 ? "s" : "") << "}{"; 
+                
+                if (chi2_result.num_bins_ > 1)
+                    oss << "p = " << chi2_result.p_value_;
+                
+                oss << "}}";
+            }
+            else
+            {
+                oss << name;
+            }
+            const std::string label = oss.str();
 
-            label += (name != "Unfolded NuWro Reco") ? ": #chi^{2} = " + oss.str() : "";
-
-            lg->AddEntry(slice_h->hist_.get(), label.c_str(), "l");
+            lg->AddEntry(slice_h->hist_.get(), label.c_str(), (name == "Unfolded Selection") ? "lp" : "l");
         }
 
+        std::ostringstream headerss;
+        headerss << "#splitline{Fake data: NuWro + EXT}"
+                 << "{" << toLatexScientific(total_pot) << " POT}";
+                 
+        lg->SetHeader(headerss.str().c_str());
         lg->Draw("same");
-
         c1->Update();
-        std::cout << "DEBUG test_unfolding_nuwro - Point 8" << std::endl;
 
         std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf";
         c1->SaveAs(out_pdf_name.c_str());
@@ -1507,7 +1785,7 @@ void test_unfolding_nuwro()
         // std::string out_pdf_name_cov = "plots/plot_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "" + postfix + ".pdf";
         // c2->SaveAs(out_pdf_name_cov.c_str());
 
-        // const auto unfolded_cov_matrix = slice_gen_map.at("Unfolded NuWro Reco")->cmat_.cov_matrix_.get();
+        // const auto unfolded_cov_matrix = slice_gen_map.at("Unfolded Selection")->cmat_.cov_matrix_.get();
         // TCanvas *c3 = new TCanvas("c3", "Canvas", 800, 600);
         // unfolded_cov_matrix->Draw("COLZ");
         // unfolded_cov_matrix->SetTitle("Unfolded covariance matrix");
@@ -1562,18 +1840,18 @@ void test_unfolding_nuwro()
         // Prepare the output file prefix
         std::string output_file_prefix = "dump/pgfplots_slice_" + std::string(3 - std::to_string(sl_idx).length(), '0') + std::to_string(sl_idx);
 
-        std::cout << "DEBUG test_unfolding_nuwro - Point 9" << std::endl;
+        std::cout << "DEBUG unfold_nuwro - Point 9" << std::endl;
         write_pgfplots_files(output_file_prefix, slice_hist_table, slice_params_table);
-        std::cout << "DEBUG test_unfolding_nuwro - Point 10" << std::endl;
+        std::cout << "DEBUG unfold_nuwro - Point 10" << std::endl;
     } // slices
-    std::cout << "DEBUG test_unfolding_nuwro - Point 11" << std::endl;
+    std::cout << "---- All done ----" << std::endl;
     return 0;
 }
 
 int main()
 {
     std::cout << "DEBUG Unfolding Point main 0" << std::endl;
-    test_unfolding_nuwro();
+    unfold_nuwro();
     std::cout << "DEBUG Unfolding Point main 1" << std::endl;
     return 0;
 }

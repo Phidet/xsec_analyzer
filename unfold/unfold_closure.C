@@ -220,7 +220,7 @@ void dump_overall_results(const UnfoldedMeasurement &result,
     }
 }
 
-void test_unfolding_closure()
+void unfold_closure()
 {
     // Initialize the FilePropertiesManager and tell it to treat the Genie Data MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
@@ -228,14 +228,19 @@ void test_unfolding_closure()
     // fpm.load_file_properties("../closure_file_properties_closure.txt");
     // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/univmake_output_closure_v5_noext_nodirt_run1.root");
     // // Do the systematics calculations in preparation for unfolding
-    // std::cout << "DEBUG test_unfolding_closure - Point 0" << std::endl;
+    // std::cout << "DEBUG unfold_closure - Point 0" << std::endl;
     // const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
 
-    fpm.load_file_properties("../closure_file_properties.txt");
-    const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_closure_with_sideband_overflow_all_13Jan23.root");
+    fpm.load_file_properties("../closure_file_properties_testingOnly.txt");
+    // Do the systematics calculations in preparation for unfolding
+    // const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
+
+    const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_closure_02Apr24_testingOnly_lowPiMomThreshold.root");
+
+    const std::string postfix = "_fd_testingOnly_lowPiMomThreshold";
+
     // Do the systematics calculations in preparation for unfolding
     const auto *syst_ptr = new MCC9SystematicsCalculator(respmat_file_name, "../systcalc_unfold_fd_closure.conf");
-
     const auto &syst = *syst_ptr;
 
     // Get the tuned GENIE CV prediction in each true bin (including the
@@ -281,9 +286,9 @@ void test_unfolding_closure()
 
     // Define your custom labels and intervals
     const Int_t n = 9;
-    Double_t bins[n+1] = {0, 11, 26, 32, 39, 49, 55, 62, 65, 66};
-    const Int_t overUnderFlowN = 3;
-    Double_t overUnderFlowBins[overUnderFlowN] = {31, 49, 54};
+    Double_t bins[n+1] = {0, 11, 26, 32, 39, 49, 54, 61, 64, 65};
+    const Int_t overUnderFlowN = 2;
+    Double_t overUnderFlowBins[overUnderFlowN] = {31, 53};
     const Char_t *labels[n] = {"cos(#theta_{#mu})", "#phi_{#mu}", "p_{#mu}", "cos(#theta_{#pi})", "#phi_{#pi}", "p_{#pi}^{**}", "#theta_{#pi #mu}", "N_{p}", "Total"};
 
     // Set the color palette
@@ -370,7 +375,7 @@ void test_unfolding_closure()
     // footnote->SetTextAlign(22); // Center alignment
     footnote2->Draw();
 
-    cm2->SaveAs("plots/plot_slice_entire_corr_closure.pdf");
+    cm2->SaveAs(("plots/plot_slice_entire_corr_closure" + postfix + ".pdf").c_str());
 
     std::cout<<"DEBUG U0.1"<<std::endl;
 
@@ -429,10 +434,11 @@ void test_unfolding_closure()
     //     }
     // }
 
+    
+
 
     // Draw the TH2D object on the canvas
     TCanvas *cm1 = new TCanvas("cm1", "Canvas", 800, 600);
-
     TMatrixD* corr_unfolded = new TMatrixD(util::CovarianceMatrixToCorrelationMatrix(*result.cov_matrix_));
     TH2D* corr_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*corr_unfolded, "corr_unfolded", "Correlation Matrix", 0, corr_unfolded->GetNrows(), 0, corr_unfolded->GetNcols()));
     delete corr_unfolded; // Delete the dynamically allocated memory
@@ -510,7 +516,7 @@ void test_unfolding_closure()
     // footnote->SetTextAlign(22); // Center alignment
     footnote1->Draw();
 
-    cm1->SaveAs("plots/plot_unfolded_slice_entire_corr_closure.pdf");
+    cm1->SaveAs(("plots/plot_unfolded_slice_entire_corr_closure" + postfix + ".pdf").c_str());
 
     // Add the blockwise decomposed matrices into the map
     unfolded_cov_matrix_map["total_blockwise_norm"] = std::make_unique<TMatrixD>(bd_ns_covmat.norm_);
@@ -652,7 +658,7 @@ void test_unfolding_closure()
     footnote3->Draw();
 
 
-    c_ac->SaveAs("plots/plot_entire_additional_smearing_matrix_closure.pdf");
+    c_ac->SaveAs(("plots/plot_entire_additional_smearing_matrix_closure" + postfix + ".pdf").c_str());
 
     std::cout<<"DEBUG U3"<<std::endl;
 
@@ -717,14 +723,14 @@ void test_unfolding_closure()
     // for each available generator model
     double conv_factor = (num_Ar * integ_flux) / 1e39;
     std::map<std::string, TMatrixD *> generator_truth_map = {}; // get_true_events_nuisance( sample_info, conv_factor );
-    std::cout << "DEBUG test_unfolding_closure - Point 2" << std::endl;
+    std::cout << "DEBUG unfold_closure - Point 2" << std::endl;
 
     // Dump overall results to text files. Total cross section units (10^{-39}
     // cm^2 / Ar) will be used throughout. Do this before adjusting the
     // truth-level prediction TMatrixD objects via multiplication by A_C
     // dump_overall_results(result, unfolded_cov_matrix_map, 1.0 / conv_factor, genie_cv_truth_vec, fake_data_truth, generator_truth_map, using_fake_data);
 
-    std::cout << "DEBUG test_unfolding_closure - Point 3" << std::endl;
+    std::cout << "DEBUG unfold_closure - Point 3" << std::endl;
 
     if (USE_ADD_SMEAR)
     {
@@ -743,7 +749,7 @@ void test_unfolding_closure()
             *pair.second = TMatrixD(A_C, TMatrixD::kMult, *pair.second);
     }
 
-    std::cout << "DEBUG test_unfolding_closure - Point 4" << std::endl;
+    std::cout << "DEBUG unfold_closure - Point 4" << std::endl;
 
     const auto cv_hist_2d = syst.get_cv_hist_2d();
 
@@ -752,15 +758,15 @@ void test_unfolding_closure()
     cv_hist_2d->Draw("colz");
     gPad->SetLogz();
     util::CreateWhiteToBlueColorPalette(20);
-    c_cv_hist_2d->SaveAs("plots/entire_cv_hist_2d_closure.pdf");
+    c_cv_hist_2d->SaveAs(("plots/entire_cv_hist_2d_closure" + postfix + ".pdf").c_str());
 
     for (size_t sl_idx = 0u; sl_idx < sb.slices_.size(); ++sl_idx)
     {
         // if (sl_idx != 4)
         //     continue; // TODO: remove !!!!!!!!!!!!!!!!!!!!!
-        std::cout << "DEBUG test_unfolding_closure - Point 5" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 5" << std::endl;
         const auto &slice = sb.slices_.at(sl_idx);
-        std::cout << "DEBUG test_unfolding_closure - Point 6" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 6" << std::endl;
 
         // Make a histogram showing the unfolded true event counts in the current slice
         SliceHistogram *slice_unf = SliceHistogram::make_slice_histogram(
@@ -930,7 +936,7 @@ void test_unfolding_closure()
             }
         }
 
-        c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure.pdf").c_str());
+        c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure" + postfix + ".pdf").c_str());
 
 
         if(using_fake_data)
@@ -964,7 +970,7 @@ void test_unfolding_closure()
                 }
             }
 
-            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure.pdf").c_str());
+            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure" + postfix + ".pdf").c_str());
         }
 
 
@@ -986,7 +992,7 @@ void test_unfolding_closure()
         ac_hist->GetYaxis()->SetLabelSize(0.05);
 
         TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
-        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure.pdf").c_str());
+        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure" + postfix + ".pdf").c_str());
 
         // Plot for trimmed_corr_unf_hist
         TCanvas* c_corr_unf_slice = new TCanvas("c_corr_unf_slice", "c correlation matrix", 800, 600);
@@ -1008,7 +1014,7 @@ void test_unfolding_closure()
         trimmed_corr_unf_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_corr_unf_hist->GetYaxis()->SetLabelSize(0.05);
 
-        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure.pdf").c_str());
+        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure" + postfix + ".pdf").c_str());
 
         // Plot for trimmed_corr_hist
         TCanvas* c_corr_slice = new TCanvas("c_corr_slice", "c correlation matrix", 800, 600);
@@ -1030,7 +1036,7 @@ void test_unfolding_closure()
         trimmed_corr_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_corr_hist->GetYaxis()->SetLabelSize(0.05);
 
-        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure.pdf").c_str());
+        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure" + postfix + ".pdf").c_str());
 
 
         // TMatrixD* matrix = result.cov_matrix_.get();
@@ -1133,7 +1139,7 @@ void test_unfolding_closure()
 
         if(sl_idx == 8) var_count = 0; // TODO: Find a better way to do this
 
-        std::cout << "DEBUG test_unfolding_closure - Point 7" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 7" << std::endl;
 
         int num_slice_bins = slice_unf->hist_->GetNbinsX();
         TMatrixD trans_mat(num_slice_bins, num_slice_bins);
@@ -1144,7 +1150,7 @@ void test_unfolding_closure()
             std::cout << "DEBUG at " << b << " trans_mat: " << trans_mat(b, b) << " width: " << width << " integ_flux: " << integ_flux << " num_Ar: " << num_Ar << std::endl;
         }
 
-        std::cout << "DEBUG test_unfolding_closure - Point 7.1" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 7.1" << std::endl;
 
         std::string slice_y_title = var_count > 0 ? "d" : "#sigma";
         std::string slice_y_latex_title = var_count > 0 ? "{$d" : "\\sigma";
@@ -1156,7 +1162,7 @@ void test_unfolding_closure()
             slice_y_latex_title += var_count_str;
         }
 
-        std::cout << "DEBUG test_unfolding_closure - Point 7.2" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 7.2" << std::endl;
 
         if (var_count > 0)
         {
@@ -1167,7 +1173,7 @@ void test_unfolding_closure()
         slice_y_title += " (10^{-39} cm^{2}" + diff_xsec_units_denom + " / Ar)";
         slice_y_latex_title += "\\text{ }(10^{-39}\\text{ cm}^{2}" + diff_xsec_units_denom_latex + " / \\mathrm{Ar})$}";
 
-        std::cout << "DEBUG test_unfolding_closure - Point 7.3" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 7.3" << std::endl;
 
         for (auto &pair : slice_gen_map)
         {
@@ -1182,7 +1188,7 @@ void test_unfolding_closure()
             slice_h->transform(trans_mat);
         }
 
-        std::cout << "DEBUG test_unfolding_closure - Point 7.4" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 7.4" << std::endl;
 
         std::map<std::string, SliceHistogram::Chi2Result> chi2_map;
         std::cout << '\n';
@@ -1192,7 +1198,7 @@ void test_unfolding_closure()
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
 
-            std::cout << "DEBUG test_unfolding_closure - Point 7.1 " << name << std::endl;
+            std::cout << "DEBUG unfold_closure - Point 7.1 " << name << std::endl;
 
             if (name == "Genie Unfolded ")
             {
@@ -1379,7 +1385,7 @@ void test_unfolding_closure()
 
         slice_unf->hist_->GetYaxis()->SetRangeUser(0., ymax * 1.07);
         slice_unf->hist_->Draw("3 same");
-        slice_unf->hist_->SetTitle("Genie Unfolded  CC1#pi^{#pm}Np");
+        slice_unf->hist_->SetTitle("Genie Unfolded  CC1#pi^{#pm}Xp");
         slice_unf->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis
         slice_unf->hist_->GetXaxis()->SetTitleOffset(999); // Hide x-axis title
 
@@ -1430,12 +1436,12 @@ void test_unfolding_closure()
         lg->Draw("same");
 
         c1->Update();
-        std::cout << "DEBUG test_unfolding_closure - Point 8" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 8" << std::endl;
 
-        std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure.pdf";
+        std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_closure" + postfix + ".pdf";
         c1->SaveAs(out_pdf_name.c_str());
 
-        std::cout << "DEBUG test_unfolding_closure - Point 9" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 9" << std::endl;
 
 
         // // Assuming slice.bin_map_ is a std::map<int, std::set<size_t>>
@@ -1482,14 +1488,14 @@ void test_unfolding_closure()
         // TCanvas *c2 = new TCanvas("c2", "Canvas", 800, 600);
         // cov_matrix->Draw("COLZ");
         // cov_matrix->SetTitle("Covariance matrix");
-        // std::string out_pdf_name_cov = "plots/plot_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf";
+        // std::string out_pdf_name_cov = "plots/plot_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "" + postfix + ".pdf";
         // c2->SaveAs(out_pdf_name_cov.c_str());
 
         // const auto unfolded_cov_matrix = slice_gen_map.at("Unfolded Genie Data Reco")->cmat_.cov_matrix_.get();
         // TCanvas *c3 = new TCanvas("c3", "Canvas", 800, 600);
         // unfolded_cov_matrix->Draw("COLZ");
         // unfolded_cov_matrix->SetTitle("Unfolded covariance matrix");
-        // std::string out_pdf_name_unf_cov = "plots/plot_unfolded_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + ".pdf";
+        // std::string out_pdf_name_unf_cov = "plots/plot_unfolded_slice_cov_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "" + postfix + ".pdf";
         // c3->SaveAs(out_pdf_name_unf_cov.c_str());
         // delete cov_matrix;
 
@@ -1498,22 +1504,22 @@ void test_unfolding_closure()
         std::map<std::string, std::vector<double>> slice_hist_table;
         std::map<std::string, std::string> slice_params_table;
 
-        std::cout << "DEBUG test_unfolding_closure - Point 9.1" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 9.1" << std::endl;
         dump_slice_variables(sb, sl_idx, slice_params_table);
 
-        std::cout << "DEBUG test_unfolding_closure - Point 9.2" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 9.2" << std::endl;
 
         for (const auto &pair : slice_gen_map)
         {
-            std::cout << "DEBUG test_unfolding_closure - Point 9.3 - name: " << pair.first << std::endl;
+            std::cout << "DEBUG unfold_closure - Point 9.3 - name: " << pair.first << std::endl;
             const auto hist_name = samples_to_hist_names.at(pair.first);
-            std::cout << "DEBUG test_unfolding_closure - Point 9.4 - hist_name: " << hist_name << std::endl;
+            std::cout << "DEBUG unfold_closure - Point 9.4 - hist_name: " << hist_name << std::endl;
             const auto *slice_hist = pair.second;
             bool include_coords_and_error = (hist_name == "UnfData");
 
             dump_slice_histogram(hist_name, *slice_hist, slice, slice_hist_table,
                                  include_coords_and_error, include_coords_and_error);
-            std::cout << "DEBUG test_unfolding_closure - Point 9.5" << std::endl;
+            std::cout << "DEBUG unfold_closure - Point 9.5" << std::endl;
         }
 
         std::cout << "DEBUG Unfolding Point 7" << std::endl;
@@ -1546,18 +1552,18 @@ void test_unfolding_closure()
         // Prepare the output file prefix
         std::string output_file_prefix = "dump/pgfplots_slice_" + std::string(3 - std::to_string(sl_idx).length(), '0') + std::to_string(sl_idx);
 
-        std::cout << "DEBUG test_unfolding_closure - Point 9" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 9" << std::endl;
         write_pgfplots_files(output_file_prefix, slice_hist_table, slice_params_table);
-        std::cout << "DEBUG test_unfolding_closure - Point 10" << std::endl;
+        std::cout << "DEBUG unfold_closure - Point 10" << std::endl;
     } // slices
-    std::cout << "DEBUG test_unfolding_closure - Point 11" << std::endl;
+    std::cout << "DEBUG unfold_closure - Point 11" << std::endl;
     return 0;
 }
 
 int main()
 {
     std::cout << "DEBUG Unfolding Point main 0" << std::endl;
-    test_unfolding_closure();
+    unfold_closure();
     std::cout << "DEBUG Unfolding Point main 1" << std::endl;
     return 0;
 }

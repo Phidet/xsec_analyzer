@@ -55,6 +55,7 @@ MCC9SystematicsCalculator::MCC9SystematicsCalculator(
 double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
   int reco_bin, int flux_universe_index ) const
 {
+  // std::cout << "DEBUG SSS-5" << std::endl;
   // For the MCC9SystematicsCalculator class, the observable of interest is the
   // total number of events (signal + background) in the current bin in reco
   // space
@@ -87,15 +88,19 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
   // We need to sum the contributions of the various true bins,
   // so loop over them while checking whether each one is associated
   // with either signal or background
+  // std::cout << "DEBUG SSS-4 num_true_bins = " << num_true_bins << std::endl;
   for ( size_t tb = 0u; tb < num_true_bins; ++tb ) {
     const auto& tbin = true_bins_.at( tb );
 
     if ( tbin.type_ == kSignalTrueBin ) {
+      // std::cout << "DEBUG SSS-3" << std::endl;
 
       // Ignore contributions from signal true bins outside of the block for
       // the current reco bin. This avoids issues with double-counting.
       int true_block_index = tbin.block_index_;
+      // std::cout << "DEBUG SSS-2.91 reco_block_index = " << reco_block_index << " true_block_index = " << true_block_index << std::endl;
       if ( reco_block_index != true_block_index ) continue;
+      // std::cout << "DEBUG SSS-2.9" << std::endl;
 
       // Get the CV event count for the current true bin
       double denom_CV = cv_univ->hist_true_->GetBinContent( tb + 1 );
@@ -104,6 +109,8 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
       // current true bin that fall into the current reco bin
       double numer_CV = cv_univ->hist_2d_->GetBinContent( tb + 1,
         reco_bin + 1 );
+
+      // std::cout << "DEBUG SSS-2.8" << std::endl;
 
       // For the systematic variation universes, we want to assess
       // uncertainties on the signal only through the smearceptance
@@ -126,6 +133,8 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
         denom = denom_CV;
       }
 
+      // std::cout << "DEBUG SSS-2.7" << std::endl;
+
       // If the denominator is nonzero actually calculate the fraction.
       // Otherwise, just leave it zeroed out.
       // TODO: revisit this, think about MC statistical uncertainties
@@ -134,7 +143,7 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
       if ( denom > 0. ) smearcept = numer / denom;
 
       double expected_signal = 0.;
-
+      // std::cout << "DEBUG SSS-2" << std::endl;
       if ( syst_mode_ == SystMode::ForXSec
         || syst_mode_ == SystMode::VaryOnlySignalResponse )
       {
@@ -142,6 +151,7 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
         // by multiplying the varied smearceptance matrix element
         // by the unaltered CV prediction in the current true bin.
         expected_signal = smearcept * denom_CV;
+        // std::cout << "DEBUG SSS-1: expected_signal = " << expected_signal << " smearcept = " << smearcept << " denom_CV = " << denom_CV << std::endl;
       }
       else if ( syst_mode_ == SystMode::VaryOnlySignal
              || syst_mode_ == SystMode::VaryBackgroundAndSignalDirectly )
@@ -164,6 +174,7 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
       // with the varied smearceptance matrix (and, for flux universes,
       // the varied integrated flux)
       reco_bin_events += expected_signal;
+      // std::cout << "DEBUG SSS0: reco_bin_events = " << reco_bin_events << std::endl;
     }
     else if ( tbin.type_ == kBackgroundTrueBin ) {
 
@@ -189,8 +200,12 @@ double MCC9SystematicsCalculator::evaluate_observable( const Universe& univ,
       }
       else throw std::runtime_error( "Unrecognized SystMode enum value"
         " in MCC9SystematicsCalculator::evaluate_observable()" );
+      
+      // std::cout << "DEBUG SSS1: reco_bin_events = " << reco_bin_events << std::endl;
     }
   } // true bins
+
+  // std::cout << "DEBUG SSS2: reco_bin_events = " << reco_bin_events << std::endl;
 
   return reco_bin_events;
 }

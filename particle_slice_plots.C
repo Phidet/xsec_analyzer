@@ -31,9 +31,9 @@ void scale_by_bin_width(SliceHistogram* pSlice)
     pSlice->transform(trans_mat);
 }
 
-void slice_plots(const bool normaliseByBinWidth) {
+void make_slice_plots(const bool normaliseByBinWidth) {
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 0"<<std::endl;
+  std::cout<<"DEBUG tutorial_make_slice_plots Point 0"<<std::endl;
   #ifdef USE_FAKE_DATA
     // Initialize the FilePropertiesManager and tell it to treat the NuWro
     // MC ntuples as if they were data
@@ -53,7 +53,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     std::string nameExtension = "_bnb_truncMeandEdx_run1234bcd5";
   #endif
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 1"<<std::endl;
+  std::cout<<"DEBUG tutorial_make_slice_plots Point 1"<<std::endl;
   auto& syst = *syst_ptr;
 
   auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_truncMeandEdx.txt" );
@@ -69,7 +69,7 @@ void slice_plots(const bool normaliseByBinWidth) {
   //   reco_bnb_hist->Add( reco_ext_hist );
   // #endif
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 2"<<std::endl;
+  std::cout<<"DEBUG tutorial_make_slice_plots Point 2"<<std::endl;
 
   // TH2D* category_hist = syst.cv_universe().hist_categ_.get();
 
@@ -93,31 +93,31 @@ void slice_plots(const bool normaliseByBinWidth) {
     std::cout << "Key: " << key << std::endl;
   }
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 3"<<std::endl;
+  std::cout<<"DEBUG tutorial_make_slice_plots Point 3"<<std::endl;
 
   for ( size_t sl_idx = 0u; sl_idx < sb.slices_.size(); ++sl_idx ) {
-    std::cout<<"DEBUG tutorial_slice_plots Point 3.1 sl_idx: "<<sl_idx<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 3.1 sl_idx: "<<sl_idx<<std::endl;
     // if(sl_idx!=2) continue;
 
     const auto& slice = sb.slices_.at( sl_idx );
-    std::cout<<"DEBUG tutorial_slice_plots Point 3.2"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 3.2"<<std::endl;
 
     // We now have all of the reco bin space histograms that we need as input.
     // Use them to make new histograms in slice space.
     SliceHistogram* slice_bnb = SliceHistogram::make_slice_histogram(
       *reco_bnb_hist, slice, &matrix_map.at("BNBstats") );
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 3.21"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 3.21"<<std::endl;
 
     SliceHistogram* slice_ext = SliceHistogram::make_slice_histogram(
       *reco_ext_hist, slice, &matrix_map.at("EXTstats") );
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 3.22"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 3.22"<<std::endl;
 
     SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
       *reco_mc_plus_ext_hist, slice, &matrix_map.at("total") );
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 3.23"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 3.23"<<std::endl;
 
     // auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
     // std::cout << "Slice " << sl_idx << ": \u03C7\u00b2 = "
@@ -127,7 +127,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     // Prepare the plot legend
     // TLegend* lg = new TLegend( 0.3, 0.4 );
     TLegend* lg = new TLegend( 0.75, 0.7, 0.99, 0.9);
-    std::cout<<"DEBUG tutorial_slice_plots Point 3.3"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 3.3"<<std::endl;
 
     // Build a stack of categorized central-value MC predictions plus the
     // extBNB contribution in slice space
@@ -144,7 +144,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     // auto cat_bin_index = cat_map.size();
     const auto total_events = slice_mc_plus_ext->hist_->Integral();
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 4"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 4"<<std::endl;
 
     // for ( auto iter = cat_map.begin(); iter != cat_map.end(); ++iter )
     // {
@@ -182,7 +182,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     //   --cat_bin_index;
     // }
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 5"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 5"<<std::endl;
 
     TCanvas* c1 = new TCanvas;
     c1->SetRightMargin(0.252); // Allow space for the legend
@@ -269,7 +269,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     out_pdf_name += normaliseByBinWidth ? "_norm.pdf" : ".pdf";
     c1->SaveAs( out_pdf_name.c_str() );
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 6"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 6"<<std::endl;
 
     // Get the binning and axis labels for the current slice by cloning the
     // (empty) histogram owned by the Slice object
@@ -347,16 +347,16 @@ void slice_plots(const bool normaliseByBinWidth) {
       slice_for_syst->hist_->SetLineWidth( 3 );
     }
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 7"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 7"<<std::endl;
 
     TCanvas* c2 = new TCanvas;
     // TLegend* lg2 = new TLegend( 0.7, 0.7, 0.9, 0.9 );
     TLegend* lg2 = new TLegend( 0.2, 0.3);
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 7.1"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 7.1"<<std::endl;
 
     auto* total_frac_err_hist = frac_uncertainty_hists.at( "total" );
-    std::cout<<"DEBUG tutorial_slice_plots Point 7.2"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 7.2"<<std::endl;
     total_frac_err_hist->SetStats( false );
     total_frac_err_hist->GetYaxis()->SetRangeUser( 0.,
       total_frac_err_hist->GetMaximum() * 1.05 );
@@ -367,7 +367,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     total_frac_err_hist->SetTitle("Fractional Uncertainty");
     total_frac_err_hist->GetYaxis()->SetTitle("Fractional Uncertainty");
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 7.3"<<std::endl;
+    std::cout<<"DEBUG tutorial_make_slice_plots Point 7.3"<<std::endl;
 
     // const auto frac_ymax = 0.35;
     // total_frac_err_hist->GetYaxis()->SetRangeUser( 0., frac_ymax);
@@ -375,7 +375,7 @@ void slice_plots(const bool normaliseByBinWidth) {
     lg2->AddEntry( total_frac_err_hist, "total", "l" );
 
     for ( auto& pair : frac_uncertainty_hists ) {
-      std::cout<<"DEBUG tutorial_slice_plots Point 7.4"<<std::endl;
+      std::cout<<"DEBUG tutorial_make_slice_plots Point 7.4"<<std::endl;
       const auto& name = pair.first;
       TH1* hist = pair.second;
       // We already plotted the "total" one above
@@ -384,7 +384,7 @@ void slice_plots(const bool normaliseByBinWidth) {
       {
         hist->SetLineStyle( 2 );
       }
-      std::cout<<"DEBUG tutorial_slice_plots Point 7.5"<<std::endl;
+      std::cout<<"DEBUG tutorial_make_slice_plots Point 7.5"<<std::endl;
 
       lg2->AddEntry( hist, name.c_str(), "l" );
       hist->Draw( "same hist" );
@@ -406,11 +406,11 @@ void slice_plots(const bool normaliseByBinWidth) {
 
   } // slices
 
-  std::cout<<"DEBUG tutorial_slice_plots Point 8"<<std::endl;
+  std::cout<<"DEBUG tutorial_make_slice_plots Point 8"<<std::endl;
 
 }
 
-int tutorial_particle_slice_plots() {
-  slice_plots(false);
+int particle_slice_plots() {
+  make_slice_plots(false);
   return 0;
 }
