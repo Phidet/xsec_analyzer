@@ -113,7 +113,7 @@ class EventCategoryInterpreter {
       { kNumuCC1PiChargedGolden, "#nu_{#mu} CC1#pi^{#pm} for p_{#pi}" },
       { kNumuCC1PiChargedNonGolden, "#nu_{#mu} CC1#pi^{#pm} Other" },
       { kNumuCC1PiNonSignal, "#nu_{#mu} CC1#pi^{#pm} Non-Signal" },
-      { kNumuCC0PiSignal, "#nu_{#mu} CC0#pi Constraint Signal" },
+      { kNumuCC0PiSignal, "#nu_{#mu} CC0#piNp, N #geq 1" },
       { kNumuCC0Pi, "#nu_{#mu} CC0#pi Other" },
       { kNumuCC1PiZero, "#nu_{#mu} CC1#pi^{0}" },
       { kNumuCCOther, "Other #nu_{#mu} CC" },

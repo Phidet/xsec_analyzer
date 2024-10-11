@@ -13,7 +13,7 @@
 #include "TDecompLU.h"
 #include "TMatrixD.h"
 
-constexpr double DEFAULT_MATRIX_INVERSION_TOLERANCE = 1e-4;
+constexpr double DEFAULT_MATRIX_INVERSION_TOLERANCE = 1e-3;
 
 std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
   const double inversion_tolerance = DEFAULT_MATRIX_INVERSION_TOLERANCE )
@@ -25,7 +25,7 @@ std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
   constexpr double BIG_DOUBLE = std::numeric_limits<double>::max();
   double min_abs = BIG_DOUBLE;
   int num_bins = mat.GetNrows();
-  std::cout<<"DEBUG invert_matrix - num_bins: "<<num_bins<<std::endl;
+  // std::cout<<"DEBUG invert_matrix - num_bins: "<<num_bins<<std::endl;
   for ( int a = 0; a < num_bins; ++a ) {
     for ( int b = 0; b < num_bins; ++b ) {
       double element = mat( a, b );
@@ -66,13 +66,13 @@ std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
   // original by its inverse
   TMatrixD unit_mat( mat, TMatrixD::kMult, *inverse_matrix );
 
-  std::cout << "\n\nDEBUG original cov mat muliplied by its inverse:" << std::endl;
-  for (int i = 0; i < unit_mat.GetNrows(); ++i) {
-    for (int j = 0; j < unit_mat.GetNcols(); ++j) {
-      std::cout << unit_mat(i, j) << " ";
-    }
-    std::cout << std::endl;
-  }
+  // std::cout << "\n\nDEBUG original cov mat muliplied by its inverse:" << std::endl;
+  // for (int i = 0; i < unit_mat.GetNrows(); ++i) {
+  //   for (int j = 0; j < unit_mat.GetNcols(); ++j) {
+  //     std::cout << unit_mat(i, j) << " ";
+  //   }
+  //   std::cout << std::endl;
+  // }
 
   for ( int a = 0; a < num_bins; ++a ) {
     for ( int b = 0; b < num_bins; ++b ) {

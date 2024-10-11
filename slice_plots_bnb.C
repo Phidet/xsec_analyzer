@@ -17,7 +17,7 @@
 
 using NFT = NtupleFileType;
 
-#define USE_FAKE_DATA "yes"
+// #define USE_FAKE_DATA "yes"
 
 void scale_by_bin_width(SliceHistogram* pSlice)
 {
@@ -42,95 +42,57 @@ struct inputFiles
 
 void make_slice_plots(const bool normaliseByBinWidth) {
 
-  // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section 
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_09Apr24_testingOnly_lowPiMomThreshold_containedMuon.root",
-  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc_fd_min.conf",
-  //   "ubcc1pi_neutral_slice_config.txt", // <-- This verion includes the _lowPiMomThreshold underflow bin removal
-  //   "_fd_testingOnly_lowPiMomThreshold_containedMuon"
-  // };
-
-  // inputFiles input{ // muon momentum bnb phase-space cut plot
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_generic_muon_momentum_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_containedMuon_11Apr24.root", // << "bdt_input_variables" is wrong in the name
-  //   "file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc.conf",
-  //   "bdt_input_slice_config_generic_muon_momentum_fewer_bins.txt",
-  //   "_bnb_generic_muon_mom_phase_space_containedMuon"
-  // };
-
-  // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section and modified bin size (muon momentum endind at 1.2GeV rather than 1.5)
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_15Apr24_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV.root",
-  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc_fd_min.conf",
-  //   "ubcc1pi_neutral_slice_config_muon1200MeV.txt", // <-- This verion includes the _lowPiMomThreshold underflow bin removal & muon momentum endind at 1.2GeV rather than 1.5
-  //   "_fd_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV"
-  // };
-
-  // inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal)
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_30Apr_pionMom_V2.root",
-  //     "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //     "systcalc_fd_min.conf",
-  //     "ubcc1pi_neutral_slice_config_pion_momentum_study.txt",
-  //     "_nuwro_pion_momentum_study"
-  // };
-
-  // inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal); Same as above but with cross-section binning
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_1May_pionMom_xsec_binning.root",
-  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc_fd_min.conf",
-  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning.txt",
-  //   "_nuwro_pion_momentum_study_xsec_binning"
-  // };
-
-  // inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal); Same as above but with cross-section binning; Only one slice
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_1May_pionMom_xsec_binning_slice3.root",
-  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc_fd_min.conf",
-  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning_only_slice1.txt",
-  //   "_nuwro_pion_momentum_study_xsec_binning_only_slice3"
-  // };
-
-  //   inputFiles input{ // Test plots that look at the 100 MeV tre/reco pion momentum region (selected and selected signal); Same as above but with cross-section binning; Only one slice; Only run 1 and set same block number for truth and reco
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_3May_pionMom_xsec_binning_slice3_V2.root",
-  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc_fd_min.conf",
-  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning_only_slice1_underflow.txt",
-  //   "_nuwro_pion_momentum_study_xsec_binning_signal_uncertainties_only_slice3"
-  // };
-
   // inputFiles input{ // Same as above but without NuWro uncertainty
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_nuwro_3May_pionMom_xsec_binning_slice3_V2.root",
-  //   "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //   "systcalc_fd_min_noNuWro.conf",
-  //   "ubcc1pi_neutral_slice_config_pion_momentum_study_xsec_binning_only_slice1_underflow.txt",
-  //   "_nuwro_pion_momentum_study_xsec_binning_signal_uncertainties_only_slice3_noNuWroUncertainty"
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May24_testingOnly_lowPiMomThreshold_fullDetVars.root",
+  //   "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+  //   "systcalc.conf",
+  //   "ubcc1pi_neutral_slice_config.txt",
+  //   "_bnb"
   // };
 
-  // inputFiles input{ // All nuwro cross-sections; removed the nProton cross-section
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_07May24_testingOnly_lowPiMomThreshold.root",
-  //     "nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-  //     "systcalc_fd_min.conf",
-  //     "ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal and remove nProton cross-section
-  //     "_fd_testingOnly_lowPiMomThreshold_09May24"
+  // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
+  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow.root",
+  //   "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+  //   "systcalc.conf",
+  //   "ubcc1pi_neutral_slice_config_mergedOverflow.txt",
+  //   "_bnb_fixedBackground_mergedOverflow"
   // };
 
-  // inputFiles input{ // Golden pion bdt score with full uncertainties
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/bdt_input_variables_goldenPionBDTScore_phase_space_run1234bcd5_testingOnly_lowPiMomThreshold_9May24.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold.txt",
+  // #########################
+  // Alternative plots
+  // #########################
+
+  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; WARNING THE BACKGROUND SUBTRACTION IS NOT CORRECT!!!!!!
+  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_06Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_v2.root",
+  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
   //     "systcalc.conf",
-  //     "bdt_input_slice_config_goldenPionBDTScore.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal and remove nProton cross-section
-  //     "_bnb_testingOnly_lowPiMomThreshold_09May24_golden_pion_bdt_cut"
+  //     "ubcc1pi_slice_config_phiStudy.txt",
+  //     "_bnb_fixedBackground_mergedOverflow_phiStudy"
   // };
 
+  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions are unchanged but the reco bins ar
+  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_unchangedSignalDef.root",
+  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+  //     "systcalc.conf",
+  //     "ubcc1pi_slice_config_phiStudy.txt",
+  //     "_bnb_fixedBackground_mergedOverflow_phiStudy_unchangedSignalDef"
+  // };
 
-  inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
-    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow.root",
-    "nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-    "systcalc_fd_min.conf",
-    "ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-    "_nuwro_fixedBackground_mergedOverflow"
+  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include contained muons
+  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_contained.root",
+  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+  //     "systcalc.conf",
+  //     "ubcc1pi_slice_config_phiStudy_containedSignal.txt",
+  //     "_bnb_fixedBackground_mergedOverflow_phiStudy_contained"
+  // };
+
+  inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include uncontained muons
+      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_uncontained.root",
+      "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+      "systcalc.conf",
+      "ubcc1pi_slice_config_phiStudy_uncontainedSignal.txt",
+      "_bnb_fixedBackground_mergedOverflow_phiStudy_uncontained"
   };
-
 
   #ifdef USE_FAKE_DATA
     // Initialize the FilePropertiesManager and tell it to treat the NuWro
@@ -207,6 +169,16 @@ void make_slice_plots(const bool normaliseByBinWidth) {
   // slices below.
   TH1D* reco_bnb_hist = syst.data_hists_.at( NFT::kOnBNB ).get();
   TH1D* reco_ext_hist = syst.data_hists_.at( NFT::kExtBNB ).get();
+
+  // std::cout << "DEBUG reco_bnb_hist: ";
+  // for (int i = 1; i <= reco_bnb_hist->GetNbinsX(); ++i) {
+  //   std::cout << reco_bnb_hist->GetBinContent(i);
+  //   if (i != reco_bnb_hist->GetNbinsX()) {
+  //     std::cout << ", ";
+  //   }
+  // }
+  // std::cout << std::endl;
+  // return 0;
 
   // #ifdef USE_FAKE_DATA
   //   // Add the EXT to the "data" when working with fake data
@@ -580,7 +552,7 @@ void make_slice_plots(const bool normaliseByBinWidth) {
 
 }
 
-int slice_plots() {
+int slice_plots_bnb() {
   make_slice_plots(true);
   return 0;
 }

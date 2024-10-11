@@ -62,6 +62,24 @@ TMatrixD CovarianceMatrixToCorrelationMatrix(const TMatrixD & cov_m) {
     return corr_m;
 }
 
+// Check whether matrix is unit matrix within a tolerance
+bool IsUnitMatrix(const TMatrixD& mat, double tolerance) {
+    int n = mat.GetNrows(); // Assuming the matrix is square
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            // Check diagonal elements for 1 within tolerance
+            if (i == j && std::abs(mat(i, j) - 1) > tolerance) {
+                return false;
+            }
+            // Check off-diagonal elements for 0 within tolerance
+            if (i != j && std::abs(mat(i, j)) > tolerance) {
+                return false;
+            }
+        }
+    }
+    return true; // Passed all checks
+}
+
 TVectorD CovarianceMatrixToErrorVector(const TMatrixD & cov_m) {
     int n = cov_m.GetNrows();
     TVectorD vec(n);
@@ -170,6 +188,15 @@ TMatrixD TH2DToTMatrixD(const TH2D & hist) {
         for (int j = 0; j < nY; ++j) {
             mat[i][j] = hist.GetBinContent(i+1, j+1);
         }
+    }
+    return mat;
+}
+
+TMatrixD TH1ToTMatrixD(const TH1 & hist) {
+    int nX = hist.GetNbinsX();
+    TMatrixD mat(nX, 1); // Change to nX x 1 matrix
+    for (int i = 0; i < nX; ++i) {
+        mat[i][0] = hist.GetBinContent(i+1); // Fill matrix with histogram content
     }
     return mat;
 }

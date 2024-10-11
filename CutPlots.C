@@ -519,7 +519,7 @@ void CutPlots() {
       {"openingAngle", get_bin_low_edges( 0, 3.15, 25 )},
       {"openingAngle2", get_bin_low_edges( 2.35, 3.15,  8)},
       {"muonMomentum", get_bin_low_edges( 0, 1.5, 30 )},
-      {"muonMomentum2", get_bin_low_edges( 0.15, 0.3, 4 )},
+      {"muonMomentum2", get_bin_low_edges( 0.0, 0.3, 8 )},
       {"pionMomentum", get_bin_low_edges( 0, 1.0, 30 )},
       {"pionMomentum2", get_bin_low_edges( 0, 0.2, 4 )},
   };
@@ -603,17 +603,17 @@ void CutPlots() {
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "After Generic Cut #6: Without muon-candidates in gaps");
 
-    make_plots( /* out_name = */          "cut7",
-                /* branchexpr = */        "event_cutValue_topologicalScore",
-                /* selection = */         "passed_muonNotInGap",
-                /* runs = */              runSet,
-                /* bin_low_edges = */     binEdges.at("topologicalScore"),
-                /* x_axis_label = */      "Neutrino-vs-cosmic topological score",
-                /* y_axis_label = */      "# Events", 
-                /* title = */             "Generic Cut #7: Topological score",
-                /* vertical_lines = */ std::set<float>{0.67f},
-                /* xAxisLog = */ false,
-                /* yAxisLog = */ false );
+    // make_plots( /* out_name = */          "cut7",
+    //             /* branchexpr = */        "event_cutValue_topologicalScore",
+    //             /* selection = */         "passed_muonNotInGap",
+    //             /* runs = */              runSet,
+    //             /* bin_low_edges = */     binEdges.at("topologicalScore"),
+    //             /* x_axis_label = */      "Neutrino-vs-cosmic topological score",
+    //             /* y_axis_label = */      "# Events", 
+    //             /* title = */             "Generic Cut #7: Topological score",
+    //             /* vertical_lines = */ std::set<float>{0.67f},
+    //             /* xAxisLog = */ false,
+    //             /* yAxisLog = */ true );
 
     // make_plots( /* out_name = */          "cut8",
     //             /* branchexpr = */        "TMath::Sqrt(event_cutValue_maxVertexDist)",
@@ -634,7 +634,10 @@ void CutPlots() {
     //             /* x_axis_label = */      "Reconstructed muon-pion opening angle, #theta_{#mu#pi} / rad",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #1: Cut on opening angle",
-    //             /* vertical_lines = */ std::set<float>{2.65f} );
+    //             /* vertical_lines = */ std::set<float>{2.65f},
+    //             /* const bool xAxisLog = */ false,
+    //             /* const bool yAxisLog = */ false,
+    //             /* const bool noData = */ true );
 
     // make_plots( /* out_name = */          "cut10",
     //             /* branchexpr = */        "cc1pi_reco_muonMomentum",
@@ -644,7 +647,10 @@ void CutPlots() {
     //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / (GeV / c)",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #2: Cut on muon momentum",
-    //             /* vertical_lines = */ std::set<float>{0.15f} );
+    //             /* vertical_lines = */ std::set<float>{0.15f},
+    //             /* xAxisLog = */ false,
+    //             /* yAxisLog = */ false,
+    //             /* noData = */ true );
 
     // make_plots( /* out_name = */          "cut11",
     //             /* branchexpr = */        "cc1pi_reco_pionMomentum",
@@ -654,7 +660,10 @@ void CutPlots() {
     //             /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / (GeV / c)",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #3: Cut on pion momentum",
-    //             /* vertical_lines = */ std::set<float>{0.1f} );
+    //             /* vertical_lines = */ std::set<float>{0.1f},
+    //             /* xAxisLog = */ false,
+    //             /* yAxisLog = */ false,
+    //             /* noData = */ true );
 
 
     // // make_plots( /* out_name = */          "cut12a",
@@ -675,15 +684,15 @@ void CutPlots() {
     // //             /* y_axis_label = */      "# Events",
     // //             /* title = */             "After Muon Momentum Subset Cut: Contained Muons");
 
-    // make_plots( /* out_name = */          "cut12",
-    //             /* branchexpr = */        "event_cutValue_goldenPionBDT",
-    //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1",
-    //             /* runs = */              runSet,
-    //             /* bin_low_edges = */     binEdges.at("goldenPionBDTScore"),
-    //             /* x_axis_label = */      "Golden pion BDT response",
-    //             /* y_axis_label = */      "# Events",
-    //             /* title = */             "Pion Momentum Subset Cut: Golden-pion BDT",
-    //             /* vertical_lines = */ std::set<float>{-0.03f} );
+    make_plots( /* out_name = */          "cut12",
+                /* branchexpr = */        "event_cutValue_goldenPionBDT",
+                /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1",
+                /* runs = */              runSet,
+                /* bin_low_edges = */     binEdges.at("goldenPionBDTScore"),
+                /* x_axis_label = */      "Golden pion BDT response",
+                /* y_axis_label = */      "# Events",
+                /* title = */             "Pion Momentum Subset Cut: Golden-pion BDT",
+                /* vertical_lines = */ std::set<float>{-0.03f} );
 
 
 

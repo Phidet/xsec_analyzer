@@ -64,7 +64,8 @@ inline double integrated_numu_flux_in_FV( double pot ) {
   // root [4] hEnumu_cv->Integral()
   // (double) 7.3762291e-10
   // See the README file in that same folder for details.
-  constexpr double numu_per_cm2_per_POT_in_AV = 7.3762291e-10;
+  // The first number is the numu flux and the second is the numubar flux
+  constexpr double numu_per_cm2_per_POT_in_AV = 7.3762291e-10 + 4.5589190e-11;
   double flux = pot * numu_per_cm2_per_POT_in_AV; // numu / cm^2
   return flux;
 }

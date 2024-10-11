@@ -164,20 +164,20 @@ void dump_overall_results(const UnfoldedMeasurement &result,
     // the units on the unfolded signal event counts)
     TMatrixD unf_signal = *result.unfolded_signal_;
     unf_signal *= events_to_xsec_factor;
-    dump_text_column_vector("dump/vec_table_unfolded_signal.txt", unf_signal);
+    dump_text_column_vector("dump_bnb/vec_table_unfolded_signal.txt", unf_signal);
 
     // Dump similar tables for each of the theoretical predictions (and the fake
     // data truth if applicable). Note that this function expects that the
     // additional smearing matrix A_C has not been applied to these predictions.
     TMatrixD temp_genie_cv = genie_cv_true_events;
     temp_genie_cv *= events_to_xsec_factor;
-    dump_text_column_vector("dump/vec_table_uBTune.txt", temp_genie_cv);
+    dump_text_column_vector("dump_bnb/vec_table_uBTune.txt", temp_genie_cv);
 
     if (using_fake_data)
     {
         TMatrixD temp_fake_truth = fake_data_true_events;
         temp_fake_truth *= events_to_xsec_factor;
-        dump_text_column_vector("dump/vec_table_FakeData.txt", temp_fake_truth);
+        dump_text_column_vector("dump_bnb/vec_table_FakeData.txt", temp_fake_truth);
     }
 
     for (const auto &gen_pair : generator_truth_map)
@@ -185,15 +185,15 @@ void dump_overall_results(const UnfoldedMeasurement &result,
         std::string gen_short_name = samples_to_hist_names.at(gen_pair.first);
         TMatrixD temp_gen = *gen_pair.second;
         temp_gen *= events_to_xsec_factor;
-        dump_text_column_vector("dump/vec_table_" + gen_short_name + ".txt",
+        dump_text_column_vector("dump_bnb/vec_table_" + gen_short_name + ".txt",
                                 temp_gen);
     }
 
     // No unit conversions are necessary for the unfolding, error propagation,
     // and additional smearing matrices since they are dimensionless
-    dump_text_matrix("dump/mat_table_unfolding.txt", *result.unfolding_matrix_);
-    dump_text_matrix("dump/mat_table_err_prop.txt", *result.err_prop_matrix_);
-    dump_text_matrix("dump/mat_table_add_smear.txt", *result.add_smear_matrix_);
+    dump_text_matrix("dump_bnb/mat_table_unfolding.txt", *result.unfolding_matrix_);
+    dump_text_matrix("dump_bnb/mat_table_err_prop.txt", *result.err_prop_matrix_);
+    dump_text_matrix("dump_bnb/mat_table_add_smear.txt", *result.add_smear_matrix_);
 
     // Convert units on the covariance matrices one-by-one and dump them
     for (const auto &cov_pair : unf_cov_matrix_map)
@@ -203,7 +203,7 @@ void dump_overall_results(const UnfoldedMeasurement &result,
         // Note that we need to square the unit conversion factor for the
         // covariance matrix elements
         temp_cov_matrix *= std::pow(events_to_xsec_factor, 2);
-        dump_text_matrix("dump/mat_table_cov_" + name + ".txt", temp_cov_matrix);
+        dump_text_matrix("dump_bnb/mat_table_cov_" + name + ".txt", temp_cov_matrix);
     }
 
     // Finally, dump a summary table of the flux-averaged total cross section
@@ -215,7 +215,7 @@ void dump_overall_results(const UnfoldedMeasurement &result,
 
     // Open the output file and set up the output stream so that full numerical
     // precision is preserved in the ascii text representation
-    std::ofstream out_summary_file("dump/xsec_summary_table.txt");
+    std::ofstream out_summary_file("dump_bnb/xsec_summary_table.txt");
     out_summary_file << std::scientific
                      << std::setprecision(std::numeric_limits<double>::max_digits10);
 
@@ -231,6 +231,7 @@ void dump_overall_results(const UnfoldedMeasurement &result,
                          << bin << "  " << xsec << "  " << stat_err
                          << "  " << total_err;
     }
+    std::cout << "Saved the overall results to text files." << std::endl;
 }
 
 TH1D* get_generator_hist(const TString& filePath, const unsigned int sl_idx, const float scaling = 1.f )
@@ -292,46 +293,38 @@ struct inputFiles
   std::string nameExtension;
 };
 
-void unfold_nuwro()
+void unfold_bnb()
 {
-    // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_09Apr24_testingOnly_lowPiMomThreshold_containedMuon.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal
-    //     "_fd_testingOnly_lowPiMomThreshold_containedMuon_withGenerators"
-    // };
-
-    // inputFiles input{ // All nuwro cross-sections with only contained muons for the muon momentum cross-section and modified bin size (muon momentum ending at 1.2GeV rather than 1.5)
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_15Apr24_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config_muon1200MeV.txt", // <-- This verion includes the _lowPiMomThreshold underflow bin removal & muon momentum endind at 1.2GeV rather than 1.5
-    //     "_fd_testingOnly_lowPiMomThreshold_containedMuon_muon1200MeV"
-    // };
-
-    // inputFiles input{ // All nuwro cross-sections
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_28Mar24_testingOnly_lowPiMomThreshold.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal
-    //     "_fd_testingOnly_lowPiMomThreshold_withGenerators"
-    // };
-
-    // inputFiles input{ // All nuwro cross-sections; removed the nProton cross-section
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_07May24_testingOnly_lowPiMomThreshold.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal and removes the nProton cross-section
-    //     "_fd_testingOnly_lowPiMomThreshold_withGenerators_08May24"
-    // };
-
-    // inputFiles input{ // All nuwro cross-sections with full uncertainties like real data
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_29May24_testingOnly_lowPiMomThreshold_allUncertainties.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
+    // inputFiles input{
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May24_testingOnly_lowPiMomThreshold_fullDetVars.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
     //     "../systcalc_unfold.conf",
-    //     "../ubcc1pi_neutral_slice_config.txt", // <-- This version includes the _lowPiMomThreshold underflow bin removal and remove nProton cross-section
-    //     "_fd_testingOnly_lowPiMomThreshold_withGenerators_30May24_allUncertainties"
+    //     "../ubcc1pi_neutral_slice_config.txt",
+    //     "_bnb"
+    // };
+
+    // inputFiles input{ // The slice definition file here includes overvflow bins into the slice
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May24_testingOnly_lowPiMomThreshold_fullDetVars.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_neutral_slice_config_overflowFix.txt", // <-- Adds the overflow bins to the slice
+    //     "_bnb_overflowFix"
+    // };
+
+    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_26Jun24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_neutral_slice_config_overflowFix.txt",
+    //     "_bnb_overflowFix_fixedBackground"
+    // };
+
+    // inputFiles input{ // Use only the uncertainties used for the NuWro fake-data tests
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May24_testingOnly_lowPiMomThreshold_fullDetVars.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold_fd_min.conf",
+    //     "../ubcc1pi_neutral_slice_config.txt",
+    //     "_bnb_onlyModelUncertainties"
     // };
 
     // ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
@@ -340,49 +333,93 @@ void unfold_nuwro()
     // ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
     // # # # # # # # # # # # # # # # #
 
-    // ##########################################################
-    // Remember to consider how to handle the overflow in truth 
-    // ##########################################################
-    // std::cout<<"\n\n\n\n\nWarning: The overflow bins are excluded both truth and reco here\n\n\n\n\n"<<std::endl;
-    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_28Jun24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_noOverflow.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
+    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_26Jun24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
     //     "../systcalc_unfold.conf",
-    //     "../ubcc1pi_neutral_slice_config_noOverflow.txt",
-    //     "_nuwro_fixedBackground_noOverflow"
+    //     "../ubcc1pi_neutral_slice_config.txt",
+    //     "_bnb_fixedBackground"
     // };
 
     // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_26Jun24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config.txt",
-    //     "_nuwro_fixedBackground"
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_26Jun24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_neutral_slice_config_overflowFix.txt", // <-- Adds the overflow bins to the slice
+    //     "_bnb_overflowFix_fixedBackground"
     // };
 
-    inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
-        "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow.root",
-        "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-        "../systcalc_unfold_fd_min.conf",
+
+    // std::cout<<"\n\n\n\n\nWarning: The overflow bins are excluded both truth and reco here\n\n\n\n\n"<<std::endl;
+    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_28Jun24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_noOverflow.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_neutral_slice_config_noOverflow.txt",
+    //     "_bnb_fixedBackground_noOverflow"
+    // };
+
+
+    inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
+        "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow.root",
+        "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+        "../systcalc_unfold.conf",
         "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-        "_nuwro_fixedBackground_mergedOverflow"
+        "_bnb_fixedBackground_mergedOverflow"
     };
 
-    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_10Sep24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow_onlyContained.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-    //     "../systcalc_unfold_fd_min.conf",
+    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions; uncontained muon events have been removed
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_10Sep24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_onlyContained.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
     //     "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-    //     "_nuwro_fixedBackground_mergedOverflow_onlyContained"
+    //     "_bnb_fixedBackground_mergedOverflow_onlyContained"
     // };
 
     // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions; only contained muons for the muon momentum xsec
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_09Oct24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow_containedMuXSec.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-    //     "../systcalc_unfold_fd_min.conf",
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_09Oct24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_containedMuXSec.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
     //     "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-    //     "_nuwro_fixedBackground_mergedOverflow_containedMuXSec"
+    //     "_bnb_fixedBackground_mergedOverflow_containedMuXSec"
     // };
+
+    // #########################
+    // Alternative plots
+    // #########################
+
+    // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; WARNING THE BACKGROUND SUBTRACTION IS NOT CORRECT!!!!!!
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_06Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_v2.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_slice_config_phiStudy.txt",
+    //     "_bnb_fixedBackground_mergedOverflow_phiStudy"
+    // };
+
+    // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions are unchanged but the reco bins ar
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_unchangedSignalDef.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_slice_config_phiStudy.txt",
+    //     "_bnb_fixedBackground_mergedOverflow_phiStudy_unchangedSignalDef"
+    // };
+
+    // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include contained muons
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_contained.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_slice_config_phiStudy_containedSignal.txt",
+    //     "_bnb_fixedBackground_mergedOverflow_phiStudy_contained"
+    // };
+
+    // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include uncontained muons
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_uncontained.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_slice_config_phiStudy_uncontainedSignal.txt",
+    //     "_bnb_fixedBackground_mergedOverflow_phiStudy_uncontained"
+    // };
+
 
     // Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
@@ -426,7 +463,7 @@ void unfold_nuwro()
         // {genPath + "FlatTreeAnalyzerOutput_NEUT.root", kRed+1, 0, 1, "NEUT NUMU 5.4.0.1", 1.f}, // Old numu only sample from wiki
         // {genPath + "FlatTreeAnalyzerOutput_GiBUU.root", kOrange+7, 0, 1, "GiBUU NUMU ?3.0.6?", 1/100.f}, // Old numu only sample from wiki
         // {genPath + "FlatTreeAnalyzerOutput_NuWro.root", kGreen+1, 0, 1, "NuWro NUMU 19.02.1", 1.f}, // Old numu only sample from wiki
-
+        
         // {genPath + "FlatTreeAnalyzerOutput_GENIE_NuMu_NuMuBar.root", kBlue+1, 1, 1, "GENIE 3.04.02", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_NuMu_NuMuBar.root", kGreen+3, 1, 1, "NuWro 21.09.2", 1.f}, // <----------- Use these
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_NuMu_NuMuBar_19_02_1.root", kGreen, 1, 1, "NuWro 19.02.1", 1.f},
@@ -439,48 +476,57 @@ void unfold_nuwro()
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_NuMu_noScaling.root", kGreen+2, 2, 1, "NuWro NUMU NoScaling", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_NuMu_19_02_1_noScaling.root", kGreen+7, 2, 1, "NuWro NUMU 19.02.1 NoScaling", 1.f},
 
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro.root", kGreen+4, 5, 1, "NuWro 19.02.1 NuMu Original", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kBlue+4, 1, 1, "GENIE 3.04.02 DUNE/SBN Tune", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+2, 1, 1, "GENIE 3.04.02 G18_10a_02_11a", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kGreen+3, 1, 1, "NuWro 21.09.2", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kGreen+5, 1, 1, "NuWro 19.02.1", 1.f},
+
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_AR23_20i_00_000.root", kBlue+4, 1, 1, "GENIE 3.04.02 DUNE/SBN Tune NuMu", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue+2, 1, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_AR23_20i_00_000.root", kBlue+4, 1, 1, "GENIE 3.04.02 DUNE/SBN Tune NuMuBar", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+2, 1, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar", 1.f},
+
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro.root", kGreen+4, 1, 1, "NuWro 19.02.1 NuMu Original", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1_Unscaled.root", kGreen+2, 5, 1, "NuWro 19.02.1 NuMu Mine", 1.f},
 
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kAzure-6, 3, 1, "#splitline{GENIE 3.04.02}{AR23_20i_00_000}", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "#splitline{GENIE 3.04.02}{G18_10a_02_11a}", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_AR23_20i_00_000_photonInclusive.root", kAzure-7, 4, 1, "#splitline{GENIE 3.04.02 - Photon Inclusive}{AR23_20i_00_000}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a_photonInclusive.root", kAzure+7, 4, 1, "#splitline{GENIE 3.04.02 - Photon Inclusive}{G18_10a_02_11a}", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_1000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 3, 2, "#splitline{GENIE 1000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_5000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+1, 3, 2, "#splitline{GENIE 5000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+2, 3, 2, "#splitline{GENIE 20000 3.04.02}{G18_10a_02_11a}", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_1000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 1000", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_2000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange + 1, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 2000", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_3000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kRed+1, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 3000", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_4000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kRed+2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 4000", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange + 2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 10000", 1.f},
 
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue+3, 3, 2, "#splitline{GENIE NuMu 20000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numu_CC_v3_4_2_AR23_20i_00_000.root", kOrange+1 + 2, 9, 1, "GENIE NuMu 3.04.02 DUNE/SBN Tune 10000", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_2000_numu_CC_v3_4_2_AR23_20i_00_000.root", kRed, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 2000 NuMu Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_3000_numu_CC_v3_4_2_AR23_20i_00_000.root", kRed+1, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 3000 NuMu Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_4000_numu_CC_v3_4_2_AR23_20i_00_000.root", kRed+2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 4000 NuMu Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numu_CC_v3_4_2_AR23_20i_00_000.root", kRed+2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 10000 NuMu Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_2000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kGreen, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 2000 NuMuBar Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_3000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kGreen+1, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 3000 NuMuBar Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_4000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kGreen+2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 4000 NuMuBar Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
 
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+4, 3, 2, "#splitline{GENIE NuMuBar 20000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange+2 + 2, 9, 1, "GENIE NuMuBar 3.04.02 DUNE/SBN Tune 10000", 1.f},
+        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "#splitline{GENIE 3.04.02}{G18_10a_02_11a}", 1.f},
 
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 4, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+1, 4, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue+3, 3, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu Scaled", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+4, 3, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar Scaled", 1.f},
         {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro 21.09.2", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kTeal+6, 1, 1, "NuWro 19.02.1", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1_cthorpe.root", kGreen+4, 1, 1, "NuWro (v19 + Hyperon Models*)", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1.root", kRed + 1, 1, 1, "NuWro 19.02.1 NuMu Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numubar_CC_v19_02_1.root", kRed + 3, 1, 1, "NuWro 19.02.1 NuMuBar", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
-
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1_cthorpe_2000000_Scaled.root", kRed+1, 1, 1, "NuWro 19.02.1 CThorpe Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kTeal+6, 1, 1, "NuWro 19.02.1", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1_cthorpe.root", kGreen+4, 1, 1, "NuWro (v19 + Hyperon Models*)", 1.f},
 
         {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "#splitline{GENIE 3.04.02}{#splitline{AR23_20i_00_000}{Nuclear deexcitation off}}", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 3, 2, "GENIE numu(bar) 20000 3.04.02 G18_10a_02_11a", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_4000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange+1, 9, 1, "GENIE numu(bar) 4000 3.04.02 DUNE/SBN Tune", 1.f},
     };
 
     // Get the tuned GENIE CV prediction in each true bin (including the
     // background true bins)
     TH1D *genie_cv_truth = syst.cv_universe().hist_true_.get();
+
+
+    // Get some reco histograms for the fractional error plots
+    TH1D* reco_bnb_hist = syst.data_hists_.at( NFT::kOnBNB ).get();
+    TH1D* reco_ext_hist = syst.data_hists_.at( NFT::kExtBNB ).get();
+    TH1D* reco_mc_plus_ext_hist = dynamic_cast< TH1D* >(
+    reco_ext_hist->Clone("reco_mc_plus_ext_hist") ); // Total MC+EXT prediction in reco bin space. Start by getting EXT.
+    reco_mc_plus_ext_hist->SetDirectory( nullptr );
+    reco_mc_plus_ext_hist->Add( syst.cv_universe().hist_reco_.get() ); // Add in the CV MC prediction
+
+
     int num_true_bins = genie_cv_truth->GetNbinsX();
 
     // While we're at it, clone the histogram and zero it out. We'll fill this
@@ -569,6 +615,32 @@ void unfold_nuwro()
     NormShapeCovMatrix bd_ns_covmat = make_block_diagonal_norm_shape_covmat(
         *result.unfolded_signal_, *result.cov_matrix_, syst.true_bins_);
 
+    // // Sanity check that adding bd_ns_covmat.norm_ + bd_ns_covmat.shape_ + bd_ns_covmat.mixed_ returns *result.cov_matrix_
+    // const auto combined_covmat = bd_ns_covmat.norm_ + bd_ns_covmat.shape_ + bd_ns_covmat.mixed_;
+    // const auto diff = *result.cov_matrix_ - combined_covmat;
+    // const auto tolerance = 0.01;
+    // // Print the full diff matrix
+    // std::cout << "Difference between the total covariance matrix and the sum of the blockwise decomposed matrices:\n";
+    // diff.Print();
+    // std::cout<<"DEBUG 00: Point 2"<<std::endl;
+
+    // for (int i = 0; i < diff.GetNrows(); ++i)
+    // {
+    //     for (int j = 0; j < diff.GetNcols(); ++j)
+    //     {
+    //         if (std::abs(diff(i, j)) > tolerance)
+    //         {
+    //             std::cerr << "Error: The blockwise decomposition of the covariance matrix is incorrect. "
+    //                       << "The difference between the total covariance matrix and the sum of the blockwise "
+    //                       << "decomposed matrices is " << diff(i, j) << " at index (" << i << ", " << j << ")."
+    //                       << std::endl;
+    //             return 1;
+    //         }
+    //     }
+    // }
+    // return 0;
+
+
     // // Assuming result_cov_matrix is a std::unique_ptr<TMatrixD>
     // int nRows = result.cov_matrix_->GetNrows();
     // int nCols = result.cov_matrix_->GetNcols();
@@ -590,12 +662,32 @@ void unfold_nuwro()
     TH2D* corr_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*corr_unfolded, "corr_unfolded", "Correlation Matrix", 0, corr_unfolded->GetNrows(), 0, corr_unfolded->GetNcols()));
     delete corr_unfolded; // Delete the dynamically allocated memory
     UnfolderHelper::plot_entire_matrix(corr_unfolded_hist, "Correlation matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_corr"+postfix);
-        TH2D* cov_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*result.cov_matrix_, "cov_unfolded", "Covariance Matrix", 0, result.cov_matrix_->GetNrows(), 0, result.cov_matrix_->GetNcols()));
+    TH2D* cov_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*result.cov_matrix_, "cov_unfolded", "Covariance Matrix", 0, result.cov_matrix_->GetNrows(), 0, result.cov_matrix_->GetNcols()));
 
     // Add the blockwise decomposed matrices into the map
     unfolded_cov_matrix_map["total_blockwise_norm"] = std::make_unique<TMatrixD>(bd_ns_covmat.norm_);
     unfolded_cov_matrix_map["total_blockwise_shape"] = std::make_unique<TMatrixD>(bd_ns_covmat.shape_);
     unfolded_cov_matrix_map["total_blockwise_mixed"] = std::make_unique<TMatrixD>(bd_ns_covmat.mixed_);
+
+    // std::cout << "Unfolded Covariance Matrix:\n";
+    // int nRows = result.cov_matrix_->GetNrows();
+    // int nCols = result.cov_matrix_->GetNcols();
+    // for (int i = 1; i <= nRows; ++i) {
+    //     for (int j = 1; j <= nCols; ++j) {
+    //         std::cout << (*result.cov_matrix_)(i-1, j-1) << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+
+    // std::cout << "\n\n\n\n\n\n\n\n\n\n\n\nUnfolded Covariance Matrix (Total Blockwise Norm):\n";
+    // for (int i = 0; i < num_true_signal_bins; ++i) {
+    //     for (int j = 0; j < num_true_signal_bins; ++j) {
+    //         std::cout << (*unfolded_cov_matrix_map["total_blockwise_norm"])(i, j) << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+
+    // return 0;
 
     // Set the event counts in each bin of the histogram that displays the
     // unfolded result. Note that we don't care about the background true bins
@@ -757,12 +849,24 @@ void unfold_nuwro()
 
         // Make a histogram showing the unfolded true event counts in the current slice
         SliceHistogram *slice_unf = SliceHistogram::make_slice_histogram(
-            *result.unfolded_signal_, slice, result.cov_matrix_.get());
+                    *result.unfolded_signal_, slice, result.cov_matrix_.get());
 
         // Make a histogram showing the unfolded true event counts in the current slice using only the DataStats covariance matrix
         SliceHistogram *slice_unf_stats_only = SliceHistogram::make_slice_histogram(
                     *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("DataStats").get());
 
+        // SliceHistogram *slice_unf_norm_only = SliceHistogram::make_slice_histogram(
+        //             *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("total_blockwise_norm").get());
+
+        // SliceHistogram *slice_unf_shape_only = SliceHistogram::make_slice_histogram(
+        //             *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("total_blockwise_shape").get());
+
+        // Reco slices slice_mc_plus_ext and slice_bnb are for the fractional error plots
+        SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
+                    *reco_mc_plus_ext_hist, slice, &matrix_map.at("total") );
+        
+        SliceHistogram* slice_bnb = SliceHistogram::make_slice_histogram(
+                    *reco_bnb_hist, slice, &matrix_map.at("BNBstats") );
 
         auto meas = syst.get_measured_events();
         const auto& data_signal = meas.reco_signal_;
@@ -770,15 +874,16 @@ void unfold_nuwro()
 
 
         // Make unfolded fractional uncertainty plots
-        std::vector< std::string > cov_mat_keys_total = { "total", "xsec_total", "MCstats", "BNBstats"};
+        std::vector< std::string > cov_mat_keys_total = { "total", "detVar_total", "flux", "reint", "xsec_total", "POT", "numTargets", "MCstats", "EXTstats", "BNBstats"};
+        std::vector< std::string > cov_mat_keys_detVar = { "detVar_total", "detVarLYatten", "detVarLYdown", "detVarLYrayl", "detVarRecomb2", "detVarSCE", "detVarWMAngleXZ", "detVarWMAngleYZ", "detVarWMX", "detVarWMYZ"};
         std::vector< std::string > cov_mat_keys_xsec = { "xsec_total", "xsec_multi", "xsec_unisim", "xsec_xsr_scc_Fa3_SCC", "xsec_xsr_scc_Fv3_SCC", "NuWroGenie"};
 
         // TMatrixD* bkgnd_subtracted_reco_data_hist = new TMatrixD(meas.reco_signal_);
         UnfolderHelper::fractional_uncertainty_plot(slice, cov_TMatrix_map, data_signal.get(), sl_idx, cov_mat_keys_total, "total", postfix + "_reco_total");
+        UnfolderHelper::fractional_uncertainty_plot(slice, cov_TMatrix_map, data_signal.get(), sl_idx, cov_mat_keys_detVar, "detVar_total", postfix + "_reco_detVar");
         UnfolderHelper::fractional_uncertainty_plot(slice, cov_TMatrix_map, data_signal.get(), sl_idx, cov_mat_keys_xsec, "xsec_total", postfix + "_reco_xsec");
         // delete bkgnd_subtracted_reco_data_hist;
 
-        std::cout<<"DEBUG UXU Point 0"<<std::endl;
 
         // This assumes a continuous range of individual bins
         // int t_start = slice.bin_map_.begin()->first;
@@ -821,7 +926,6 @@ void unfold_nuwro()
             }
         }
 
-        std::cout<<"DEBUG UXU Point 1"<<std::endl;
         const auto cv_confusion_mat = util::CountsToConfusionMatrix(cv_hist_2d_slice, "row");
         const auto fake_confusion_mat = util::CountsToConfusionMatrix(fake_hist_2d_slice, "row");
         std::string title = slice_unf->hist_->GetXaxis()->GetTitle();
@@ -833,6 +937,7 @@ void unfold_nuwro()
         const auto cov_unf_title = std::string("Covariance Matrix for Unfolded Bins") + title +";Truth Bins;Truth Bins";
         const auto corr_title = std::string("Correlation Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
         const auto cov_title = std::string("Covariance Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
+        const auto chi2_title = std::string("Chi2 Contribution Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
 
         const int num_bins = slice.hist_->GetNbinsX();
         const int num_bins_ac = stop - start + 1;
@@ -873,7 +978,9 @@ void unfold_nuwro()
                                 num_bins, 0, num_bins,
                                 num_bins, 0, num_bins);
 
-        std::cout<<"DEBUG UXU Point 2"<<std::endl;
+        TH2D *trimmed_deconstructed_chi2 = new TH2D(("trimmed_deconstructed_chi2 slice "+std::to_string(sl_idx)).c_str(), chi2_title.c_str(),
+                                num_bins, 0, num_bins,
+                                num_bins, 0, num_bins);
 
         // Fill histogram with values from TMatrixD
         for (int i = 0; i < cv_confusion_mat.GetNrows(); i++) {
@@ -903,8 +1010,8 @@ void unfold_nuwro()
                 trimmed_corr_unf_hist->SetBinContent(i+1, j+1, corr_unfolded_hist_slice.operator()(i, j));
             }
         }
-        
-        // std::cout<<"DEBUG trimmed_cov_unf_hist:"<<std::endl;
+
+        std::cout<<"DEBUG trimmed_cov_unf_hist:"<<std::endl;
         for(int i = 0; i < cov_unfolded_hist_slice.GetNrows(); i++) {
             for(int j = 0; j < cov_unfolded_hist_slice.GetNcols(); j++) {
                 trimmed_cov_unf_hist->SetBinContent(i+1, j+1, cov_unfolded_hist_slice.operator()(i, j));
@@ -918,7 +1025,7 @@ void unfold_nuwro()
             }
         }
 
-        // std::cout<<"DEBUG trimmed_cov_hist:"<<std::endl;
+        std::cout<<"DEBUG trimmed_cov_hist:"<<std::endl;
         for(int i = 0; i < cov_hist_slice.GetNrows(); i++) {
             for(int j = 0; j < cov_hist_slice.GetNcols(); j++) {
                 trimmed_cov_hist->SetBinContent(i+1, j+1, cov_hist_slice.operator()(i, j));
@@ -963,7 +1070,7 @@ void unfold_nuwro()
             }
         }
 
-        c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
+        c_conf_1->SaveAs(("plots/cv_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
 
         if(using_fake_data)
@@ -997,7 +1104,7 @@ void unfold_nuwro()
                 }
             }
 
-            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
+            c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
         }
 
 
@@ -1025,7 +1132,7 @@ void unfold_nuwro()
         ac_hist->GetYaxis()->SetLabelSize(0.05);
 
         TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
-        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
+        c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
         // Plot for trimmed_corr_unf_hist
         TCanvas* c_corr_unf_slice = new TCanvas("c_corr_unf_slice", "c correlation matrix", 800, 600);
@@ -1047,7 +1154,7 @@ void unfold_nuwro()
         trimmed_corr_unf_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_corr_unf_hist->GetYaxis()->SetLabelSize(0.05);
 
-        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
+        c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
         // Plot for trimmed_cov_unf_hist
         TCanvas* c_cov_unf_slice = new TCanvas("c_cov_unf_slice", "c covariance matrix", 800, 600);
@@ -1089,7 +1196,7 @@ void unfold_nuwro()
         trimmed_corr_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_corr_hist->GetYaxis()->SetLabelSize(0.05);
 
-        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf").c_str());
+        c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
         // Plot for trimmed_cov_hist
         TCanvas* c_cov_slice = new TCanvas(("c_cov_slice slice "+std::to_string(sl_idx)).c_str(), "c covariance matrix", 800, 600);
@@ -1112,6 +1219,66 @@ void unfold_nuwro()
 
         c_cov_slice->SaveAs(("plots/covariance_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
+        // ###########################################################
+        const auto inverse_cov = slice_mc_plus_ext->get_inverse_cov_mat();
+        const auto diff = slice_mc_plus_ext->get_diff(*slice_bnb);
+
+        float chi2Total = 0;
+        float minValue = std::numeric_limits<float>::max(); // Initialize to maximum possible float value
+        float maxValue = std::numeric_limits<float>::lowest(); // Initialize to minimum possible float value
+
+        for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) {
+            for (int j = 1; j <= trimmed_deconstructed_chi2->GetNbinsY(); j++) {
+                const auto diffValue1 = diff(0, i-1);
+                const auto diffValue2 = diff(0, j-1);
+                const auto invCovValue = inverse_cov(i-1, j-1);
+                const auto newValue = diffValue1 * invCovValue * diffValue2;
+                trimmed_deconstructed_chi2->SetBinContent(i, j, newValue);
+                chi2Total += newValue;
+
+                // Update min and max values
+                if (newValue < minValue) minValue = newValue;
+                if (newValue > maxValue) maxValue = newValue;
+            }
+        }
+
+        // Now minValue and maxValue hold the minimum and maximum values encountered in the loop
+        TCanvas* c_frac_err_slice = new TCanvas(("c_frac_err_slice slice "+std::to_string(sl_idx)).c_str(), "c fractional error matrix", 800, 600);
+
+        // Number of colors in the palette
+        const Int_t NRGBs = 3;
+        const Int_t NCont = 255;
+        // Define your color stops and the corresponding RGB values
+        Double_t stops[NRGBs] = {0, std::abs(minValue)/(std::abs(minValue) + std::abs(maxValue)), 1}; // minValue/maxValue corresponds to the zero point, which will be white
+        Double_t red[NRGBs]   = {0.00, 1.00, 1.00}; // Red component (0 at the start and end, 1 in the middle)
+        Double_t green[NRGBs] = {0.00, 1.00, 0.00}; // Green component (0 at the start, 1 in the middle, 0 at the end)
+        Double_t blue[NRGBs]  = {1.00, 1.00, 0.00}; // Blue component (1 at the start, 1 in the middle, 0 at the end)
+
+        // Create the gradient color table
+        TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+        gStyle->SetNumberContours(NCont);
+
+        // If needed, you can use minValue and maxValue for further processing
+        // util::CreateRedToBlueColorPalette(20);
+        trimmed_deconstructed_chi2->SetTitleSize(0.05, "t");
+        trimmed_deconstructed_chi2->SetStats(false);
+        trimmed_deconstructed_chi2->Draw("colz");
+        // Set x and y axis labels to bin numbers
+        for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) 
+        {
+            trimmed_deconstructed_chi2->GetXaxis()->SetBinLabel(i, Form("%d", i));
+        }
+        for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsY(); i++)
+        {
+            trimmed_deconstructed_chi2->GetYaxis()->SetBinLabel(i, Form("%d", i));
+        }
+
+        // Increase the font size of the axis labels
+        trimmed_deconstructed_chi2->GetXaxis()->SetLabelSize(0.05);
+        trimmed_deconstructed_chi2->GetYaxis()->SetLabelSize(0.05);
+        c_frac_err_slice->SaveAs(("plots/deconstructed_chi2_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
+        // ###########################################################
+
         // Also use the GENIE CV model to do the same
         SliceHistogram *slice_cv = SliceHistogram::make_slice_histogram(genie_cv_truth_vec, slice, &genie_cv_truth_cov);
 
@@ -1133,6 +1300,7 @@ void unfold_nuwro()
 
         auto *slice_gen_map_alt_ptr = new std::map<std::string, SliceHistogram *>(); // Used for stats only histograms
         auto &slice_gen_map_alt = *slice_gen_map_alt_ptr;
+        // slice_gen_map_alt["MicroBooNE Tune"] = slice_cv;
         slice_gen_map_alt["Unfolded Selection Stats Only"] = slice_unf_stats_only;
 
         int var_count = 0;
@@ -1215,7 +1383,7 @@ void unfold_nuwro()
             slice_h->transform(trans_mat);
             slice_h->hist_->GetYaxis()->SetTitle(slice_y_title.c_str());
         }
-
+        
         for (auto &pair : slice_gen_map_alt)
         {
             auto *slice_h = pair.second;
@@ -1234,8 +1402,42 @@ void unfold_nuwro()
         {
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
+
+            // const auto covMat = *slice_gen_map.at("Unfolded Selection")->cmat_.get_matrix();
+            // std::cout<<"\nDEBUG A name: "<<name<<" slice: "<<sl_idx<<std::endl;
+            // std::cout<<"DEBUG A slice_h->cov_mat_.GetNrows() = "<<covMat.GetNrows()<<std::endl;
+            // std::cout<<"DEBUG A slice_h->cov_mat_.GetNcols() = "<<covMat.GetNcols()<<std::endl;
+            // for(int i = 0; i < covMat.GetNrows(); i++)
+            // {
+            //     for(int j = 0; j < covMat.GetNcols(); j++)
+            //     {
+            //         std::cout<<"["<<i<<", "<<j<<"] = "<<covMat(i, j)<<std::endl;
+            //     }
+            // }
             chi2_map[name] = (name == "Unfolded Selection") ? SliceHistogram::Chi2Result() : slice_h->get_chi2(*slice_gen_map.at("Unfolded Selection"));
         }
+
+        // for (const auto &pair : slice_gen_map_alt) // Loop over different uncertainty contrinbutions (e.g. norm vs shape ...)
+        // {
+        //     const auto &name = pair.first;
+        //     std::cout << "Slice " << sl_idx << " - " << name << std::endl;
+        //     if(name == "MicroBooNE Tune") continue; // Skip the MicroBooNE Tune
+        //     const auto *slice_h = pair.second;
+
+        //     const auto covMat = *slice_h->cmat_.get_matrix();
+        //     std::cout<<"\nDEBUG B name: "<<name<<" slice: "<<sl_idx<<std::endl;
+        //     std::cout<<"DEBUG B slice_h->cov_mat_.GetNrows() = "<<covMat.GetNrows()<<std::endl;
+        //     std::cout<<"DEBUG B slice_h->cov_mat_.GetNcols() = "<<covMat.GetNcols()<<std::endl;
+        //     for(int i = 0; i < covMat.GetNrows(); i++)
+        //     {
+        //         for(int j = 0; j < covMat.GetNcols(); j++)
+        //         {
+        //             std::cout<<"["<<i<<", "<<j<<"] = "<<covMat(i, j)<<std::endl;
+        //         }
+        //     }
+        //     const auto metrics = slice_h->get_chi2(*slice_gen_map.at("MicroBooNE Tune"));
+        //     std::cout << "Slice " << sl_idx << " - " << name << " chi2: " << metrics.chi2_ << std::endl;
+        // }
 
         TCanvas *c1 = new TCanvas("c1", "c1");//, 800, 600); // 800x600 pixels
         gStyle->SetLegendBorderSize(0);
@@ -1270,7 +1472,7 @@ void unfold_nuwro()
         // line->SetLineColor(kAzure - 7);
         // line->SetLineWidth(2);
         // line->SetLineStyle(5);
-
+        
 
         h_ratio->Divide(h_cv_no_errors);
         h_ratio->SetLineWidth(2);
@@ -1382,7 +1584,7 @@ void unfold_nuwro()
                         max = binContent + binError;
                     }
                 }
-                drawHistogramWithBand(gen_hist_ratio, generator, 0.3);
+                drawHistogramWithBand(gen_hist_ratio, generator, 0.3, true);
             }
         }
 
@@ -1401,11 +1603,11 @@ void unfold_nuwro()
             max = TMath::Max(max, 1.1 * h_ratio_truth->GetMaximum());
             h_ratio_truth->GetYaxis()->SetRangeUser(min, max);
             // h_ratio_truth->Draw("hist same");
-            drawHistogramWithBand(h_ratio_truth, kGreen, 2, 5, 0.3, false);
+            drawHistogramWithBand(h_ratio_truth, kGreen, 2, 5, 0.3, true);
         }
 
         // h_cv_ratio->Draw();
-        drawHistogramWithBand(h_cv_ratio, kAzure - 7, 2, 5, 0.3, false);
+        drawHistogramWithBand(h_cv_ratio, kAzure - 7, 2, 5, 0.3, true);
         h_ratio->Draw("e same"); // draw again to be over everything
 
         slice_unf_stats_only_ratio->Draw("EX0 same");
@@ -1465,7 +1667,7 @@ void unfold_nuwro()
             slice_h->hist_->Draw("hist same");
         }
 
-        drawHistogramWithBand(slice_cv->hist_.get(), kAzure - 7, 2, 5, 0.3, false);
+        drawHistogramWithBand(slice_cv->hist_.get(), kAzure - 7, 2, 5, 0.3, true);
 
         if (using_fake_data)
         {
@@ -1482,7 +1684,7 @@ void unfold_nuwro()
                 slice_truth->hist_->SetBinError(i, error);
             }
 
-            drawHistogramWithBand(slice_truth->hist_.get(), kGreen, 2, 5, 0.3, false);
+            drawHistogramWithBand(slice_truth->hist_.get(), kGreen, 2, 5, 0.3, true);
             // drawHistogramWithBand(h_slice_truth_with_error, kGreen, 2, 5, 0.2, false);
         }
 
@@ -1529,7 +1731,7 @@ void unfold_nuwro()
                 gen_metrics[generator.name] = metrics;
                 delete gen_slice_h;
 
-                drawHistogramWithBand(gen_hist, generator, 0.3);
+                drawHistogramWithBand(gen_hist, generator, 0.3, true);
             }
         }
 
@@ -1616,14 +1818,19 @@ void unfold_nuwro()
         }
 
         std::ostringstream headerss;
-        headerss << "#splitline{NuWro Fake Data}"
-                         << "{" << toLatexScientific(total_pot) << " POT}";
+        headerss << "#splitline{BNB Data}"
+                 << "{" << toLatexScientific(total_pot) << " POT}";
                  
         lg->SetHeader(headerss.str().c_str());
+        // Increase the font size for the legend header
+        // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
+        TLegendEntry* lg_header = dynamic_cast< TLegendEntry* >(
+            lg->GetListOfPrimitives()->First() );
+        lg_header->SetTextSize( 0.03 );
         lg->Draw("same");
         c1->Update();
 
-        std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + "_nuwro" + postfix + ".pdf";
+        std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf";
         c1->SaveAs(out_pdf_name.c_str());
 
 
@@ -1687,12 +1894,13 @@ void unfold_nuwro()
         slice_params_table["y_axis_title"] = slice_y_latex_title;
 
         // Prepare the output file prefix
-        std::string output_file_prefix = "dump/pgfplots_slice_" + std::string(3 - std::to_string(sl_idx).length(), '0') + std::to_string(sl_idx);
+        std::string output_file_prefix = "dump_bnb/pgfplots_slice_" + std::string(3 - std::to_string(sl_idx).length(), '0') + std::to_string(sl_idx);
 
         write_pgfplots_files(output_file_prefix, slice_hist_table, slice_params_table);
 
         // Make unfolded fractional uncertainty plots
         UnfolderHelper::fractional_uncertainty_plot(slice, unfolded_cov_matrix_map, result.unfolded_signal_.get(), sl_idx, cov_mat_keys_total, "total", postfix + "_unfolded_total");
+        UnfolderHelper::fractional_uncertainty_plot(slice, unfolded_cov_matrix_map, result.unfolded_signal_.get(), sl_idx, cov_mat_keys_detVar, "detVar_total", postfix + "_unfolded_detVar");
         UnfolderHelper::fractional_uncertainty_plot(slice, unfolded_cov_matrix_map, result.unfolded_signal_.get(), sl_idx, cov_mat_keys_xsec, "xsec_total", postfix + "_unfolded_xsec");
     } // slices
     delete corr_unfolded_hist, corr_hist, cov_unfolded_hist;
@@ -1702,6 +1910,6 @@ void unfold_nuwro()
 
 int main()
 {
-    unfold_nuwro();
+    unfold_bnb();
     return 0;
 }
