@@ -25,6 +25,45 @@
 
 constexpr double BIG_DOUBLE = 1e300;
 
+constexpr bool show_pvalue = false;
+
+// Function to calculate the response matrix
+std::unique_ptr<TMatrixD> calculate_response_matrix(const TMatrixD& hist_2d, const TMatrixD& hist_true) {
+    // Get the number of reco and truth bins
+    int num_bins = hist_2d.GetNrows();
+
+    // Ensure hist_true is a column vector with the same number of rows
+    if (hist_true.GetNrows() != num_bins || hist_true.GetNcols() != 1) {
+        throw std::invalid_argument("hist_true must be an n x 1 matrix with the same number of rows as hist_2d");
+    }
+
+    // Create the response matrix
+    auto response_matrix = std::make_unique<TMatrixD>(num_bins, num_bins);
+
+    // Loop over the truth bins
+    for (int j = 0; j < num_bins; ++j) {
+        // Get the total predicted CV truth events in truth bin j
+        double total_truth_events = hist_true(j, 0);
+
+        // Loop over the reco bins
+        for (int i = 0; i < num_bins; ++i) {
+            // Get the selected signal events in reco bin i and truth bin j
+            double selected_signal_events = hist_2d(i, j);
+
+            // Calculate the response matrix element
+            double response_value = 0.0;
+            if (total_truth_events != 0.0) {
+                response_value = selected_signal_events / total_truth_events;
+            }
+
+            // Set the response matrix element
+            (*response_matrix)(i, j) = response_value;
+        }
+    }
+
+    return response_matrix;
+}
+
 void multiply_1d_hist_by_matrix(TMatrixD *mat, TH1 *hist)
 {
     // Copy the histogram contents into a column vector
@@ -79,7 +118,7 @@ struct TruthFileInfo
 std::map<std::string, TruthFileInfo> truth_file_map = {};
 
 std::map<std::string, std::string> samples_to_hist_names{
-    {"Unfolded Selection", "UnfData"},
+    {"Unfolded data", "UnfData"},
     {"MicroBooNE Tune", "uBTune"},
     {"NuWro Truth", "FakeData"}};
 
@@ -152,7 +191,7 @@ void dump_slice_errors(const std::string &hist_col_prefix,
 
 // Helper function that dumps a lot of the results to simple text files.
 // The events_to_xsec_factor is a constant that converts expected true event
-// counts to a total cross section (10^{-39} cm^2 / Ar) via multiplication.
+// counts to a total cross section (10^{-38} cm^2 / Ar) via multiplication.
 void dump_overall_results(const UnfoldedMeasurement &result,
                           const std::map<std::string, std::shared_ptr<TMatrixD>> &unf_cov_matrix_map,
                           double events_to_xsec_factor, const TMatrixD &genie_cv_true_events,
@@ -360,13 +399,13 @@ void unfold_bnb()
     // };
 
 
-    inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
-        "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow.root",
-        "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-        "../systcalc_unfold.conf",
-        "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-        "_bnb_fixedBackground_mergedOverflow"
-    };
+    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
+    //     "_bnb_fixedBackground_mergedOverflow"
+    // };
 
     // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions; uncontained muon events have been removed
     //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_10Sep24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_onlyContained.root",
@@ -383,6 +422,14 @@ void unfold_bnb()
     //     "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
     //     "_bnb_fixedBackground_mergedOverflow_containedMuXSec"
     // };
+
+    inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
+        "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_17Oct24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_containedMuXSec.root",
+        "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+        "../systcalc_unfold.conf",
+        "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
+        "_bnb_fixedBackground_mergedOverflow_containedMuXSec"
+    };
 
     // #########################
     // Alternative plots
@@ -503,14 +550,31 @@ void unfold_bnb()
         // {genPath + "FlatTreeAnalyzerOutput_Genie_3000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kGreen+1, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 3000 NuMuBar Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
         // {genPath + "FlatTreeAnalyzerOutput_Genie_4000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kGreen+2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 4000 NuMuBar Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
 
-        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "#splitline{GENIE 3.04.02}{G18_10a_02_11a}", 1.f},
-
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro 21.09.2", 1.f},
+        // // ----------------------------------------------------------
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "#splitline{GENIE 3.04.02}{G18_10a_02_11a}", 1.f/10}, // Using 1/10 scaling since lines were produced with e^-39 scaling but now we use e^-38 on y axis
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "#splitline{GENIE 3.04.02}{#splitline{AR23_20i_00_000}{Nuclear deexcitation off}}", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro 21.09.2", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange, 1, 1, "GiBUU 2023 (Patch 3)", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15_with_COH_from_Genie_v3_4_2_G18_10a_02_11a.root", kOrange+1, 1, 1, "#splitline{GiBUU 2023 (Patch 3)}{#splitline{with COH from}{GENIE 3.04.02 G18_10a_02_11a}}", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000.root", kRed, 1, 1, "NEUT 5.4.0.1", 1.f/10},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kTeal+6, 1, 1, "NuWro 19.02.1", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1_cthorpe.root", kGreen+4, 1, 1, "NuWro (v19 + Hyperon Models*)", 1.f},
 
-        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "#splitline{GENIE 3.04.02}{#splitline{AR23_20i_00_000}{Nuclear deexcitation off}}", 1.f},
+        // ----------------------------------------------------------
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "GENIE G18 Untuned", 1.f/10}, // Using 1/10 scaling since lines were produced with e^-39 scaling but now we use e^-38 on y axis
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "GENIE DUNE/SBN", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange, 1, 1, "GiBUU", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15_with_COH_from_Genie_v3_4_2_G18_10a_02_11a.root", kOrange+1, 1, 1, "GiBUU+COH", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000.root", kRed, 1, 1, "NEUT", 1.f/10},
+        // // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000_noPhotonRequirement.root", kAzure+9, 1, 1, "GENIE DUNE/SBN No Photon Req.", 1.f/10},
+
+        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a_noFSI.root", kAzure+1, 2, 1, "GENIE G18 Untuned noFSI", 1.f/10},
+        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000_noFSI.root", kAzure+3, 2, 1, "GENIE DUNE/SBN noFSI", 1.f/10},
+        {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15_noFSI.root", kOrange, 2, 1, "GiBUU noFSI", 1.f/10},
+        {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000_noFSI.root", kRed, 2, 1, "NEUT noFSI", 1.f/10},
+        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2_noFSI.root", kTeal-7, 2, 1, "NuWro noFSI", 1.f/10},
+
     };
 
     // Get the tuned GENIE CV prediction in each true bin (including the
@@ -622,7 +686,6 @@ void unfold_bnb()
     // // Print the full diff matrix
     // std::cout << "Difference between the total covariance matrix and the sum of the blockwise decomposed matrices:\n";
     // diff.Print();
-    // std::cout<<"DEBUG 00: Point 2"<<std::endl;
 
     // for (int i = 0; i < diff.GetNrows(); ++i)
     // {
@@ -639,7 +702,6 @@ void unfold_bnb()
     //     }
     // }
     // return 0;
-
 
     // // Assuming result_cov_matrix is a std::unique_ptr<TMatrixD>
     // int nRows = result.cov_matrix_->GetNrows();
@@ -726,13 +788,13 @@ void unfold_bnb()
     // Save the GENIE CV model (before A_C multiplication) using a column vector
     // of event counts
     TMatrixD genie_cv_truth_vec(num_true_signal_bins, 1);
-    TMatrixD genie_cv_truth_cov(num_true_signal_bins, num_true_signal_bins);
+    TMatrixD genie_cv_truth_err_vec(num_true_signal_bins, num_true_signal_bins);
     for (int b = 0; b < num_true_signal_bins; ++b)
     {
         const auto true_evts = genie_cv_truth->GetBinContent(b + 1);
         const auto true_evts_err = genie_cv_truth->GetBinError(b + 1);
         genie_cv_truth_vec(b, 0) = true_evts;
-        genie_cv_truth_cov(b, b) = true_evts_err * true_evts_err;
+        genie_cv_truth_err_vec(b, b) = true_evts_err * true_evts_err;
     }
 
     // Multiply the truth-level GENIE prediction histogram by the additional
@@ -787,16 +849,16 @@ void unfold_bnb()
     lg->AddEntry(genie_cv_truth, "uB tune", "l");
     if (using_fake_data)
     {
-        lg->AddEntry(fake_data_truth_hist, "Fake Data Truth (NuWro (v19 + Hyperon Models*))", "l");
+        lg->AddEntry(fake_data_truth_hist, "Fake Data Truth (NuWro 19.02.1)", "l");
     }
 
     lg->Draw("same");
 
 
     // Get the factors needed to convert to cross-section units
-    double total_pot = syst.total_bnb_data_pot_;
-    double integ_flux = integrated_numu_flux_in_FV(total_pot);
-    double num_Ar = num_Ar_targets_in_FV();
+    const double total_pot = syst.total_bnb_data_pot_;
+    const double integ_flux = integrated_numu_flux_in_FV(total_pot);
+    const double num_Ar = num_Ar_targets_in_FV();
 
     std::cout << "TOTAL POT = " << total_pot << '\n';
     std::cout << "INTEGRATED numu FLUX = " << integ_flux << '\n';
@@ -804,10 +866,10 @@ void unfold_bnb()
 
     // Retrieve the true-space expected event counts from NUISANCE output files
     // for each available generator model
-    double conv_factor = (num_Ar * integ_flux) / 1e39;
+    double conv_factor = (num_Ar * integ_flux) / 1e38;
     std::map<std::string, TMatrixD *> generator_truth_map = {}; // get_true_events_nuisance( sample_info, conv_factor );
 
-    // Dump overall results to text files. Total cross section units (10^{-39}
+    // Dump overall results to text files. Total cross section units (10^{-38}
     // cm^2 / Ar) will be used throughout. Do this before adjusting the
     // truth-level prediction TMatrixD objects via multiplication by A_C
     dump_overall_results(result, unfolded_cov_matrix_map, 1.0 / conv_factor, genie_cv_truth_vec, fake_data_truth, generator_truth_map, using_fake_data);
@@ -827,7 +889,7 @@ void unfold_bnb()
 
         // Also transform the GENIE CV model
         genie_cv_truth_vec = TMatrixD(A_C, TMatrixD::kMult, genie_cv_truth_vec);
-        genie_cv_truth_cov = TMatrixD(TMatrixD(A_C, TMatrixD::kMult, genie_cv_truth_cov), TMatrixD::kMult, A_C_T); // A_c * cov * A_c^T
+        genie_cv_truth_err_vec = TMatrixD(A_C, TMatrixD::kMult, genie_cv_truth_err_vec);
 
         // Now do the other generator predictions
         for (const auto &pair : generator_truth_map)
@@ -855,11 +917,11 @@ void unfold_bnb()
         SliceHistogram *slice_unf_stats_only = SliceHistogram::make_slice_histogram(
                     *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("DataStats").get());
 
-        // SliceHistogram *slice_unf_norm_only = SliceHistogram::make_slice_histogram(
-        //             *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("total_blockwise_norm").get());
+        SliceHistogram *slice_unf_norm_only = SliceHistogram::make_slice_histogram(
+                    *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("total_blockwise_norm").get());
 
-        // SliceHistogram *slice_unf_shape_only = SliceHistogram::make_slice_histogram(
-        //             *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("total_blockwise_shape").get());
+        SliceHistogram *slice_unf_shape_only = SliceHistogram::make_slice_histogram(
+                    *result.unfolded_signal_, slice, unfolded_cov_matrix_map.at("total_blockwise_shape").get());
 
         // Reco slices slice_mc_plus_ext and slice_bnb are for the fractional error plots
         SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
@@ -917,7 +979,7 @@ void unfold_bnb()
         }
 
         // Add over and underflow bins to additional smearing matrix plots
-        if(sl_idx==2 || sl_idx==5) stop++; // Overflow bin
+        // if(sl_idx==2 || sl_idx==5) stop++; // Overflow bin
         // if(sl_idx==5) start--; // Underflow bin // Removed and replaced withh 100 MeV phase space restriction
         TMatrixD ac_hist_slice(stop - start + 1, stop - start + 1);
         for (int i = start; i <= stop; i++) {
@@ -926,11 +988,40 @@ void unfold_bnb()
             }
         }
 
+        // Get the trimmed complete truth signal prediction
+        TMatrixD truth_signal_slice(stop - start + 1, 1);
+        for (int i = 0; i < stop - start + 1; ++i) {
+            truth_signal_slice(i, 0) = genie_cv_truth_vec(start + i, 0);
+        }
+        const auto response_matrix = calculate_response_matrix(cv_hist_2d_slice, truth_signal_slice);
+        // Print out genie_cv_truth_vec, truth_signal_slice, and response_matrix
+        std::cout << "Genie CV Truth Vector:\n";
+        for (int i = 0; i < genie_cv_truth_vec.GetNrows(); ++i) {
+            std::cout << genie_cv_truth_vec(i, 0) << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "Truth Signal Slice:\n";
+        for (int i = 0; i < truth_signal_slice.GetNrows(); ++i) {
+            std::cout << truth_signal_slice(i, 0) << " ";
+        }
+        std::cout << "\n";
+
+        std::cout << "Response Matrix:\n";
+        for (int i = 0; i < response_matrix->GetNrows(); i++) {
+            for (int j = 0; j < response_matrix->GetNcols(); j++) {
+                std::cout << response_matrix->operator()(i, j) << " ";
+            }
+            std::cout << "\n";
+        }
+
+        // return 0;
         const auto cv_confusion_mat = util::CountsToConfusionMatrix(cv_hist_2d_slice, "row");
         const auto fake_confusion_mat = util::CountsToConfusionMatrix(fake_hist_2d_slice, "row");
         std::string title = slice_unf->hist_->GetXaxis()->GetTitle();
         // std::regex pattern("true (.*)");
         // title = std::regex_replace(title, pattern, "$1");
+        const auto resp_title = std::string("Responce Matrix") + title +";Truth Bins;Reco Bins";
         const auto conf_title = std::string("Confusion Matrix") + title +";Truth Bins;Reco Bins";
         const auto ac_title = std::string("Additional Smearing Matrix") + title +";Truth Bins;Regularized Truth Bins";
         const auto corr_unf_title = std::string("Correlation Matrix for Unfolded Bins") + title +";Truth Bins;Truth Bins";
@@ -946,6 +1037,12 @@ void unfold_bnb()
         //     edges[i] = slice.hist_->GetBinLowEdge(i+1);
         // }
         // edges[num_bins] = slice.hist_->GetBinLowEdge(num_bins) + slice.hist_->GetBinWidth(num_bins);
+
+        // Create a TH2D histogram
+        TH2D *cv_resp_hist = new TH2D(("cv_response slice "+std::to_string(sl_idx)).c_str(),("Genie " + resp_title).c_str(),
+                                num_bins, 0, num_bins,
+                                num_bins, 0, num_bins);
+
 
         // Create a TH2D histogram
         TH2D *cv_confusion_hist = new TH2D(("cv_confusion slice "+std::to_string(sl_idx)).c_str(),("Genie " + conf_title).c_str(),
@@ -981,6 +1078,13 @@ void unfold_bnb()
         TH2D *trimmed_deconstructed_chi2 = new TH2D(("trimmed_deconstructed_chi2 slice "+std::to_string(sl_idx)).c_str(), chi2_title.c_str(),
                                 num_bins, 0, num_bins,
                                 num_bins, 0, num_bins);
+
+        // Fill histogram with values from TMatrixD
+        for (int i = 0; i < response_matrix->GetNrows(); i++) {
+            for (int j = 0; j < response_matrix->GetNcols(); j++) {
+                cv_resp_hist->SetBinContent(i+1, j+1, response_matrix->operator()(i, j));
+            }
+        }
 
         // Fill histogram with values from TMatrixD
         for (int i = 0; i < cv_confusion_mat.GetNrows(); i++) {
@@ -1033,6 +1137,40 @@ void unfold_bnb()
             }
         }
 
+        TCanvas* c_resp_slice = new TCanvas(("c_resp_slice slice "+std::to_string(sl_idx)).c_str(), "c response matrix", 800, 600);
+        cv_resp_hist->SetStats(false);
+        cv_resp_hist->SetMinimum(0);
+        cv_resp_hist->SetMaximum(1.0);
+        gStyle->SetPalette();
+
+        // Set x and y axis labels to bin numbers
+        for (int i = 1; i <= cv_resp_hist->GetNbinsX(); i++) {
+            cv_resp_hist->GetXaxis()->SetBinLabel(i, Form("%d", i));
+        }
+        for (int i = 1; i <= cv_resp_hist->GetNbinsY(); i++) {
+            cv_resp_hist->GetYaxis()->SetBinLabel(i, Form("%d", i));
+        }
+        // Increase the font size of the axis labels
+        cv_resp_hist->GetXaxis()->SetLabelSize(0.05);
+        cv_resp_hist->GetYaxis()->SetLabelSize(0.05);
+
+        cv_resp_hist->Draw("colz");
+
+        // Fill histogram with slice data
+        for (int i = 0; i < num_bins; i++) {
+            for (int j = 0; j < num_bins; j++) {
+            double bin_content = cv_hist_2d_slice(i, j);
+            TLatex* latex = new TLatex(cv_resp_hist->GetXaxis()->GetBinCenter(i+1), cv_resp_hist->GetYaxis()->GetBinCenter(j+1), Form("#splitline{%.1f%%}{(%.1f)}", 100*cv_resp_hist->GetBinContent(i+1, j+1), bin_content));
+            latex->SetTextFont(42);
+            latex->SetTextSize(0.02);
+            latex->SetTextAlign(22);
+            latex->Draw();
+            }
+        }
+
+        c_resp_slice->SaveAs(("plots/response_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
+
+
         TCanvas* c_conf_1 = new TCanvas(("c_conf_1 slice "+std::to_string(sl_idx)).c_str(), "c confusion matrix", 800, 600);
         cv_confusion_hist->SetStats(false);
         cv_confusion_hist->SetMinimum(0);
@@ -1042,12 +1180,12 @@ void unfold_bnb()
 
         // Set x and y axis labels to bin numbers
         for (int i = 1; i <= cv_confusion_hist->GetNbinsX(); i++) {
-            // const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            // const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
             // const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             cv_confusion_hist->GetXaxis()->SetBinLabel(i, Form("%d", i));
         }
         for (int i = 1; i <= cv_confusion_hist->GetNbinsY(); i++) {
-            // const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            // const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
             // const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             cv_confusion_hist->GetYaxis()->SetBinLabel(i, Form("%d", i));
         }
@@ -1107,30 +1245,59 @@ void unfold_bnb()
             c_conf_fake->SaveAs(("plots/fake_confusion_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
         }
 
+        // Define the color scheme for the z-axis
+        const Int_t nRGBs = 3;
+        const Int_t nCont = 255;
+        Double_t stops[nRGBs] = {0.0, 0.333, 1.0};
+        Double_t red[nRGBs]   = {1.0, 1.0, 0.0};
+        Double_t green[nRGBs] = {0.0, 1.0, 0.0};
+        Double_t blue[nRGBs]  = {0.0, 1.0, 1.0};
 
-        TCanvas* c_ac_slice = new TCanvas(("c_ac_slice slice "+std::to_string(sl_idx)).c_str(), "c ac matrix", 800, 600);
+        // Create the gradient color table
+        TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, nCont);
+        gStyle->SetNumberContours(nCont);
+
+        TCanvas* c_ac_slice = new TCanvas(("c_ac_slice slice "+std::to_string(sl_idx)).c_str(), "c ac matrix", 700, 700);
+        c_ac_slice->SetRightMargin(0.15); // Allow extra space for the legend on the right
+        ac_hist->SetTitle(""); // Remove the title
         ac_hist->SetTitleSize(0.05, "t");
         ac_hist->SetStats(false);
-        ac_hist->GetZaxis()->SetRangeUser(-0.5, 1.5); // Set the z range
+        ac_hist->GetZaxis()->SetRangeUser(-0.5, 1.0); // Set the z range
         ac_hist->Draw("colz");
-
+        
+        // Print out number of bins
+        // std::cout<<"DEBUG ac_hist.GetNbinsX() = "<<ac_hist->GetNbinsX()<<std::endl;
+        
         // Set x and y axis labels to bin numbers
         for (int i = 1; i <= ac_hist->GetNbinsX(); i++) {
-            // const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
-            const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 5));
+            // const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && i == 5);
             const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             ac_hist->GetXaxis()->SetBinLabel(i, binLabel);
         }
         for (int i = 1; i <= ac_hist->GetNbinsY(); i++) {
-            // const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
-            const auto overFlow = (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 5));
+            // const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
+            const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && i == 5);
             const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             ac_hist->GetYaxis()->SetBinLabel(i, binLabel);
         }
         // Increase the font size of the axis labels
-        ac_hist->GetXaxis()->SetLabelSize(0.05);
-        ac_hist->GetYaxis()->SetLabelSize(0.05);
-
+        ac_hist->GetXaxis()->SetLabelSize(0.04); // Reduced by 20%
+        ac_hist->GetYaxis()->SetLabelSize(0.04); // Reduced by 20%
+        
+        // Add values into the cells of the 2D histogram
+        for (int i = 1; i <= ac_hist->GetNbinsX(); i++) {
+            for (int j = 1; j <= ac_hist->GetNbinsY(); j++) {
+                double value = ac_hist->GetBinContent(i, j);
+                if (value != 0) { // Only draw non-zero values
+                    TText *text = new TText(ac_hist->GetXaxis()->GetBinCenter(i), ac_hist->GetYaxis()->GetBinCenter(j), Form("%.3f", value));
+                    text->SetTextAlign(22); // Center alignment
+                    text->SetTextSize(0.024); // Reduced by 20%
+                    text->Draw("same");
+                }
+            }
+        }
+        
         TColor::CreateGradientColorTable(nColors, stops, red, green, blue, 20);
         c_ac_slice->SaveAs(("plots/additional_smearing_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
@@ -1219,68 +1386,69 @@ void unfold_bnb()
 
         c_cov_slice->SaveAs(("plots/covariance_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
-        // ###########################################################
-        const auto inverse_cov = slice_mc_plus_ext->get_inverse_cov_mat();
-        const auto diff = slice_mc_plus_ext->get_diff(*slice_bnb);
+        // // ###########################################################
+        // const auto inverse_cov = slice_mc_plus_ext->get_inverse_cov_mat();
+        // const auto diff = slice_mc_plus_ext->get_diff(*slice_bnb);
 
-        float chi2Total = 0;
-        float minValue = std::numeric_limits<float>::max(); // Initialize to maximum possible float value
-        float maxValue = std::numeric_limits<float>::lowest(); // Initialize to minimum possible float value
+        // float chi2Total = 0;
+        // float minValue = std::numeric_limits<float>::max(); // Initialize to maximum possible float value
+        // float maxValue = std::numeric_limits<float>::lowest(); // Initialize to minimum possible float value
 
-        for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) {
-            for (int j = 1; j <= trimmed_deconstructed_chi2->GetNbinsY(); j++) {
-                const auto diffValue1 = diff(0, i-1);
-                const auto diffValue2 = diff(0, j-1);
-                const auto invCovValue = inverse_cov(i-1, j-1);
-                const auto newValue = diffValue1 * invCovValue * diffValue2;
-                trimmed_deconstructed_chi2->SetBinContent(i, j, newValue);
-                chi2Total += newValue;
+        // for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) {
+        //     for (int j = 1; j <= trimmed_deconstructed_chi2->GetNbinsY(); j++) {
+        //         const auto diffValue1 = diff(0, i-1);
+        //         const auto diffValue2 = diff(0, j-1);
+        //         const auto invCovValue = inverse_cov(i-1, j-1);
+        //         const auto newValue = diffValue1 * invCovValue * diffValue2;
+        //         trimmed_deconstructed_chi2->SetBinContent(i, j, newValue);
+        //         chi2Total += newValue;
 
-                // Update min and max values
-                if (newValue < minValue) minValue = newValue;
-                if (newValue > maxValue) maxValue = newValue;
-            }
-        }
+        //         // Update min and max values
+        //         if (newValue < minValue) minValue = newValue;
+        //         if (newValue > maxValue) maxValue = newValue;
+        //     }
+        // }
 
-        // Now minValue and maxValue hold the minimum and maximum values encountered in the loop
-        TCanvas* c_frac_err_slice = new TCanvas(("c_frac_err_slice slice "+std::to_string(sl_idx)).c_str(), "c fractional error matrix", 800, 600);
+        // // Now minValue and maxValue hold the minimum and maximum values encountered in the loop
+        // TCanvas* c_frac_err_slice = new TCanvas(("c_frac_err_slice slice "+std::to_string(sl_idx)).c_str(), "c fractional error matrix", 800, 600);
 
-        // Number of colors in the palette
-        const Int_t NRGBs = 3;
-        const Int_t NCont = 255;
-        // Define your color stops and the corresponding RGB values
-        Double_t stops[NRGBs] = {0, std::abs(minValue)/(std::abs(minValue) + std::abs(maxValue)), 1}; // minValue/maxValue corresponds to the zero point, which will be white
-        Double_t red[NRGBs]   = {0.00, 1.00, 1.00}; // Red component (0 at the start and end, 1 in the middle)
-        Double_t green[NRGBs] = {0.00, 1.00, 0.00}; // Green component (0 at the start, 1 in the middle, 0 at the end)
-        Double_t blue[NRGBs]  = {1.00, 1.00, 0.00}; // Blue component (1 at the start, 1 in the middle, 0 at the end)
+        // // Number of colors in the palette
+        // const Int_t NRGBs = 3;
+        // const Int_t NCont = 255;
+        // // Define your color stops and the corresponding RGB values
+        // Double_t stops[NRGBs] = {0, std::abs(minValue)/(std::abs(minValue) + std::abs(maxValue)), 1}; // minValue/maxValue corresponds to the zero point, which will be white
+        // Double_t red[NRGBs]   = {0.00, 1.00, 1.00}; // Red component (0 at the start and end, 1 in the middle)
+        // Double_t green[NRGBs] = {0.00, 1.00, 0.00}; // Green component (0 at the start, 1 in the middle, 0 at the end)
+        // Double_t blue[NRGBs]  = {1.00, 1.00, 0.00}; // Blue component (1 at the start, 1 in the middle, 0 at the end)
 
-        // Create the gradient color table
-        TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
-        gStyle->SetNumberContours(NCont);
+        // // Create the gradient color table
+        // TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+        // gStyle->SetNumberContours(NCont);
 
-        // If needed, you can use minValue and maxValue for further processing
-        // util::CreateRedToBlueColorPalette(20);
-        trimmed_deconstructed_chi2->SetTitleSize(0.05, "t");
-        trimmed_deconstructed_chi2->SetStats(false);
-        trimmed_deconstructed_chi2->Draw("colz");
-        // Set x and y axis labels to bin numbers
-        for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) 
-        {
-            trimmed_deconstructed_chi2->GetXaxis()->SetBinLabel(i, Form("%d", i));
-        }
-        for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsY(); i++)
-        {
-            trimmed_deconstructed_chi2->GetYaxis()->SetBinLabel(i, Form("%d", i));
-        }
+        // // If needed, you can use minValue and maxValue for further processing
+        // // util::CreateRedToBlueColorPalette(20);
+        // trimmed_deconstructed_chi2->SetTitleSize(0.05, "t");
+        // trimmed_deconstructed_chi2->SetStats(false);
+        // trimmed_deconstructed_chi2->Draw("colz");
+        // // Set x and y axis labels to bin numbers
+        // for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) 
+        // {
+        //     trimmed_deconstructed_chi2->GetXaxis()->SetBinLabel(i, Form("%d", i));
+        // }
+        // for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsY(); i++)
+        // {
+        //     trimmed_deconstructed_chi2->GetYaxis()->SetBinLabel(i, Form("%d", i));
+        // }
 
-        // Increase the font size of the axis labels
-        trimmed_deconstructed_chi2->GetXaxis()->SetLabelSize(0.05);
-        trimmed_deconstructed_chi2->GetYaxis()->SetLabelSize(0.05);
-        c_frac_err_slice->SaveAs(("plots/deconstructed_chi2_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
-        // ###########################################################
+        // // Increase the font size of the axis labels
+        // trimmed_deconstructed_chi2->GetXaxis()->SetLabelSize(0.05);
+        // trimmed_deconstructed_chi2->GetYaxis()->SetLabelSize(0.05);
+        // c_frac_err_slice->SaveAs(("plots/deconstructed_chi2_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
+        // // ###########################################################
 
         // Also use the GENIE CV model to do the same
-        SliceHistogram *slice_cv = SliceHistogram::make_slice_histogram(genie_cv_truth_vec, slice, &genie_cv_truth_cov);
+        SliceHistogram *slice_cv = SliceHistogram::make_slice_histogram(
+            genie_cv_truth_vec, slice, nullptr);
 
         // If present, also use the truth information from the fake data to do the same
         SliceHistogram *slice_truth = using_fake_data ? SliceHistogram::make_slice_histogram(fake_data_truth, slice, &fake_data_truth_cov) : nullptr;
@@ -1289,7 +1457,7 @@ void unfold_bnb()
         auto *slice_gen_map_ptr = new std::map<std::string, SliceHistogram *>();
         auto &slice_gen_map = *slice_gen_map_ptr;
 
-        slice_gen_map["Unfolded Selection"] = slice_unf;
+        slice_gen_map["Unfolded data"] = slice_unf;
         slice_gen_map["MicroBooNE Tune"] = slice_cv;
 
         if (using_fake_data)
@@ -1301,32 +1469,34 @@ void unfold_bnb()
         auto *slice_gen_map_alt_ptr = new std::map<std::string, SliceHistogram *>(); // Used for stats only histograms
         auto &slice_gen_map_alt = *slice_gen_map_alt_ptr;
         // slice_gen_map_alt["MicroBooNE Tune"] = slice_cv;
-        slice_gen_map_alt["Unfolded Selection Stats Only"] = slice_unf_stats_only;
+        slice_gen_map_alt["Unfolded data Stats Only"] = slice_unf_stats_only;
+        // slice_gen_map_alt["Unfolded data Norm Only"] = slice_unf_norm_only;
+        // slice_gen_map_alt["Unfolded data Shape Only"] = slice_unf_shape_only;
 
         int var_count = 0;
         double other_var_width = 1.;
         std::string diff_xsec_denom, diff_xsec_units_denom, diff_xsec_denom_latex, diff_xsec_units_denom_latex;
 
-        for (const auto &ov_spec : slice.other_vars_)
-        {
-            double high = ov_spec.high_bin_edge_;
-            double low = ov_spec.low_bin_edge_;
-            const auto &var_spec = sb.slice_vars_.at(ov_spec.var_index_);
+        // for (const auto &ov_spec : slice.other_vars_)
+        // {
+        //     double high = ov_spec.high_bin_edge_;
+        //     double low = ov_spec.low_bin_edge_;
+        //     const auto &var_spec = sb.slice_vars_.at(ov_spec.var_index_);
 
-            if (high != low && std::abs(high - low) < BIG_DOUBLE)
-            {
-                ++var_count;
-                other_var_width *= (high - low);
-                diff_xsec_denom += 'd' + var_spec.name_;
-                diff_xsec_denom_latex += " d" + var_spec.latex_name_;
+        //     if (high != low && std::abs(high - low) < BIG_DOUBLE)
+        //     {
+        //         ++var_count;
+        //         other_var_width *= (high - low);
+        //         diff_xsec_denom += 'd' + var_spec.name_;
+        //         diff_xsec_denom_latex += " d" + var_spec.latex_name_;
 
-                if (!var_spec.units_.empty())
-                {
-                    diff_xsec_units_denom += " / " + var_spec.units_;
-                    diff_xsec_units_denom_latex += " / " + var_spec.latex_units_;
-                }
-            }
-        }
+        //         if (!var_spec.units_.empty())
+        //         {
+        //             diff_xsec_units_denom += " / " + var_spec.units_;
+        //             diff_xsec_units_denom_latex += " / " + var_spec.latex_units_;
+        //         }
+        //     }
+        // }
 
         for (size_t av_idx : slice.active_var_indices_)
         {
@@ -1352,30 +1522,59 @@ void unfold_bnb()
 
         int num_slice_bins = slice_unf->hist_->GetNbinsX();
         TMatrixD trans_mat(num_slice_bins, num_slice_bins);
+        std::cout << "DEBUG num_slice_bins: " << num_slice_bins << " for " << slice_unf->hist_->GetName() << std::endl;
         for (int b = 0; b < num_slice_bins; ++b)
         {
             double width = slice_unf->hist_->GetBinWidth(b + 1) * other_var_width;
-            trans_mat(b, b) = 1e39 / (width * integ_flux * num_Ar);
+            std::cout << "DEBUG width: " << width << std::endl;
+            trans_mat(b, b) = 1e38 / (width * integ_flux * num_Ar);
+            // std::cout << "DEBUG trans_mat(" << b << ", " << b << "): " << trans_mat(b, b) << "  -  width: " << std::fixed << std::setprecision(5) << width << std::endl;
         }
+        // if(sl_idx == 1) return 0;
 
-        std::string slice_y_title = var_count > 0 ? "d" : "#sigma";
-        std::string slice_y_latex_title = var_count > 0 ? "{$d" : "\\sigma";
+        // std::string slice_y_title = var_count > 0 ? "d" : "#sigma";
+        // std::string slice_y_latex_title = var_count > 0 ? "{$d" : "\\sigma";
 
-        if (var_count > 1)
-        {
-            std::string var_count_str = "^{" + std::to_string(var_count) + "}";
-            slice_y_title += var_count_str;
-            slice_y_latex_title += var_count_str;
+        // if (var_count > 1)
+        // {
+        //     std::string var_count_str = "^{" + std::to_string(var_count) + "}";
+        //     slice_y_title += var_count_str;
+        //     slice_y_latex_title += var_count_str;
+        // }
+
+        // if (var_count > 0)
+        // {
+        //     slice_y_title += "#sigma/" + diff_xsec_denom;
+        //     slice_y_latex_title += "\\sigma / " + diff_xsec_denom_latex;
+        // }
+
+        // slice_y_title += " (10^{-38} cm^{2}" + diff_xsec_units_denom + " / Ar)";
+        // slice_y_latex_title += "\\text{ }(10^{-38}\\text{ cm}^{2}" + diff_xsec_units_denom_latex + " / \\mathrm{Ar})$}";
+
+        // Determine the titles for the y-axis based on the variable count
+        std::string slice_y_title;
+        std::string slice_y_latex_title;
+        
+        if (var_count > 0) {
+            // Differential cross-section        
+            // Add the denominator for differential cross-section using \frac{}{}
+            slice_y_title += "#frac{d#sigma}{" + diff_xsec_denom + "}";
+            slice_y_latex_title += "{$\\frac{d\\sigma}{" + diff_xsec_denom_latex + "}";
+        
+            // // Add the units to the titles in square brackets, considering the units of the denominator
+            // std::cout<<"DEBUG diff_xsec_units_denom: "<<diff_xsec_units_denom<<" "<<diff_xsec_units_denom_latex<<std::endl;
+            // if(sl_idx==2) return 0;
+            slice_y_title += " [10^{-38} cm^{2} " + (diff_xsec_units_denom != "" ? diff_xsec_units_denom : "") + " / Ar]";
+            slice_y_latex_title += "\\text{ }\\left[10^{-38}\\text{ cm}^{2} " + diff_xsec_units_denom_latex + " / \\text{Ar}\\right]$}";
+        } else {
+            // Total cross-section
+            slice_y_title = "#sigma";
+            slice_y_latex_title = "{$\\sigma";
+        
+            // Add the units to the titles in square brackets
+            slice_y_title += " [10^{-38} cm^{2} / Ar]";
+            slice_y_latex_title += "\\text{ }\\left[10^{-38}\\text{ cm}^{2} / \\text{Ar}\\right]$}";
         }
-
-        if (var_count > 0)
-        {
-            slice_y_title += "#sigma/" + diff_xsec_denom;
-            slice_y_latex_title += "\\sigma / " + diff_xsec_denom_latex;
-        }
-
-        slice_y_title += " (10^{-39} cm^{2}" + diff_xsec_units_denom + " / Ar)";
-        slice_y_latex_title += "\\text{ }(10^{-39}\\text{ cm}^{2}" + diff_xsec_units_denom_latex + " / \\mathrm{Ar})$}";
 
         for (auto &pair : slice_gen_map)
         {
@@ -1402,42 +1601,8 @@ void unfold_bnb()
         {
             const auto &name = pair.first;
             const auto *slice_h = pair.second;
-
-            // const auto covMat = *slice_gen_map.at("Unfolded Selection")->cmat_.get_matrix();
-            // std::cout<<"\nDEBUG A name: "<<name<<" slice: "<<sl_idx<<std::endl;
-            // std::cout<<"DEBUG A slice_h->cov_mat_.GetNrows() = "<<covMat.GetNrows()<<std::endl;
-            // std::cout<<"DEBUG A slice_h->cov_mat_.GetNcols() = "<<covMat.GetNcols()<<std::endl;
-            // for(int i = 0; i < covMat.GetNrows(); i++)
-            // {
-            //     for(int j = 0; j < covMat.GetNcols(); j++)
-            //     {
-            //         std::cout<<"["<<i<<", "<<j<<"] = "<<covMat(i, j)<<std::endl;
-            //     }
-            // }
-            chi2_map[name] = (name == "Unfolded Selection") ? SliceHistogram::Chi2Result() : slice_h->get_chi2(*slice_gen_map.at("Unfolded Selection"));
+            chi2_map[name] = (name == "Unfolded data") ? SliceHistogram::Chi2Result() : slice_h->get_chi2(*slice_gen_map.at("Unfolded data"));
         }
-
-        // for (const auto &pair : slice_gen_map_alt) // Loop over different uncertainty contrinbutions (e.g. norm vs shape ...)
-        // {
-        //     const auto &name = pair.first;
-        //     std::cout << "Slice " << sl_idx << " - " << name << std::endl;
-        //     if(name == "MicroBooNE Tune") continue; // Skip the MicroBooNE Tune
-        //     const auto *slice_h = pair.second;
-
-        //     const auto covMat = *slice_h->cmat_.get_matrix();
-        //     std::cout<<"\nDEBUG B name: "<<name<<" slice: "<<sl_idx<<std::endl;
-        //     std::cout<<"DEBUG B slice_h->cov_mat_.GetNrows() = "<<covMat.GetNrows()<<std::endl;
-        //     std::cout<<"DEBUG B slice_h->cov_mat_.GetNcols() = "<<covMat.GetNcols()<<std::endl;
-        //     for(int i = 0; i < covMat.GetNrows(); i++)
-        //     {
-        //         for(int j = 0; j < covMat.GetNcols(); j++)
-        //         {
-        //             std::cout<<"["<<i<<", "<<j<<"] = "<<covMat(i, j)<<std::endl;
-        //         }
-        //     }
-        //     const auto metrics = slice_h->get_chi2(*slice_gen_map.at("MicroBooNE Tune"));
-        //     std::cout << "Slice " << sl_idx << " - " << name << " chi2: " << metrics.chi2_ << std::endl;
-        // }
 
         TCanvas *c1 = new TCanvas("c1", "c1");//, 800, 600); // 800x600 pixels
         gStyle->SetLegendBorderSize(0);
@@ -1458,20 +1623,16 @@ void unfold_bnb()
 
         // Create a temporary clone of slice_cv->hist_ with zero errors
         TH1D* h_cv_no_errors = dynamic_cast<TH1D*>(slice_cv->hist_.get()->Clone("h_cv_no_errors"));
-        // TH1D* h_cv_no_errors = dynamic_cast<TH1D*>(slice_truth->hist_.get()->Clone("h_cv_no_errors"));
         for (int i = 1; i <= h_cv_no_errors->GetNbinsX(); ++i) {
             h_cv_no_errors->SetBinError(i, 0.0);
         }
 
-        TH1D* h_cv_ratio = dynamic_cast<TH1D*>(slice_cv->hist_.get()->Clone("h_cv_ratio"));
-        h_cv_ratio->SetStats(false);
 
-
-        // // Draw a horizontal dashed line at ratio == 1
-        // TLine* line = new TLine(h_ratio->GetXaxis()->GetXmin(), 1.0, h_ratio->GetXaxis()->GetXmax(), 1.0);
-        // line->SetLineColor(kAzure - 7);
-        // line->SetLineWidth(2);
-        // line->SetLineStyle(5);
+        // Draw a horizontal dashed line at ratio == 1
+        TLine* line = new TLine(h_ratio->GetXaxis()->GetXmin(), 1.0, h_ratio->GetXaxis()->GetXmax(), 1.0);
+        line->SetLineColor(kAzure - 7);
+        line->SetLineWidth(2);
+        line->SetLineStyle(5);
         
 
         h_ratio->Divide(h_cv_no_errors);
@@ -1490,12 +1651,6 @@ void unfold_bnb()
         h_ratio->GetXaxis()->SetTitleSize(0.08);
         h_ratio->GetXaxis()->SetTickLength(0.05);
         // h_ratio->GetXaxis()->SetTitleOffset(0.9);
-
-        h_cv_ratio->Divide(h_cv_no_errors);
-        h_cv_ratio->SetLineWidth(2);
-        h_cv_ratio->SetLineColor(kAzure - 7);
-        h_cv_ratio->SetLineStyle(5);
-
 
         if(sl_idx == 7)
         {
@@ -1547,45 +1702,72 @@ void unfold_bnb()
         }
 
         h_ratio->GetYaxis()->SetRangeUser(0.95*min, 1.05*max);
+
+        // Define a base font size (this is a fraction of the pad size)
+        const auto baseFontSize = 0.033;
+
+        // Get the dimensions of the pad
+        auto padHeight = pad2->GetAbsHNDC();
+        
+        // Calculate the scaled font size
+        auto scaledFontSize = baseFontSize / padHeight;
+        
+        // Increase the axis label font size
+        h_ratio->GetXaxis()->SetLabelSize(scaledFontSize);
+        h_ratio->GetYaxis()->SetLabelSize(scaledFontSize);
+        
+        // Increase the axis title font size
+        h_ratio->GetXaxis()->SetTitleSize(scaledFontSize);
+        h_ratio->GetYaxis()->SetTitleSize(scaledFontSize);
+        
         h_ratio->Draw("e");
 
         for(const auto& generator : generators)
         {
             const auto gen_hist = get_generator_hist(generator.path, sl_idx, generator.scaling);
-            if (gen_hist) {
+            if (!gen_hist) throw std::runtime_error("Error: gen_hist is nullptr");
 
-                if(USE_ADD_SMEAR) 
-                {
-                    multiply_1d_hist_by_matrix(&ac_hist_slice, gen_hist);
-                }
+            // Clone slice_unf and name it gen_hist_clone, then populate the colne with the values and errors from gen_hist
+            TH1D* gen_hist_clone = dynamic_cast<TH1D*>(slice_unf->hist_->Clone("gen_hist_clone"));
+            gen_hist_clone->Reset();
+            for (int i = 1; i <= gen_hist->GetNbinsX(); ++i) {
+                double bin_content = gen_hist->GetBinContent(i);
+                double bin_error = gen_hist->GetBinError(i);
+                gen_hist_clone->SetBinContent(i, bin_content);
+                gen_hist_clone->SetBinError(i, bin_error);
+            }                
 
-                // Normalise by bin width
-                for (int i = 1; i <= gen_hist->GetNbinsX(); ++i) {
-                    double bin_content = gen_hist->GetBinContent(i);
-                    double bin_error = gen_hist->GetBinError(i);
-                    // double bin_width = gen_hist->GetXaxis()->GetBinWidth(i);
-                    double bin_width = slice_unf->hist_->GetXaxis()->GetBinWidth(i); // Get the bin width from the slice_unf histogram
-                    gen_hist->SetBinContent(i, bin_content / bin_width);
-                    gen_hist->SetBinError(i, bin_error / bin_width);
-                }
-
-                // Clone gen_hist and create a 'ratio' version and divide that by h_cv_no_errors
-                TH1D* gen_hist_ratio = dynamic_cast<TH1D*>(gen_hist->Clone("gen_hist_ratio"));
-                gen_hist_ratio->Divide(h_cv_no_errors); // Warnings about different bin limits come from floating point differences in bin sizes
-
-                // Update min and max based on gen_hist_ratio
-                for (int i = 1; i <= gen_hist_ratio->GetNbinsX(); ++i) {
-                    double binContent = gen_hist_ratio->GetBinContent(i);
-                    double binError = gen_hist_ratio->GetBinError(i);
-                    if (binContent - binError < min) {
-                        min = binContent - binError;
-                    }
-                    if (binContent + binError > max) {
-                        max = binContent + binError;
-                    }
-                }
-                drawHistogramWithBand(gen_hist_ratio, generator, 0.3, true);
+            if(USE_ADD_SMEAR) 
+            {
+                multiply_1d_hist_by_matrix(&ac_hist_slice, gen_hist_clone);
             }
+
+            // Normalise by bin width
+            for (int i = 1; i <= gen_hist_clone->GetNbinsX(); ++i) {
+                double bin_content = gen_hist_clone->GetBinContent(i);
+                double bin_error = gen_hist_clone->GetBinError(i);
+                // double bin_width = gen_hist_clone->GetXaxis()->GetBinWidth(i);
+                double bin_width = slice_unf->hist_->GetXaxis()->GetBinWidth(i); // Get the bin width from the slice_unf histogram
+                gen_hist_clone->SetBinContent(i, bin_content / bin_width);
+                gen_hist_clone->SetBinError(i, bin_error / bin_width);
+            }
+
+            // Clone gen_hist_clone and create a 'ratio' version and divide that by h_cv_no_errors
+            TH1D* gen_hist_ratio = dynamic_cast<TH1D*>(gen_hist_clone->Clone("gen_hist_ratio"));
+            gen_hist_ratio->Divide(h_cv_no_errors); // Warnings about different bin limits come from floating point differences in bin sizes
+
+            // Update min and max based on gen_hist_ratio
+            for (int i = 1; i <= gen_hist_ratio->GetNbinsX(); ++i) {
+                double binContent = gen_hist_ratio->GetBinContent(i);
+                double binError = gen_hist_ratio->GetBinError(i);
+                if ((binContent - binError) < min) {
+                    min = binContent - binError;
+                }
+                if ((binContent + binError) > max) {
+                    max = binContent + binError;
+                }
+            }
+            drawHistogramWithBand(gen_hist_ratio, generator, 0.3, true);
         }
 
         h_ratio->GetYaxis()->SetRangeUser(0.95 * std::min(min, 1.0), 1.05 * std::max(max, 1.0));
@@ -1596,18 +1778,16 @@ void unfold_bnb()
 
             h_ratio_truth->SetStats(false);
             h_ratio_truth->Divide(h_cv_no_errors);
-            // h_ratio_truth->SetLineColor(kGreen);
-            // h_ratio_truth->SetLineWidth(2);
-            // h_ratio_truth->SetLineStyle(5);
+            h_ratio_truth->SetLineColor(kGreen);
+            h_ratio_truth->SetLineWidth(2);
+            h_ratio_truth->SetLineStyle(5);
             min = TMath::Min(min, 0.9 * h_ratio_truth->GetMinimum());
             max = TMath::Max(max, 1.1 * h_ratio_truth->GetMaximum());
             h_ratio_truth->GetYaxis()->SetRangeUser(min, max);
-            // h_ratio_truth->Draw("hist same");
-            drawHistogramWithBand(h_ratio_truth, kGreen, 2, 5, 0.3, true);
+            h_ratio_truth->Draw("hist same");
         }
 
-        // h_cv_ratio->Draw();
-        drawHistogramWithBand(h_cv_ratio, kAzure - 7, 2, 5, 0.3, true);
+        line->Draw();
         h_ratio->Draw("e same"); // draw again to be over everything
 
         slice_unf_stats_only_ratio->Draw("EX0 same");
@@ -1630,6 +1810,18 @@ void unfold_bnb()
         slice_unf->hist_->SetStats(false);
         slice_unf->hist_->SetLineWidth(2);
 
+        // Get the dimensions of the pad
+        padHeight = pad1->GetAbsHNDC();
+        
+        // Calculate the scaled font size
+        scaledFontSize = baseFontSize / padHeight;
+
+        // Increase the axis label font size
+        slice_unf->hist_->GetXaxis()->SetLabelSize(scaledFontSize);
+        slice_unf->hist_->GetYaxis()->SetLabelSize(scaledFontSize);
+        // Increase the axis title font size
+        slice_unf->hist_->GetXaxis()->SetTitleSize(scaledFontSize);
+        slice_unf->hist_->GetYaxis()->SetTitleSize(scaledFontSize);
 
         double ymax = -DBL_MAX;
         slice_unf->hist_->Draw("e");
@@ -1651,13 +1843,13 @@ void unfold_bnb()
 
             for (int i = 1; i <= slice_h->hist_->GetNbinsX(); ++i) {
                 double binContent = slice_h->hist_->GetBinContent(i);
-                double binError = (name == "Unfolded Selection") ? slice_h->hist_->GetBinError(i) : 0;
+                double binError = (name == "Unfolded data") ? slice_h->hist_->GetBinError(i) : 0;
                 if (binContent + binError > ymax) {
                     ymax = binContent + binError;
                 }
             }
 
-            if (name == "Unfolded Selection" || name == "NuWro Truth" || name == "MicroBooNE Tune")
+            if (name == "Unfolded data" || name == "NuWro Truth" || name == "MicroBooNE Tune")
                 continue;
 
             const auto &file_info = truth_file_map.at(name);
@@ -1692,47 +1884,59 @@ void unfold_bnb()
         for(const auto& generator : generators)
         {
             const auto gen_hist = get_generator_hist(generator.path, sl_idx, generator.scaling);
-            if (gen_hist) {
-                
-                if(USE_ADD_SMEAR) 
-                {
-                    multiply_1d_hist_by_matrix(&ac_hist_slice, gen_hist);
-                }
 
-                // Normalise by bin width
-                for (int i = 1; i <= gen_hist->GetNbinsX(); ++i) {
-                    double bin_content = gen_hist->GetBinContent(i);
-                    double bin_error = gen_hist->GetBinError(i);
-                    // double bin_width = gen_hist->GetXaxis()->GetBinWidth(i);
-                    double bin_width = slice_unf->hist_->GetXaxis()->GetBinWidth(i); // Get the bin width from the slice_unf histogram
-                    gen_hist->SetBinContent(i, bin_content / bin_width);
-                    gen_hist->SetBinError(i, bin_error / bin_width);
-                }
+            if (!gen_hist) throw std::runtime_error("Error: gen_hist is nullptr");
 
-                // Create the generator slice with nullptr convariance matrix
-                SliceHistogram *gen_slice_h = SliceHistogram::slice_histogram_from_histogram(*gen_hist);
-
-                if (gen_slice_h->hist_->GetNbinsX() != slice_gen_map.at("Unfolded Selection")->hist_->GetNbinsX()) {
-                    std::ostringstream oss;
-                    oss << "Error: gen_slice_h->hist_->GetNbinsX() (" << gen_slice_h->hist_->GetNbinsX() << ") != slice_gen_map.at(\"Unfolded NuWro Reco\")->hist_->GetNbinsX() (" << slice_gen_map.at("Unfolded Selection")->hist_->GetNbinsX() << ")";
-                    throw std::runtime_error(oss.str());
-                }
-
-                for (int i = 1; i <= gen_slice_h->hist_->GetNbinsX(); ++i) {
-                    double binContent = gen_slice_h->hist_->GetBinContent(i);
-                    double binError = 0;
-                    if (binContent + binError > ymax) {
-                        ymax = binContent + binError;
-                    }
-                }
-
-                // Compute chi2 to unfolded NuWro Reco
-                const auto metrics = gen_slice_h->get_chi2(*slice_gen_map.at("Unfolded Selection"));
-                gen_metrics[generator.name] = metrics;
-                delete gen_slice_h;
-
-                drawHistogramWithBand(gen_hist, generator, 0.3, true);
+            // Clone slice_unf and name it gen_hist_clone, then populate the colne with the values and errors from gen_hist
+            TH1D* gen_hist_clone = dynamic_cast<TH1D*>(slice_unf->hist_->Clone("gen_hist_clone"));
+            gen_hist_clone->Reset();
+            gen_hist_clone->SetMarkerStyle(1);
+            for (int i = 1; i <= gen_hist->GetNbinsX(); ++i) {
+                double bin_content = gen_hist->GetBinContent(i);
+                double bin_error = gen_hist->GetBinError(i);
+                gen_hist_clone->SetBinContent(i, bin_content);
+                gen_hist_clone->SetBinError(i, bin_error);
             }
+            
+            if(USE_ADD_SMEAR) 
+            {
+                multiply_1d_hist_by_matrix(&ac_hist_slice, gen_hist_clone);
+            }
+
+            // Normalise by bin width
+            for (int i = 1; i <= gen_hist_clone->GetNbinsX(); ++i) {
+                double bin_content = gen_hist_clone->GetBinContent(i);
+                double bin_error = gen_hist_clone->GetBinError(i);
+                // double bin_width = gen_hist_clone->GetXaxis()->GetBinWidth(i);
+                double bin_width = slice_unf->hist_->GetXaxis()->GetBinWidth(i); // Get the bin width from the slice_unf histogram
+                gen_hist_clone->SetBinContent(i, bin_content / bin_width);
+                gen_hist_clone->SetBinError(i, bin_error / bin_width);
+            }
+
+            // Create the generator slice with nullptr convariance matrix
+            SliceHistogram *gen_slice_h = SliceHistogram::slice_histogram_from_histogram(*gen_hist_clone);
+
+            if (gen_slice_h->hist_->GetNbinsX() != slice_gen_map.at("Unfolded data")->hist_->GetNbinsX()) {
+                std::ostringstream oss;
+                oss << "Error: gen_slice_h->hist_->GetNbinsX() (" << gen_slice_h->hist_->GetNbinsX() << ") != slice_gen_map.at(\"Unfolded NuWro Reco\")->hist_->GetNbinsX() (" << slice_gen_map.at("Unfolded data")->hist_->GetNbinsX() << ")";
+                throw std::runtime_error(oss.str());
+            }
+
+            for (int i = 1; i <= gen_slice_h->hist_->GetNbinsX(); ++i)
+            {
+                double binContent = gen_slice_h->hist_->GetBinContent(i);
+                double binError = 0;
+                if (binContent + binError > ymax) {
+                    ymax = binContent + binError;
+                }
+            }
+
+            // Compute chi2 to unfolded NuWro Reco
+            const auto metrics = gen_slice_h->get_chi2(*slice_gen_map.at("Unfolded data"));
+            gen_metrics[generator.name] = metrics;
+            delete gen_slice_h;
+
+            drawHistogramWithBand(gen_hist_clone, generator, 0.3, true);
         }
 
         slice_unf->hist_->GetYaxis()->SetRangeUser(0., ymax * 1.05);
@@ -1753,7 +1957,7 @@ void unfold_bnb()
         c1->cd();
 
         // TLegend *lg = new TLegend(0.6, 0.2);
-        TLegend *lg = new TLegend(1 - rightMargin + 0.02, 0.09, 1 - 0.02, 0.93);
+        TLegend *lg = new TLegend(1 - rightMargin + 0.02, 0.09, 1 - 0.02, 0.85);
 
         // lg->AddEntry((TObject*)0, "Generator Predictions", "");
         for(const auto& generator : generators)
@@ -1770,7 +1974,8 @@ void unfold_bnb()
             oss << "#splitline{" << generator.name << "}{" 
                 << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{"; 
             
-            if (metrics.num_bins_ > 1)
+            // if (metrics.num_bins_ > 1)
+            if (show_pvalue)
                 oss << "p = " << metrics.p_value_;
             
             oss << "}}";
@@ -1791,19 +1996,20 @@ void unfold_bnb()
             // if (chi2_result.num_bins_ > 1)
             //     oss << "s; p-value = " << chi2_result.p_value_;
 
-            // label += (name != "Unfolded Selection") ? ": #chi^{2} = " + oss.str() : "";
+            // label += (name != "Unfolded data") ? ": #chi^{2} = " + oss.str() : "";
 
             std::ostringstream oss;
-            if((name != "Unfolded Selection"))
+            if((name != "Unfolded data"))
             {
                 oss << "#splitline{";
-                if (name == "NuWro Truth") oss << "#splitline{Fake Data Truth (Overlay)}{NuWro (v19 + Hyperon Models*)}";
-                else if (name == "MicroBooNE Tune") oss << "#splitline{MC CV Truth (Overlay)}{#splitline{GENIE 3.0.6}{G18_10a_02_11a}}";
+                if (name == "NuWro Truth") oss << "#splitline{Fake Data Truth}{(NuWro 19.02.1)}";
+                else if (name == "MicroBooNE Tune") oss << "GENIE CV"; //<< "#splitline{GENIE 3.0.6}{G18_10a_02_11a}";
                 else oss << name;
 
                 oss << "}{" << "#splitline{#chi^{2} = " << (chi2_result.chi2_>= 0.01 && chi2_result.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin" << (chi2_result.num_bins_ > 1 ? "s" : "") << "}{"; 
                 
-                if (chi2_result.num_bins_ > 1)
+                // if (chi2_result.num_bins_ > 1)
+                if (show_pvalue)                
                     oss << "p = " << chi2_result.p_value_;
                 
                 oss << "}}";
@@ -1814,21 +2020,28 @@ void unfold_bnb()
             }
             const std::string label = oss.str();
 
-            lg->AddEntry(slice_h->hist_.get(), label.c_str(), (name == "Unfolded Selection") ? "lp" : "l");
+            lg->AddEntry(slice_h->hist_.get(), label.c_str(), (name == "Unfolded data") ? "lp" : "l");
         }
 
-        std::ostringstream headerss;
-        headerss << "#splitline{BNB Data}"
-                 << "{" << toLatexScientific(total_pot) << " POT}";
-                 
-        lg->SetHeader(headerss.str().c_str());
-        // Increase the font size for the legend header
-        // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
-        TLegendEntry* lg_header = dynamic_cast< TLegendEntry* >(
-            lg->GetListOfPrimitives()->First() );
-        lg_header->SetTextSize( 0.03 );
+        // std::ostringstream headerss;
+        // headerss << "#splitline{MicroBooNE}{"
+        //          << toLatexScientific(total_pot) << " POT}";
+
+        // lg->SetHeader(headerss.str().c_str());
+
+        // // Increase the font size for the legend header
+        // // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
+        // TLegendEntry* lg_header = dynamic_cast< TLegendEntry* >(
+        //     lg->GetListOfPrimitives()->First() );
+        // lg_header->SetTextSize( 0.03 );
+        lg->SetBorderSize(0);
         lg->Draw("same");
         c1->Update();
+
+        // Add LaTeX text to the plot
+        TLatex latex;
+        latex.SetTextSize(0.03); // Adjust the font size
+        latex.DrawLatexNDC(0.77, 0.88, ("#splitline{MicroBooNE in the BNB}{" + toLatexScientific(total_pot) + " POT}").c_str()); // Adjust the position (NDC coordinates)
 
         std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf";
         c1->SaveAs(out_pdf_name.c_str());

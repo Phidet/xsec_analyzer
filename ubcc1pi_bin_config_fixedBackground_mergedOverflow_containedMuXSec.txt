@@ -69,7 +69,7 @@ stv_tree
 1 -1 "category == 8"
 1 -1 "category == 9"
 1 -1 "category == 10"
-1 -1 "category == 11 || (cc1pi_signal  &&  cc1pi_truth_pionMomentum < 0.1)
+1 -1 "category == 11 || (cc1pi_signal  &&  cc1pi_truth_pionMomentum < 0.1)"
 1 -1 "category == 12"
 60
 0 0 "cc1pi_selected_generic  &&  cc1pi_reco_pionMomentum >= 0.1  &&  cc1pi_reco_muonCosTheta  >= -1             &&  cc1pi_reco_muonCosTheta < -0.27"

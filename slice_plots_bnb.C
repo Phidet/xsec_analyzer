@@ -31,6 +31,18 @@ void scale_by_bin_width(SliceHistogram* pSlice)
     pSlice->transform(trans_mat);
 }
 
+std::string toLatexScientific(double value) {
+    std::stringstream stream;
+    stream << std::scientific << std::setprecision(2) << value;
+    std::string str = stream.str();
+    size_t pos = str.find('e');
+    if (pos != std::string::npos) {
+        str.replace(pos, 1, " \\times 10^{");
+        str += "}";
+    }
+    return str;
+}
+
 struct inputFiles
 {
   std::string rootFile;
@@ -57,6 +69,14 @@ void make_slice_plots(const bool normaliseByBinWidth) {
   //   "ubcc1pi_neutral_slice_config_mergedOverflow.txt",
   //   "_bnb_fixedBackground_mergedOverflow"
   // };
+
+  inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
+      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_17Oct24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_containedMuXSec.root",
+      "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+      "systcalc.conf",
+      "ubcc1pi_neutral_slice_config_mergedOverflow.txt",
+      "_bnb_fixedBackground_mergedOverflow_containedMuXSec"
+  };
 
   // #########################
   // Alternative plots
@@ -86,13 +106,13 @@ void make_slice_plots(const bool normaliseByBinWidth) {
   //     "_bnb_fixedBackground_mergedOverflow_phiStudy_contained"
   // };
 
-  inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include uncontained muons
-      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_uncontained.root",
-      "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-      "systcalc.conf",
-      "ubcc1pi_slice_config_phiStudy_uncontainedSignal.txt",
-      "_bnb_fixedBackground_mergedOverflow_phiStudy_uncontained"
-  };
+  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include uncontained muons
+  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_uncontained.root",
+  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+  //     "systcalc.conf",
+  //     "ubcc1pi_slice_config_phiStudy_uncontainedSignal.txt",
+  //     "_bnb_fixedBackground_mergedOverflow_phiStudy_uncontained"
+  // };
 
   #ifdef USE_FAKE_DATA
     // Initialize the FilePropertiesManager and tell it to treat the NuWro
@@ -160,6 +180,9 @@ void make_slice_plots(const bool normaliseByBinWidth) {
   // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_golden_muon_momentum.txt" );
   // auto* sb_ptr = new SliceBinning( "bdt_input_slice_config_golden_pion_momentum.txt" );
 
+
+  // Get the factors needed to convert to cross-section units
+  const double total_pot = syst.total_bnb_data_pot_;
 
 
   // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_reduced_muonCosTheta.txt" );
@@ -242,7 +265,7 @@ void make_slice_plots(const bool normaliseByBinWidth) {
 
     // Prepare the plot legend
     // TLegend* lg = new TLegend( 0.3, 0.4 );
-    TLegend* lg = new TLegend( 0.75, 0.1, 0.99, 0.9);
+    TLegend* lg = new TLegend( 0.70, 0.11, 0.99, 0.85);
     std::cout<<"DEBUG tutorial_slice_plots Point 3.3"<<std::endl;
 
     // Build a stack of categorized central-value MC predictions plus the
@@ -299,41 +322,24 @@ void make_slice_plots(const bool normaliseByBinWidth) {
       --cat_bin_index;
     }
 
-    for ( auto iter = cat_map.begin(); iter != cat_map.end(); ++iter )
-    {
-      EventCategory cat = iter->first;
-      TH1D* temp_mc_hist = category_hist->ProjectionY( "temp_mc_hist",
-        cat+1, cat+1 );
-      temp_mc_hist->SetDirectory( nullptr );
-
-      SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(
-        *temp_mc_hist, slice  );
-
-      eci.set_mc_histogram_style( cat, temp_slice_mc->hist_.get() );
-      const auto label = iter->second;
-
-      if(cat == kExternal)
-      {
-        lg->AddEntry( slice_ext->hist_.get(), (label).c_str(), "f" );
-      }
-      else if(cat != kUnknown)
-      {
-        lg->AddEntry( temp_slice_mc->hist_.get(), (label).c_str(), "f" );
-      }
-    }
 
     std::cout<<"DEBUG tutorial_slice_plots Point 5"<<std::endl;
 
-    TCanvas* c1 = new TCanvas;
-    c1->SetRightMargin(0.252); // Allow space for the legend
-    c1->SetLeftMargin(0.13); // Allow a bit more space for the y axis label on the left
-    slice_bnb->hist_->SetLineColor( kBlack );
-    slice_bnb->hist_->SetLineWidth( 3 );
-    slice_bnb->hist_->SetMarkerStyle( kFullCircle );
-    slice_bnb->hist_->SetMarkerSize( 0.8 );
-    slice_bnb->hist_->SetStats( false );
-    if(normaliseByBinWidth) scale_by_bin_width(slice_bnb);
-    if(normaliseByBinWidth) scale_by_bin_width(slice_mc_plus_ext);
+    TCanvas* c1 = new TCanvas("c1", "Event rate", 800, 450);
+    c1->SetRightMargin(0.31); // Allow space for the legend
+    c1->SetLeftMargin(0.15); // Allow a bit more space for the y axis label on the left
+    c1->SetBottomMargin(0.12); // Increase bottom margin to avoid cutting off x-axis label
+    c1->SetTopMargin(0.02);
+    
+    slice_bnb->hist_->SetLineColor(kBlack);
+    slice_bnb->hist_->SetLineWidth(3);
+    slice_bnb->hist_->SetMarkerStyle(kFullCircle);
+    slice_bnb->hist_->SetMarkerSize(0.8);
+    slice_bnb->hist_->SetStats(false);
+    
+    if (normaliseByBinWidth) scale_by_bin_width(slice_bnb);
+    if (normaliseByBinWidth) scale_by_bin_width(slice_mc_plus_ext);
+    
     double ymax = 0;
     for (int i = 1; i <= slice_bnb->hist_->GetNbinsX(); ++i) {
         double binContent = slice_bnb->hist_->GetBinContent(i);
@@ -351,64 +357,163 @@ void make_slice_plots(const bool normaliseByBinWidth) {
     }
     ymax *= 1.07;
     slice_bnb->hist_->GetYaxis()->SetRangeUser(0., ymax);
-
-    if(sl_idx == 7)
-    {
+    
+    if (sl_idx == 7) {
         slice_bnb->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis labels
         slice_bnb->hist_->GetXaxis()->SetTickLength(0); // Hide x-axis ticks
     }
-
-    slice_bnb->hist_->Draw( "e" );
-    slice_pred_stack->Draw( "hist same" );
-
-    slice_mc_plus_ext->hist_->SetLineWidth( 3 );
+    
+    // Increase axis tick and label font size
+    slice_bnb->hist_->GetXaxis()->SetLabelSize(0.04);
+    slice_bnb->hist_->GetXaxis()->SetTitleSize(0.04);
+    slice_bnb->hist_->GetYaxis()->SetLabelSize(0.04);
+    slice_bnb->hist_->GetYaxis()->SetTitleSize(0.04);
+    
+    slice_bnb->hist_->Draw("e");
+    slice_pred_stack->Draw("hist same");
+    
+    slice_mc_plus_ext->hist_->SetLineWidth(3);
     slice_mc_plus_ext->hist_->SetFillColor(kGray + 1);
     slice_mc_plus_ext->hist_->SetFillStyle(3244);
-    slice_mc_plus_ext->hist_->Draw( "same E2" );
-    // Create a dummy histogram with the same style as slice_mc_plus_ext
-    TH1F *dummy = new TH1F(*(TH1F*)slice_mc_plus_ext->hist_.get());
-    dummy->SetFillColor(kGray + 1);
-    dummy->SetFillStyle(3244);
-    lg->AddEntry(dummy, "MC & EXT Uncertainties", "f");
-
-    slice_bnb->hist_->Draw( "same e" );
+    slice_mc_plus_ext->hist_->Draw("same E2");
+    
+    slice_bnb->hist_->Draw("same e");
+    
+    // // Add a blank entry for whitespace
+    // lg->AddEntry((TObject*)0, "", "");
+    
     #ifdef USE_FAKE_DATA
-      lg->AddEntry( slice_bnb->hist_.get(), "NuWro Fake-data", "lp" );
+      lg->AddEntry(slice_bnb->hist_.get(), "NuWro Fake-data", "lp");
     #else
-      lg->AddEntry( slice_bnb->hist_.get(), "Data (Beam On)", "lp" );
+      lg->AddEntry(slice_bnb->hist_.get(), "Data", "lp");
     #endif
-    slice_bnb->hist_->SetTitle("Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
+
+    for ( auto iter = cat_map.begin(); iter != cat_map.end(); ++iter )
+    {
+      EventCategory cat = iter->first;
+      TH1D* temp_mc_hist = category_hist->ProjectionY( "temp_mc_hist",
+        cat+1, cat+1 );
+      temp_mc_hist->SetDirectory( nullptr );
+
+      SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(
+        *temp_mc_hist, slice  );
+
+      eci.set_mc_histogram_style( cat, temp_slice_mc->hist_.get() );
+      const auto label = iter->second;
+
+      if(cat == kExternal)
+      {
+        continue;
+        // lg->AddEntry( slice_ext->hist_.get(), (label).c_str(), "f" );
+      }
+      else if(cat != kUnknown)
+      {
+        lg->AddEntry( temp_slice_mc->hist_.get(), (label).c_str(), "f" );
+      }
+    }
+
+    for ( auto iter = cat_map.begin(); iter != cat_map.end(); ++iter )
+    {
+      EventCategory cat = iter->first;
+      if(cat == kExternal)
+      {
+        TH1D* temp_mc_hist = category_hist->ProjectionY( "temp_mc_hist",
+          cat+1, cat+1 );
+        temp_mc_hist->SetDirectory( nullptr );
+
+        SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(
+          *temp_mc_hist, slice  );
+
+        eci.set_mc_histogram_style( cat, temp_slice_mc->hist_.get() );
+        const auto label = iter->second;
+
+        lg->AddEntry( slice_ext->hist_.get(), (label).c_str(), "f" );
+      }
+    }
+
+    // // Create a dummy histogram with the same style as slice_mc_plus_ext
+    // TH1F *dummy = new TH1F(*(TH1F*)slice_mc_plus_ext->hist_.get());
+    // dummy->SetFillColor(kGray + 1);
+    // dummy->SetFillStyle(3244);
+    // dummy->SetLineColor(kGray + 1); // Set the line color to the same as the fill color
+    // dummy->SetLineWidth(0); // Alternatively, set the line width to zero
+    // lg->AddEntry(dummy, "MC & EXT Uncertainties", "f");
+    
+    slice_bnb->hist_->SetTitle("");
     const std::string y_title = normaliseByBinWidth ? "# Events / Bin width" : "# Events";
     slice_bnb->hist_->GetYaxis()->SetTitle(y_title.c_str());
+    
+    // std::ostringstream oss;
+    // auto chi2_result = slice_mc_plus_ext->get_chi2(*slice_bnb);
+    // oss << "#splitline{#chi^{2} = " << std::setprecision(3) << chi2_result.chi2_ << " / "
+    //     << chi2_result.num_bins_ << " bin";
+    // if (chi2_result.num_bins_ > 1) oss << "s";
+    // oss << "}{";
+    // oss << "p = " << chi2_result.p_value_ << "}";
+    // const auto title = oss.str();
 
-    std::ostringstream oss;
-    // auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
-    auto chi2_result = slice_mc_plus_ext->get_chi2( *slice_bnb );
-    oss << "#splitline{#chi^{2} = " << std::setprecision( 3 ) << chi2_result.chi2_ << " / "
-    << chi2_result.num_bins_ << " bin";
-    if ( chi2_result.num_bins_ > 1 ) oss << "s";
-    oss<<"}{";
-    if(chi2_result.num_bins_ > 1) oss<<"p-value = " << chi2_result.p_value_<<"}";
-    else oss<<"}";
-    const auto title =  oss.str();
+    // std::ostringstream oss;
+    auto chi2_result = slice_mc_plus_ext->get_chi2(*slice_bnb);
+    // oss << std::fixed << std::setprecision(2);
+    // // oss << "#splitline{MicroBooNE in the BNB}{";
+    // // oss << "#splitline{" << toLatexScientific(total_pot) << " POT}{";
 
-    // std::string legend_title = get_legend_title( pot_on );
-    lg->SetHeader( title.c_str(), "C" );
+    // // oss << "#splitline{MicroBooNE: "<< toLatexScientific(total_pot) << " POT}{";
 
-    lg->SetBorderSize( 0 );
-    // Increase the font size for the legend header
-    // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
-    TLegendEntry* lg_header = dynamic_cast< TLegendEntry* >(
-      lg->GetListOfPrimitives()->First() );
-    lg_header->SetTextSize( 0.03 );
-    lg->Draw( "same" );
+    // oss << "#chi^{2} = " << chi2_result.chi2_ << " / "
+    //     << chi2_result.num_bins_ << " bin";
+    // if (chi2_result.num_bins_ > 1) oss << "s";
+    // oss << ", p = " << chi2_result.p_value_;
+    // // oss << "}";
+    // // oss << "}}";
+    // const auto title = oss.str();
+
+    // lg->SetHeader(title.c_str(), "C");
+    // lg->SetBorderSize(0.0);
+    
+    // // Increase the font size for the legend header
+    // TLegendEntry* lg_header = dynamic_cast<TLegendEntry*>(lg->GetListOfPrimitives()->First());
+    // lg_header->SetTextSize(0.028);
+    // lg->Draw("same");
+
+    // std::ostringstream headerss;
+    // headerss << "#splitline{MicroBooNE}" << "{#splitline{BNB:" << toLatexScientific(total_pot) << " POT}{";
+    // // headerss << "#chi^{2} = " << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin";
+    // // if (chi2_result.num_bins_ > 1) headerss << "s";
+    // // headerss << ", p = " << chi2_result.p_value_;
+    // // headerss << "}}";
+
+    // lg->SetHeader(headerss.str().c_str());
+    // // Increase the font size for the legend header
+    // // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
+    // TLegendEntry* lg_header = dynamic_cast< TLegendEntry* >(
+    //     lg->GetListOfPrimitives()->First() );
+    // lg_header->SetTextSize( 0.03 );
+    
+    lg->SetBorderSize(0);
+    lg->Draw("same");
+
+    // Add LaTeX text to the plot
+    TLatex latex;
+    latex.SetTextSize(0.04); // Adjust the font size
+    
+    std::ostringstream legendStream;
+    legendStream << "#splitline{MicroBooNE in the BNB}{#splitline{" 
+                 << toLatexScientific(total_pot) << " POT}{"
+                 << "#chi^{2} = " << std::fixed << std::setprecision(2) << chi2_result.chi2_
+                 << " / " << chi2_result.num_bins_ << " bin";
+    if (chi2_result.num_bins_ > 1) legendStream << "s";
+    legendStream << ", p = " << std::fixed << std::setprecision(2) << chi2_result.p_value_ << "}}";
+    
+    latex.DrawLatexNDC(0.71, 0.94, legendStream.str().c_str()); // Adjust the position (NDC coordinates)
+
+    c1->Update();
 
     std::string out_pdf_name = "plots/plot_slice_";
-    if ( sl_idx < 10 ) out_pdf_name += "0";
-    out_pdf_name += std::to_string( sl_idx ) + nameExtension;
+    if (sl_idx < 10) out_pdf_name += "0";
+    out_pdf_name += std::to_string(sl_idx) + nameExtension;
     out_pdf_name += normaliseByBinWidth ? "_norm.pdf" : ".pdf";
-    c1->SaveAs( out_pdf_name.c_str() );
-
+    c1->SaveAs(out_pdf_name.c_str());
     std::cout<<"DEBUG tutorial_slice_plots Point 6"<<std::endl;
 
     // Get the binning and axis labels for the current slice by cloning the

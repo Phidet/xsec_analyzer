@@ -70,12 +70,20 @@ class EventCategoryInterpreter {
       mc_hist->SetStats( false );
     }
 
+    // inline void set_ext_histogram_style( TH1* ext_hist ) const {
+    //   ext_hist->SetFillColor( 28 );
+    //   ext_hist->SetLineColor( 28 );
+    //   ext_hist->SetLineWidth( 2 );
+    //   ext_hist->SetFillStyle( 3005 );
+    //   ext_hist->SetStats( false );
+    // }
+
     inline void set_ext_histogram_style( TH1* ext_hist ) const {
-      ext_hist->SetFillColor( 28 );
-      ext_hist->SetLineColor( 28 );
-      ext_hist->SetLineWidth( 2 );
-      ext_hist->SetFillStyle( 3005 );
-      ext_hist->SetStats( false );
+          ext_hist->SetFillColor( 28 );
+          ext_hist->SetLineColor( 28 );
+          ext_hist->SetLineWidth( 0 ); // Set line width to zero to remove the outline border
+          ext_hist->SetFillStyle( 3005 );
+          ext_hist->SetStats( false );
     }
 
     inline void set_bnb_data_histogram_style( TH1* bnb_hist ) const {
@@ -108,16 +116,32 @@ class EventCategoryInterpreter {
 
     EventCategoryInterpreter() {}
 
+    // std::map< EventCategory, std::string > event_category_to_label_map_ = {
+    //   { kUnknown, "Unknown/Data" },
+    //   { kNumuCC1PiChargedGolden, "#nu_{#mu} CC1#pi^{#pm} (unscattered pion)" },
+    //   { kNumuCC1PiChargedNonGolden, "#nu_{#mu} CC1#pi^{#pm} (scattered pion)" },
+    //   { kNumuCC1PiNonSignal, "#nu_{#mu} CC1#pi^{#pm} Non-Signal" },
+    //   { kNumuCC0PiSignal, "#nu_{#mu} CC0#piNp, N #geq 1" },
+    //   { kNumuCC0Pi, "#nu_{#mu} CC0#pi Other" },
+    //   { kNumuCC1PiZero, "#nu_{#mu} CC1#pi^{0}" },
+    //   { kNumuCCOther, "Other #nu_{#mu} CC" },
+    //   { kNue, "#nu_{e}" },
+    //   { kNC, "NC" },
+    //   { kDirt, "Dirt" },
+    //   { kNonFiducial, "Non-Fiducial" },
+    //   { kExternal, "External" }
+    // };
+
     std::map< EventCategory, std::string > event_category_to_label_map_ = {
       { kUnknown, "Unknown/Data" },
-      { kNumuCC1PiChargedGolden, "#nu_{#mu} CC1#pi^{#pm} for p_{#pi}" },
-      { kNumuCC1PiChargedNonGolden, "#nu_{#mu} CC1#pi^{#pm} Other" },
-      { kNumuCC1PiNonSignal, "#nu_{#mu} CC1#pi^{#pm} Non-Signal" },
-      { kNumuCC0PiSignal, "#nu_{#mu} CC0#piNp, N #geq 1" },
-      { kNumuCC0Pi, "#nu_{#mu} CC0#pi Other" },
-      { kNumuCC1PiZero, "#nu_{#mu} CC1#pi^{0}" },
-      { kNumuCCOther, "Other #nu_{#mu} CC" },
-      { kNue, "#nu_{e}" },
+      { kNumuCC1PiChargedGolden, "#nu_{#mu}/#bar{#nu}_{#mu} CC1#pi^{#pm} (unscattered #pi^{#pm})" },
+      { kNumuCC1PiChargedNonGolden, "#nu_{#mu}/#bar{#nu}_{#mu} CC1#pi^{#pm} (scattered #pi^{#pm})" },
+      { kNumuCC1PiNonSignal, "#nu_{#mu}/#bar{#nu}_{#mu} CC1#pi^{#pm} Non-Signal" },
+      { kNumuCC0PiSignal, "#nu_{#mu}/#bar{#nu}_{#mu} CC0#piNp, N #geq 1" },
+      { kNumuCC0Pi, "#nu_{#mu}/#bar{#nu}_{#mu} CC0#pi Other" },
+      { kNumuCC1PiZero, "#nu_{#mu}/#bar{#nu}_{#mu} CC1#pi^{0}" },
+      { kNumuCCOther, "Other #nu_{#mu}/#bar{#nu}_{#mu} CC" },
+      { kNue, "#nu_{e}/#bar{#nu}_{e}" },
       { kNC, "NC" },
       { kDirt, "Dirt" },
       { kNonFiducial, "Non-Fiducial" },
@@ -127,14 +151,14 @@ class EventCategoryInterpreter {
     std::map< EventCategory, Color_t > event_category_to_color_map_ = {
       { kUnknown, kGray },
       { kNumuCC1PiChargedGolden,  kGreen },
-      { kNumuCC1PiChargedNonGolden, kViolet},
+      { kNumuCC1PiChargedNonGolden, kGreen+3}, // kViolet
       { kNumuCC1PiNonSignal , kOrange + 5 },
       { kNumuCC0PiSignal, kYellow - 6},
       { kNumuCC0Pi, kYellow },
       { kNumuCC1PiZero, kOrange - 4 },
       { kNumuCCOther, kOrange - 3 },
       { kNue, kBlue },
-      { kNC, kBlue+2 },
+      { kNC, kViolet },
       { kDirt, kOrange+3 },
       { kNonFiducial, kBlack },
       { kExternal, kBlack }

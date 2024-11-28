@@ -91,9 +91,9 @@ void drawHistogramWithBand(TH1* hist, const int lineColor, const int lineWidth, 
 }
 
 
-void drawHistogramWithBand(TH1* hist, GeneratorInfo genInfo, float alpha)
+void drawHistogramWithBand(TH1* hist, GeneratorInfo genInfo, float alpha, const bool noBand = false)
 {
-    drawHistogramWithBand(hist, genInfo.lineColor, genInfo.lineWidth, genInfo.lineStyle, alpha);
+    drawHistogramWithBand(hist, genInfo.lineColor, genInfo.lineWidth, genInfo.lineStyle, alpha, noBand);
 }
 
 void UnfolderHelper::fractional_uncertainty_plot(
@@ -177,6 +177,9 @@ void UnfolderHelper::fractional_uncertainty_plot(
 
 
     auto* total_frac_err_hist = frac_uncertainty_hists.at( totalName );
+    // total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
+    total_frac_err_hist->SetTitle("");
+    total_frac_err_hist->SetTitle("");
     total_frac_err_hist->SetStats( false );
     total_frac_err_hist->GetYaxis()->SetRangeUser( 0.,
     total_frac_err_hist->GetMaximum() * 1.05 );
@@ -184,7 +187,6 @@ void UnfolderHelper::fractional_uncertainty_plot(
     total_frac_err_hist->SetLineStyle( 9 );
     total_frac_err_hist->SetLineWidth( 3 );
     total_frac_err_hist->Draw( "hist" );
-    total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
     total_frac_err_hist->GetYaxis()->SetTitle("Fractional Uncertainty");
 
     // const auto frac_ymax = 0.35;

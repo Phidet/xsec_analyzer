@@ -3,3 +3,8 @@ univmake
 analyzer
 .nfs*
 *.pcm
+*.txt
+*.pdf
+*.png
+*.tex
+*.jpg

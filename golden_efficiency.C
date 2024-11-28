@@ -146,7 +146,7 @@ int golden_efficiency() {
     // }
 
     // Add a legend
-    TLegend* legend = new TLegend(0.5, 0.7, 0.9, 0.9);
+    TLegend* legend = new TLegend(0.6, 0.7, 0.95, 0.9);
     legend->SetTextSize(0.04); // Increase font size of the legend title and entries
     legend->SetHeader("Selection", "C"); // Centered title
     legend->AddEntry(generic_selected_signal_ratio, "General", "l");
@@ -193,31 +193,52 @@ int golden_efficiency() {
 
 
     TCanvas *c3 = new TCanvas("c3", "c3", 800, 600);
-
+    
     gStyle->SetOptStat(0); // Remove the stats box
+    
+    // Set line colors and increase line thickness
     true_golden_signal->SetLineColor(kGreen);
-    true_golden_signal->SetLineWidth(2); // Make line thicker
-    true_non_golden_signal->SetLineColor(kMagenta);
-    true_non_golden_signal->SetLineWidth(2); // Make line thicker
-
-    true_golden_signal->GetYaxis()->SetRangeUser(0, max(true_golden_signal->GetMaximum(), true_non_golden_signal->GetMaximum())*1.1); // Scale y-axis
+    true_golden_signal->SetLineWidth(4); // Increase line thickness
+    true_non_golden_signal->SetLineColor(kGreen+3);
+    true_non_golden_signal->SetLineWidth(5); // Increase line thickness
+    true_non_golden_signal->SetLineStyle(2); // Dashed line
+    
+    // Scale y-axis
+    true_golden_signal->GetYaxis()->SetRangeUser(0, std::max(true_golden_signal->GetMaximum(), true_non_golden_signal->GetMaximum()) * 1.1);
+    
+    // Remove the title
     true_golden_signal->SetTitle("");
+    
+    // Increase the axis label and title font size
+    true_golden_signal->GetXaxis()->SetLabelSize(0.05);
+    true_golden_signal->GetYaxis()->SetLabelSize(0.05);
+    true_golden_signal->GetXaxis()->SetTitleSize(0.05);
+    true_golden_signal->GetYaxis()->SetTitleSize(0.05);
+    
+    // Set axis labels and center the x-axis title
+    true_golden_signal->GetXaxis()->SetTitle("True p_{#pi^{#pm}} (GeV/c)");
+    true_golden_signal->GetXaxis()->CenterTitle(true);
+    true_golden_signal->GetXaxis()->SetTitleOffset(1.1);
+    true_golden_signal->GetYaxis()->SetTitle("Predicted Signal Events");
+    
+    // Adjust margins to ensure everything fits on screen
+    c3->SetLeftMargin(0.15);
+    c3->SetRightMargin(0.05);
+    c3->SetTopMargin(0.1);
+    c3->SetBottomMargin(0.15);
+    
+    // Draw histograms
     true_golden_signal->Draw("HIST");
     true_non_golden_signal->Draw("HIST same"); // Draw on the same canvas
-
-    true_golden_signal->GetXaxis()->SetTitle("True p_{#pi^{#pm}} (GeV/c)"); // Set x axis label
-    true_golden_signal->GetXaxis()->CenterTitle(true); // Center the title horizontally
-    true_golden_signal->GetXaxis()->SetTitleOffset(1.1); // Adjust the position to center it horizontally
-    true_golden_signal->GetYaxis()->SetTitle("Predicted Signal Events"); // Set y axis label
-
+    
     // Add a legend
     TLegend* legend3 = new TLegend(0.5, 0.7, 0.9, 0.9);
     legend3->SetTextSize(0.04); // Increase font size of the legend title and entries
     legend3->SetHeader("Signal Type", "C"); // Centered title
-    legend3->AddEntry(true_golden_signal, "Unscattered", "l");
-    legend3->AddEntry(true_non_golden_signal, "Other", "l");
+    legend3->AddEntry(true_golden_signal, "Unscattered pion", "l");
+    legend3->AddEntry(true_non_golden_signal, "Reinteracting pion", "l");
     legend3->Draw();
-
+    
     // Save the plot as pdf and .C
     c3->SaveAs("plots/generic_vs_golden_truth_total.pdf");
     c3->SaveAs("plots/generic_vs_golden_truth_total.C");

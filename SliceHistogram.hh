@@ -483,8 +483,8 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
   double chi2 = temp2( 0, 0 );
 
   // Assume that parameter fitting is not done, so that the relevant degrees
-  // of freedom for the chi^2 test is just the number of bins minus one
-  int dof = num_bins - 1;
+  // of freedom for the chi^2 test is just the number of bins
+  int dof = num_bins;
 
   // Calculate a p-value for observing a chi^2 value at least as large as the
   // one actually obtained

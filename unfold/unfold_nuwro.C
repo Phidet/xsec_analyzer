@@ -368,22 +368,6 @@ void unfold_nuwro()
         "_nuwro_fixedBackground_mergedOverflow"
     };
 
-    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_10Sep24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow_onlyContained.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-    //     "_nuwro_fixedBackground_mergedOverflow_onlyContained"
-    // };
-
-    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions; only contained muons for the muon momentum xsec
-    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_09Oct24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow_containedMuXSec.root",
-    //     "../nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
-    //     "../systcalc_unfold_fd_min.conf",
-    //     "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-    //     "_nuwro_fixedBackground_mergedOverflow_containedMuXSec"
-    // };
-
     // Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
 
@@ -422,9 +406,9 @@ void unfold_nuwro()
     constexpr double fluxIntNuMu = 7.3762291e-10; // This is technically flux/POT
 	constexpr double fluxIntNuMuBar = 4.5589190e-11;
     std::vector<GeneratorInfo> generators = {
-        // {genPath + "FlatTreeAnalyzerOutput_GENIE.root", kBlue+2, 0, 1, "GENIE NUMU 2.12.10", 1.f}, // Old numu only sample from wiki 
+        // {genPath + "FlatTreeAnalyzerOutput_GENIE.root", kBlue+2, 0, 1, "GENIE NUMU 2.12.10", 1.f}, // Old numu only sample from wiki
         // {genPath + "FlatTreeAnalyzerOutput_NEUT.root", kRed+1, 0, 1, "NEUT NUMU 5.4.0.1", 1.f}, // Old numu only sample from wiki
-        // {genPath + "FlatTreeAnalyzerOutput_GiBUU.root", kOrange+7, 0, 1, "GiBUU NUMU ?3.0.6?", 1/100.f}, // Old numu only sample from wiki
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU.root", kOrange+7, 0, 1, "GiBUU NUMU ?3.0.6?", 100.f}, // Old numu only sample from wiki
         // {genPath + "FlatTreeAnalyzerOutput_NuWro.root", kGreen+1, 0, 1, "NuWro NUMU 19.02.1", 1.f}, // Old numu only sample from wiki
 
         // {genPath + "FlatTreeAnalyzerOutput_GENIE_NuMu_NuMuBar.root", kBlue+1, 1, 1, "GENIE 3.04.02", 1.f},
@@ -439,43 +423,24 @@ void unfold_nuwro()
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_NuMu_noScaling.root", kGreen+2, 2, 1, "NuWro NUMU NoScaling", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_NuMu_19_02_1_noScaling.root", kGreen+7, 2, 1, "NuWro NUMU 19.02.1 NoScaling", 1.f},
 
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro.root", kGreen+4, 5, 1, "NuWro 19.02.1 NuMu Original", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1_Unscaled.root", kGreen+2, 5, 1, "NuWro 19.02.1 NuMu Mine", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kAzure-6, 3, 1, "#splitline{GENIE 3.04.02}{AR23_20i_00_000}", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "#splitline{GENIE 3.04.02}{G18_10a_02_11a}", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_AR23_20i_00_000_photonInclusive.root", kAzure-7, 4, 1, "#splitline{GENIE 3.04.02 - Photon Inclusive}{AR23_20i_00_000}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a_photonInclusive.root", kAzure+7, 4, 1, "#splitline{GENIE 3.04.02 - Photon Inclusive}{G18_10a_02_11a}", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_1000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 3, 2, "#splitline{GENIE 1000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_5000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+1, 3, 2, "#splitline{GENIE 5000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+2, 3, 2, "#splitline{GENIE 20000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange + 2, 9, 1, "GENIE 3.04.02 DUNE/SBN Tune 10000", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue+3, 3, 2, "#splitline{GENIE NuMu 20000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numu_CC_v3_4_2_AR23_20i_00_000.root", kOrange+1 + 2, 9, 1, "GENIE NuMu 3.04.02 DUNE/SBN Tune 10000", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+4, 3, 2, "#splitline{GENIE NuMuBar 20000 3.04.02}{G18_10a_02_11a}", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_10000_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange+2 + 2, 9, 1, "GENIE NuMuBar 3.04.02 DUNE/SBN Tune 10000", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 4, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+1, 4, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue+3, 3, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu Scaled", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+4, 3, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar Scaled", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro 21.09.2", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kTeal+6, 1, 1, "NuWro 19.02.1", 1.f},
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1_cthorpe.root", kGreen+4, 1, 1, "NuWro (v19 + Hyperon Models*)", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1.root", kRed + 1, 1, 1, "NuWro 19.02.1 NuMu Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kBlue+4, 1, 1, "GENIE 3.04.02 DUNE/SBN Tune", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+2, 1, 1, "GENIE 3.04.02 G18_10a_02_11a", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 1, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+1, 1, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_CC_v3_4_2_G18_10a_02_11a.root", kBlue+3, 1, 1, "GENIE 3.04.02 G18_10a_02_11a NuMu Scaled", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue+4, 1, 1, "GENIE 3.04.02 G18_10a_02_11a NuMuBar Scaled", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kGreen+3, 1, 1, "NuWro 21.09.2", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kRed, 1, 1, "NuWro 19.02.1", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1.root", kRed + 1, 1, 1, "NuWro 19.02.1 NuMu", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numubar_CC_v19_02_1.root", kRed + 3, 1, 1, "NuWro 19.02.1 NuMuBar", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMuBar},
 
-        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_CC_v19_02_1_cthorpe_2000000_Scaled.root", kRed+1, 1, 1, "NuWro 19.02.1 CThorpe Scaled", (fluxIntNuMu + fluxIntNuMuBar)/fluxIntNuMu},
 
+        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "#splitline{GENIE 3.04.02}{G18_10a_02_11a}", 1.f},
         {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "#splitline{GENIE 3.04.02}{#splitline{AR23_20i_00_000}{Nuclear deexcitation off}}", 1.f},
-
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_20000_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kBlue, 3, 2, "GENIE numu(bar) 20000 3.04.02 G18_10a_02_11a", 1.f},
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_4000_numu_numubar_CC_v3_4_2_AR23_20i_00_000.root", kOrange+1, 9, 1, "GENIE numu(bar) 4000 3.04.02 DUNE/SBN Tune", 1.f},
+        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro 21.09.2", 1.f},
+        {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange, 1, 1, "GiBUU 2023 Patch 3", 1.f},
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kTeal+6, 1, 1, "NuWro 19.02.1", 1.f},
+        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1_cthorpe.root", kGreen+4, 1, 1, "NuWro (v19 + Hyperon Models*)", 1.f},
     };
 
     // Get the tuned GENIE CV prediction in each true bin (including the
@@ -634,13 +599,13 @@ void unfold_nuwro()
     // Save the GENIE CV model (before A_C multiplication) using a column vector
     // of event counts
     TMatrixD genie_cv_truth_vec(num_true_signal_bins, 1);
-    TMatrixD genie_cv_truth_cov(num_true_signal_bins, num_true_signal_bins);
+    TMatrixD genie_cv_truth_err_vec(num_true_signal_bins, num_true_signal_bins);
     for (int b = 0; b < num_true_signal_bins; ++b)
     {
         const auto true_evts = genie_cv_truth->GetBinContent(b + 1);
         const auto true_evts_err = genie_cv_truth->GetBinError(b + 1);
         genie_cv_truth_vec(b, 0) = true_evts;
-        genie_cv_truth_cov(b, b) = true_evts_err * true_evts_err;
+        genie_cv_truth_err_vec(b, b) = true_evts_err * true_evts_err;
     }
 
     // Multiply the truth-level GENIE prediction histogram by the additional
@@ -695,7 +660,7 @@ void unfold_nuwro()
     lg->AddEntry(genie_cv_truth, "uB tune", "l");
     if (using_fake_data)
     {
-        lg->AddEntry(fake_data_truth_hist, "Fake Data Truth (NuWro (v19 + Hyperon Models*))", "l");
+        lg->AddEntry(fake_data_truth_hist, "Fake Data Truth (NuWro 19.02.1)", "l");
     }
 
     lg->Draw("same");
@@ -735,7 +700,7 @@ void unfold_nuwro()
 
         // Also transform the GENIE CV model
         genie_cv_truth_vec = TMatrixD(A_C, TMatrixD::kMult, genie_cv_truth_vec);
-        genie_cv_truth_cov = TMatrixD(TMatrixD(A_C, TMatrixD::kMult, genie_cv_truth_cov), TMatrixD::kMult, A_C_T); // A_c * cov * A_c^T
+        genie_cv_truth_err_vec = TMatrixD(A_C, TMatrixD::kMult, genie_cv_truth_err_vec);
 
         // Now do the other generator predictions
         for (const auto &pair : generator_truth_map)
@@ -778,8 +743,6 @@ void unfold_nuwro()
         UnfolderHelper::fractional_uncertainty_plot(slice, cov_TMatrix_map, data_signal.get(), sl_idx, cov_mat_keys_xsec, "xsec_total", postfix + "_reco_xsec");
         // delete bkgnd_subtracted_reco_data_hist;
 
-        std::cout<<"DEBUG UXU Point 0"<<std::endl;
-
         // This assumes a continuous range of individual bins
         // int t_start = slice.bin_map_.begin()->first;
         // int t_stop = slice.bin_map_.rbegin()->first;
@@ -821,7 +784,6 @@ void unfold_nuwro()
             }
         }
 
-        std::cout<<"DEBUG UXU Point 1"<<std::endl;
         const auto cv_confusion_mat = util::CountsToConfusionMatrix(cv_hist_2d_slice, "row");
         const auto fake_confusion_mat = util::CountsToConfusionMatrix(fake_hist_2d_slice, "row");
         std::string title = slice_unf->hist_->GetXaxis()->GetTitle();
@@ -873,8 +835,6 @@ void unfold_nuwro()
                                 num_bins, 0, num_bins,
                                 num_bins, 0, num_bins);
 
-        std::cout<<"DEBUG UXU Point 2"<<std::endl;
-
         // Fill histogram with values from TMatrixD
         for (int i = 0; i < cv_confusion_mat.GetNrows(); i++) {
             for (int j = 0; j < cv_confusion_mat.GetNcols(); j++) {
@@ -904,7 +864,7 @@ void unfold_nuwro()
             }
         }
         
-        // std::cout<<"DEBUG trimmed_cov_unf_hist:"<<std::endl;
+        std::cout<<"DEBUG trimmed_cov_unf_hist:"<<std::endl;
         for(int i = 0; i < cov_unfolded_hist_slice.GetNrows(); i++) {
             for(int j = 0; j < cov_unfolded_hist_slice.GetNcols(); j++) {
                 trimmed_cov_unf_hist->SetBinContent(i+1, j+1, cov_unfolded_hist_slice.operator()(i, j));
@@ -918,13 +878,14 @@ void unfold_nuwro()
             }
         }
 
-        // std::cout<<"DEBUG trimmed_cov_hist:"<<std::endl;
+        std::cout<<"DEBUG trimmed_cov_hist:"<<std::endl;
         for(int i = 0; i < cov_hist_slice.GetNrows(); i++) {
             for(int j = 0; j < cov_hist_slice.GetNcols(); j++) {
                 trimmed_cov_hist->SetBinContent(i+1, j+1, cov_hist_slice.operator()(i, j));
                 // std::cout<<"["<<i<<", "<<j<<"] = "<<cov_hist_slice.operator()(i, j)<<std::endl;
             }
         }
+
 
         TCanvas* c_conf_1 = new TCanvas(("c_conf_1 slice "+std::to_string(sl_idx)).c_str(), "c confusion matrix", 800, 600);
         cv_confusion_hist->SetStats(false);
@@ -1006,6 +967,9 @@ void unfold_nuwro()
         ac_hist->SetStats(false);
         ac_hist->GetZaxis()->SetRangeUser(-0.5, 1.5); // Set the z range
         ac_hist->Draw("colz");
+
+        // Print out number of bins
+        // std::cout<<"DEBUG ac_hist.GetNbinsX() = "<<ac_hist->GetNbinsX()<<std::endl;
 
         // Set x and y axis labels to bin numbers
         for (int i = 1; i <= ac_hist->GetNbinsX(); i++) {
@@ -1113,7 +1077,8 @@ void unfold_nuwro()
         c_cov_slice->SaveAs(("plots/covariance_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
         // Also use the GENIE CV model to do the same
-        SliceHistogram *slice_cv = SliceHistogram::make_slice_histogram(genie_cv_truth_vec, slice, &genie_cv_truth_cov);
+        SliceHistogram *slice_cv = SliceHistogram::make_slice_histogram(
+            genie_cv_truth_vec, slice, nullptr);
 
         // If present, also use the truth information from the fake data to do the same
         SliceHistogram *slice_truth = using_fake_data ? SliceHistogram::make_slice_histogram(fake_data_truth, slice, &fake_data_truth_cov) : nullptr;
@@ -1256,20 +1221,16 @@ void unfold_nuwro()
 
         // Create a temporary clone of slice_cv->hist_ with zero errors
         TH1D* h_cv_no_errors = dynamic_cast<TH1D*>(slice_cv->hist_.get()->Clone("h_cv_no_errors"));
-        // TH1D* h_cv_no_errors = dynamic_cast<TH1D*>(slice_truth->hist_.get()->Clone("h_cv_no_errors"));
         for (int i = 1; i <= h_cv_no_errors->GetNbinsX(); ++i) {
             h_cv_no_errors->SetBinError(i, 0.0);
         }
 
-        TH1D* h_cv_ratio = dynamic_cast<TH1D*>(slice_cv->hist_.get()->Clone("h_cv_ratio"));
-        h_cv_ratio->SetStats(false);
 
-
-        // // Draw a horizontal dashed line at ratio == 1
-        // TLine* line = new TLine(h_ratio->GetXaxis()->GetXmin(), 1.0, h_ratio->GetXaxis()->GetXmax(), 1.0);
-        // line->SetLineColor(kAzure - 7);
-        // line->SetLineWidth(2);
-        // line->SetLineStyle(5);
+        // Draw a horizontal dashed line at ratio == 1
+        TLine* line = new TLine(h_ratio->GetXaxis()->GetXmin(), 1.0, h_ratio->GetXaxis()->GetXmax(), 1.0);
+        line->SetLineColor(kAzure - 7);
+        line->SetLineWidth(2);
+        line->SetLineStyle(5);
 
 
         h_ratio->Divide(h_cv_no_errors);
@@ -1288,12 +1249,6 @@ void unfold_nuwro()
         h_ratio->GetXaxis()->SetTitleSize(0.08);
         h_ratio->GetXaxis()->SetTickLength(0.05);
         // h_ratio->GetXaxis()->SetTitleOffset(0.9);
-
-        h_cv_ratio->Divide(h_cv_no_errors);
-        h_cv_ratio->SetLineWidth(2);
-        h_cv_ratio->SetLineColor(kAzure - 7);
-        h_cv_ratio->SetLineStyle(5);
-
 
         if(sl_idx == 7)
         {
@@ -1349,7 +1304,7 @@ void unfold_nuwro()
 
         for(const auto& generator : generators)
         {
-            const auto gen_hist = get_generator_hist(generator.path, sl_idx, generator.scaling);
+            const auto gen_hist = get_generator_hist(generator.path, sl_idx, 1.0/generator.scaling);
             if (gen_hist) {
 
                 if(USE_ADD_SMEAR) 
@@ -1382,7 +1337,7 @@ void unfold_nuwro()
                         max = binContent + binError;
                     }
                 }
-                drawHistogramWithBand(gen_hist_ratio, generator, 0.3);
+                drawHistogramWithBand(gen_hist_ratio, generator, 0.3, true);
             }
         }
 
@@ -1394,18 +1349,16 @@ void unfold_nuwro()
 
             h_ratio_truth->SetStats(false);
             h_ratio_truth->Divide(h_cv_no_errors);
-            // h_ratio_truth->SetLineColor(kGreen);
-            // h_ratio_truth->SetLineWidth(2);
-            // h_ratio_truth->SetLineStyle(5);
+            h_ratio_truth->SetLineColor(kGreen);
+            h_ratio_truth->SetLineWidth(2);
+            h_ratio_truth->SetLineStyle(5);
             min = TMath::Min(min, 0.9 * h_ratio_truth->GetMinimum());
             max = TMath::Max(max, 1.1 * h_ratio_truth->GetMaximum());
             h_ratio_truth->GetYaxis()->SetRangeUser(min, max);
-            // h_ratio_truth->Draw("hist same");
-            drawHistogramWithBand(h_ratio_truth, kGreen, 2, 5, 0.3, false);
+            h_ratio_truth->Draw("hist same");
         }
 
-        // h_cv_ratio->Draw();
-        drawHistogramWithBand(h_cv_ratio, kAzure - 7, 2, 5, 0.3, false);
+        line->Draw();
         h_ratio->Draw("e same"); // draw again to be over everything
 
         slice_unf_stats_only_ratio->Draw("EX0 same");
@@ -1465,7 +1418,7 @@ void unfold_nuwro()
             slice_h->hist_->Draw("hist same");
         }
 
-        drawHistogramWithBand(slice_cv->hist_.get(), kAzure - 7, 2, 5, 0.3, false);
+        drawHistogramWithBand(slice_cv->hist_.get(), kAzure - 7, 2, 5, 0.3, true);
 
         if (using_fake_data)
         {
@@ -1482,14 +1435,14 @@ void unfold_nuwro()
                 slice_truth->hist_->SetBinError(i, error);
             }
 
-            drawHistogramWithBand(slice_truth->hist_.get(), kGreen, 2, 5, 0.3, false);
+            drawHistogramWithBand(slice_truth->hist_.get(), kGreen, 2, 5, 0.3, true);
             // drawHistogramWithBand(h_slice_truth_with_error, kGreen, 2, 5, 0.2, false);
         }
 
         std::map<std::string, SliceHistogram::Chi2Result> gen_metrics;
         for(const auto& generator : generators)
         {
-            const auto gen_hist = get_generator_hist(generator.path, sl_idx, generator.scaling);
+            const auto gen_hist = get_generator_hist(generator.path, sl_idx, 1.0/generator.scaling);
             if (gen_hist) {
                 
                 if(USE_ADD_SMEAR) 
@@ -1529,7 +1482,7 @@ void unfold_nuwro()
                 gen_metrics[generator.name] = metrics;
                 delete gen_slice_h;
 
-                drawHistogramWithBand(gen_hist, generator, 0.3);
+                drawHistogramWithBand(gen_hist, generator, 0.3, true);
             }
         }
 
@@ -1556,25 +1509,26 @@ void unfold_nuwro()
         // lg->AddEntry((TObject*)0, "Generator Predictions", "");
         for(const auto& generator : generators)
         {
-            const auto gen_hist = get_generator_hist(generator.path, sl_idx, generator.scaling);
-            if (!gen_hist) throw std::runtime_error("Error: gen_hist is nullptr");
-            gen_hist->SetLineColor(generator.lineColor); // Set the line color
-            gen_hist->SetLineWidth(generator.lineWidth); // Set the line width
-            gen_hist->SetLineStyle(generator.lineStyle); // Set the line style
+            const auto gen_hist = get_generator_hist(generator.path, sl_idx, 1.0/generator.scaling);
+            if (gen_hist) {
+                gen_hist->SetLineColor(generator.lineColor); // Set the line color
+                gen_hist->SetLineWidth(generator.lineWidth); // Set the line width
+                gen_hist->SetLineStyle(generator.lineStyle); // Set the line style
 
-            const auto metrics = gen_metrics[generator.name];
-            // Format the chi2 values and append to the generator name
-            std::ostringstream oss;
-            oss << "#splitline{" << generator.name << "}{" 
-                << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{"; 
-            
-            if (metrics.num_bins_ > 1)
-                oss << "p = " << metrics.p_value_;
-            
-            oss << "}}";
-            const std::string label = oss.str();
+                const auto metrics = gen_metrics[generator.name];
+                // Format the chi2 values and append to the generator name
+                std::ostringstream oss;
+                oss << "#splitline{" << generator.name << "}{" 
+                    << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{"; 
+                
+                if (metrics.num_bins_ > 1)
+                    oss << "p = " << metrics.p_value_;
+                
+                oss << "}}";
+                const std::string label = oss.str();
 
-            lg->AddEntry(gen_hist, label.c_str(), "l");
+                lg->AddEntry(gen_hist, label.c_str(), "l");
+            }
         }
 
         for (const auto &pair : slice_gen_map)
@@ -1595,8 +1549,8 @@ void unfold_nuwro()
             if((name != "Unfolded Selection"))
             {
                 oss << "#splitline{";
-                if (name == "NuWro Truth") oss << "#splitline{Fake Data Truth (Overlay)}{NuWro (v19 + Hyperon Models*)}";
-                else if (name == "MicroBooNE Tune") oss << "#splitline{MC CV Truth (Overlay)}{#splitline{GENIE 3.0.6}{G18_10a_02_11a}}";
+                if (name == "NuWro Truth") oss << "#splitline{Fake Data Truth}{(NuWro 19.02.1)}";
+                else if (name == "MicroBooNE Tune") oss << "#splitline{GENIE 3.0.6}{G18_10a_02_11a}";
                 else oss << name;
 
                 oss << "}{" << "#splitline{#chi^{2} = " << (chi2_result.chi2_>= 0.01 && chi2_result.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin" << (chi2_result.num_bins_ > 1 ? "s" : "") << "}{"; 
@@ -1620,6 +1574,11 @@ void unfold_nuwro()
                          << "{" << toLatexScientific(total_pot) << " POT}";
                  
         lg->SetHeader(headerss.str().c_str());
+        // Increase the font size for the legend header
+        // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
+        TLegendEntry* lg_header = dynamic_cast< TLegendEntry* >(
+            lg->GetListOfPrimitives()->First() );
+        lg_header->SetTextSize( 0.03 );
         lg->Draw("same");
         c1->Update();
 
