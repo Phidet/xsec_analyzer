@@ -217,10 +217,7 @@ void MuonPIDStudy()
     TH2D* muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon = new TH2D("muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon", "Fraction of selected true CC1pi events with correctly identified muon; True Muon Momentum (GeV/c); True Pion Momentum (GeV/c)", 30, 0, 1.5, 30, 0, 1.5);
 
     TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi = new TH2D("muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", "Selected True CC1pi Events (and muon candidate has backtracked truth particle); Muon Track Length > Pion Track Length; Muon Is Contained", 2, 0, 2, 2, 0, 2);
-    TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon = new TH2D("muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon", "Fraction of selected true CC1pi events with correctly identified muon; Muon Track Length > Pion Track Length; Muon Is Contained", 2, 0, 2, 2, 0, 2);    
-
-    TH2D* pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi = new TH2D("pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", "Selected True CC1pi Events (and pion candidate has backtracked truth particle); Muon Track Length > Pion Track Length; Pion is Golden", 2, 0, 2, 2, 0, 2);
-    TH2D* pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion = new TH2D("pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion", "Fraction of selected true CC1pi events with correctly identified pion; Muon Track Length > Pion Track Length; Pion is Golden", 2, 0, 2, 2, 0, 2);
+    TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon = new TH2D("muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon", "Fraction of selected true CC1pi events with correctly identified muon; Muon Track Length > Pion Track Length; Muon Is Contained", 2, 0, 2, 2, 0, 2);
 
     TH2D* muonBDTVSrange_trueMuon_trueCC1pi = new TH2D("muonBDTVSrange_trueMuon_trueCC1pi", "Backtracked Muon Particles in True CC1pi Events; Reconstructed track length / cm; Muon BDT Score", 15, 0, 500, 15, -1, 0.8);
     TH2D* muonBDTVSTrueRange_trueMuon_trueCC1pi = new TH2D("muonBDTVSTruerange_trueMuon_trueCC1pi", "Backtracked Muon Particles in True CC1pi Events; True track length / cm; Muon BDT Score", 15, 0, 500, 15, -1, 0.8);
@@ -237,6 +234,8 @@ void MuonPIDStudy()
         TFile* tFile = TFile::Open(filePath.c_str());
         TTree* tree = (TTree*)tFile->Get("stv_tree");
 
+        std::cout<<"DEBUG - Point X0"<<std::endl;
+
         // Disable all branches
         tree->SetBranchStatus("*", 0);
 
@@ -247,7 +246,8 @@ void MuonPIDStudy()
         // tree->SetBranchStatus("true_cc0pi", 1);
         tree->SetBranchStatus("spline_weight", 1);
         tree->SetBranchStatus("tuned_cv_weight", 1);
-        tree->SetBranchStatus("true_golden_cc1pi", 1);
+
+        std::cout<<"DEBUG - Point X0.1"<<std::endl;
 
         // FillHistogram(tree, pdg_backtrackedMuon,
         // /*variable*/ "cc1pi_backtracked_muonPDG",
@@ -256,32 +256,24 @@ void MuonPIDStudy()
         FillHistogram2D(tree, muonMomVSpionMom_selectedTrueCC1pi, 
         /*variable1*/ "cc1pi_truth_muonMomentum",
         /*variable2*/ "cc1pi_truth_pionMomentum", 
-        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_reco_pionMomentum > 0.1 && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
+
+        std::cout<<"DEBUG - Point X0.2"<<std::endl;
 
         FillHistogram2D(tree, muonMomVSpionMom_selectedTrueCC1pi_correctRecoMuon, 
         /*variable1*/ "cc1pi_truth_muonMomentum",
         /*variable2*/ "cc1pi_truth_pionMomentum", 
-        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_reco_pionMomentum > 0.1 && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
 
         FillHistogram2D(tree, muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, 
-        /*variable1*/ "cc1pi_truthMuon_TrackLength > cc1pi_truthPion_TrackLength",
+        /*variable1*/ "cc1pi_truthMuon_TrackLength>cc1pi_truthPion_TrackLength",
         /*variable2*/ "cc1pi_truthMuon_IsContained", 
-        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_reco_pionMomentum > 0.1 && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_backtracked_muonPDG > -2147483648", runWeight);
 
         FillHistogram2D(tree, muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon,
-        /*variable1*/ "cc1pi_truthMuon_TrackLength > cc1pi_truthPion_TrackLength",
+        /*variable1*/ "cc1pi_truthMuon_TrackLength>cc1pi_truthPion_TrackLength",
         /*variable2*/ "cc1pi_truthMuon_IsContained", 
-        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_reco_pionMomentum > 0.1 && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
-
-        FillHistogram2D(tree, pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi,
-        /*variable1*/ "cc1pi_truthMuon_TrackLength > cc1pi_truthPion_TrackLength",
-        /*variable2*/ "true_golden_cc1pi",
-        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_reco_pionMomentum > 0.1 && cc1pi_backtracked_protonPDG > -2147483648", runWeight); // cc1pi_backtracked_protonPDG is actually the pion
-
-        FillHistogram2D(tree, pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion,
-        /*variable1*/ "cc1pi_truthMuon_TrackLength > cc1pi_truthPion_TrackLength",
-        /*variable2*/ "true_golden_cc1pi",
-        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && cc1pi_reco_pionMomentum > 0.1 && (cc1pi_backtracked_protonPDG == 211 || cc1pi_backtracked_protonPDG == -211)", runWeight); // cc1pi_backtracked_protonPDG is actually the pion
+        /*Condition*/ "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1 && cc1pi_selected_generic && (cc1pi_backtracked_muonPDG == 13 ||  cc1pi_backtracked_muonPDG == -13)", runWeight);
 
         // FillHistogram2D(tree, muonBDTVSrange_trueMuon_trueCC1pi, 
         // /*variable1*/ "cc1pi_recoMuon_TrackLength",
@@ -294,6 +286,8 @@ void MuonPIDStudy()
         // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_trueProton, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", runWeight);
         // FillParticleHistogram<double>(tree, trueCC1pi_muonBDT_truePion, "trueCC1pi_recoParticle_muonBDTScore_vector", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", runWeight);
 
+
+        std::cout<<"DEBUG - Point X1"<<std::endl;
 
         std::vector<int> *pBacktracked_absTruePDG = nullptr;
         std::vector<bool> *pIsContained = nullptr;
@@ -315,15 +309,18 @@ void MuonPIDStudy()
         tree->SetBranchAddress("spline_weight", &spline_weight);
         tree->SetBranchAddress("tuned_cv_weight", &tuned_cv_weight);
 
+        std::cout<<"DEBUG - Point X2"<<std::endl;
         // Check if values is null
-        if (!pMuonBDTScore || !pProtonBDTScore) throw std::runtime_error("Error: Branch not found in the tree.");
+        if (!pMuonBDTScore || !pProtonBDTScore) throw std::runtime_error("Error: Branchnot found in the tree.");
 
         // std::cout << "Warning - Only using 1\% of the events for testing purposes." << std::endl;
         const auto nEvents = tree->GetEntries();
         // Loop over the entries in the tree
         for (Long64_t i = 0; i < nEvents; i++)
         {
+            std::cout<<"DEBUG - Point X3"<<std::endl;
             tree->GetEntry(i);
+            std::cout<<"DEBUG - Point X3.1"<<std::endl;
 
             // Update the progress bar at every percent
             if (i % (nEvents / 100) == 0)
@@ -332,15 +329,18 @@ void MuonPIDStudy()
                 std::cout << "\r[" << std::string(progress, '|') << std::string(100 - progress, ' ') << "] " << progress << "%" << std::flush;
             }
 
+            std::cout<<"DEBUG - Point X3.2"<<std::endl;
 
             auto eventWeight = std::isfinite(spline_weight*tuned_cv_weight) && spline_weight*tuned_cv_weight >= 0 && spline_weight*tuned_cv_weight <= 30 ? spline_weight*tuned_cv_weight : 1;
             eventWeight *= runWeight; // Apply the run weight
 
+            std::cout<<"DEBUG - Point X4"<<std::endl;
             // std::cout << "DEBUG FillParticleHistogram Point pMuonBDTScore->size(): " << pMuonBDTScore->size() << std::endl;
             // Apply the condition
             TTreeFormula formula("formula", "cc1pi_signal  &&  cc1pi_truth_pionMomentum > 0.1", tree);
             if (formula.EvalInstance() != 0)
             {
+                std::cout<<"DEBUG - Point X5"<<std::endl;
                 // Loop over the values in the vector and fill the histogram
                 for (Long64_t v = 0; v< pProtonBDTScore->size(); v++)
                 {
@@ -385,8 +385,10 @@ void MuonPIDStudy()
                         muonBDTVSrange_truePion_trueCC1pi->Fill(pTrackLength->at(v), pMuonBDTScore->at(v), eventWeight);
                         muonBDTVSTrueRange_truePion_trueCC1pi->Fill(pBacktracked_TrackLength->at(v), pMuonBDTScore->at(v), eventWeight);
                     }
+                    std::cout<<"DEBUG - Point X6"<<std::endl;
                 }
             }
+            std::cout<<"DEBUG - Point X7"<<std::endl;
         }
         std::cout<<"DEBUG - Done with event loop"<<std::endl;
 
@@ -570,13 +572,8 @@ void MuonPIDStudy()
     TH2D* muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio = (TH2D*)muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon->Clone("muonContainedVSMuonTrackLargerThanPionTrack_trueCC1pi_correctRecoMuon_ratio");
     muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio->Divide(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi);
     MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio", false, false, true);
-    MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", false, false, true);
 
-    // Calculate ratio
-    TH2D* pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio = (TH2D*)pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion->Clone("pionGoldenVSMuonTrackLargerThanPionTrack_trueCC1pi_correctRecoPion_ratio");
-    pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio->Divide(pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi);
-    MakePlot2D(pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio, "pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio", false, false, true);
-    MakePlot2D(pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, "pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", false, false, true);
+    MakePlot2D(muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi, "muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi", false, false, true);
 
     // Print out the values of muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio
     std::cout<<"muonContainedVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoMuon_ratio:"<<std::endl;
@@ -596,23 +593,6 @@ void MuonPIDStudy()
         }
     }
     
-    // Print out the values of pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio
-    std::cout<<"pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio:"<<std::endl;
-    for (Int_t i = 1; i <= pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio->GetNbinsX(); ++i) {
-        for (Int_t j = 1; j <= pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio->GetNbinsY(); ++j) {
-            Double_t binContent = pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio->GetBinContent(i, j);
-            std::cout << "Bin (" << i << ", " << j << ") content: " << binContent << std::endl;
-        }
-    }
-
-    std::cout<<"pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi:"<<std::endl;
-    // Print out the values of pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi_correctRecoPion_ratio
-    for (Int_t i = 1; i <= pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi->GetNbinsX(); ++i) {
-        for (Int_t j = 1; j <= pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi->GetNbinsY(); ++j) {
-            Double_t binContent = pionGoldenVSMuonTrackLargerThanPionTrack_selectedTrueCC1pi->GetBinContent(i, j);
-            std::cout << "Bin (" << i << ", " << j << ") content: " << binContent << std::endl;
-        }
-    }
 
 
     MakePlot2D(muonBDTVSrange_trueMuon_trueCC1pi, "muonBDTVSrange_trueMuon_trueCC1pi");

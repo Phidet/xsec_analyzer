@@ -64,6 +64,90 @@ std::unique_ptr<TMatrixD> calculate_response_matrix(const TMatrixD& hist_2d, con
     return response_matrix;
 }
 
+// Function to remove specified bins from a 2D histogram
+// Histogram index starting at 1 !!!!!!!!!!!!!!!!!
+TH2D* remove_bins(TH2D* hist, const std::vector<std::pair<int, int>>& binsToRemoveX = {{11+1, 26+1}, {38+1, 48+1}, {60, 61}}, const std::vector<std::pair<int, int>>& binsToRemoveY = {{11+1, 26+1}, {38+1, 48+1}, {60, 61}}) {
+    // Copy the 2d histogram hist to a new one hist_noPhi_noTotal but without the specified bins (along both dimensions)
+    int nBinsX = hist->GetNbinsX();
+    int nBinsY = hist->GetNbinsY();
+
+    // Calculate the total number of bins to remove
+    int fewerBinsX = 0;
+    for (const auto& range : binsToRemoveX) {
+        fewerBinsX += (range.second - range.first);
+    }
+
+    int fewerBinsY = 0;
+    for (const auto& range : binsToRemoveY) {
+        fewerBinsY += (range.second - range.first);
+    }
+
+    // Create a new histogram with the reduced number of bins
+    TH2D* hist_noPhi_noTotal = new TH2D("hist_noPhi_noTotal", "hist_noPhi_noTotal",
+                                nBinsX - fewerBinsX, 0, nBinsX - fewerBinsX,
+                                nBinsY - fewerBinsY, 0, nBinsY - fewerBinsY);
+
+    // Fill the new histogram with the appropriate values from the original histogram
+    int newBinX = 1;
+    for (int i = 1; i <= nBinsX; ++i) {
+        bool skipX = false;
+        for (const auto& range : binsToRemoveX) {
+            if (i >= range.first && i < range.second) {
+                skipX = true;
+                break;
+            }
+        }
+        if (skipX) continue;
+
+        int newBinY = 1;
+        for (int j = 1; j <= nBinsY; ++j) {
+            bool skipY = false;
+            for (const auto& range : binsToRemoveY) {
+                if (j >= range.first && j < range.second) {
+                    skipY = true;
+                    break;
+                }
+            }
+            if (skipY) continue;
+
+            hist_noPhi_noTotal->SetBinContent(newBinX, newBinY, hist->GetBinContent(i, j));
+            hist_noPhi_noTotal->SetBinError(newBinX, newBinY, hist->GetBinError(i, j));
+            ++newBinY;
+        }
+        ++newBinX;
+    }
+
+    return hist_noPhi_noTotal;
+}
+
+void createSplitMatrixPlots(TH2D* hist, const std::string& title, const std::string& xTitle, const std::string& yTitle, const std::string& prefix, const std::string& postfix, const bool setYRange = true, const float yLow = -1, const float yHigh = 1, const bool differentColorScheme = false, const bool scientificNotation = false){
+    // With phi: 0, 11, 26, 31, 38, 48, 52, 59, 60
+    // Without phi: 0, 11, 16, 23, 27, 34, 35
+
+    // Histogram index starting at 1 !!!!!!!!!!!!!!!!!
+    const std::vector<std::pair<int, int>> keep_first_third = {{11+1, 60+1}}; // Segments to remove
+    const std::vector<std::pair<int, int>> keep_middle_third = {{1, 26+1}, {38+1, 60+1}}; // 11-26 and 38-48 are phi
+    const std::vector<std::pair<int, int>> keep_last_third = {{1, 48+1}, {60, 60+1}}; // 60 is the total
+    
+    const std::vector<std::string> labels_first = {"cos(#theta_{#mu})"};
+    const std::vector<std::string> labels_middle = {"p_{#mu}^{*}", "cos(#theta_{#pi})"};
+    const std::vector<std::string> labels_last = {"p_{#pi}^{*}", "#theta_{#pi #mu}"};
+    
+    const std::vector<std::vector<std::pair<int, int>>> keep_options = {keep_first_third, keep_middle_third, keep_last_third};
+    const std::vector<std::vector<int>> bins_options = {{0, 11}, {0, 5, 12}, {0, 4, 11}};
+    const std::vector<unsigned int> offset_options = {0, 11, 23};
+    const std::vector<std::vector<std::string>> labels_options = {labels_first, labels_middle, labels_last};
+    const std::vector<bool> footnotes = {false, true, true};
+    
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            auto cropped_hist = remove_bins(hist, keep_options[i], keep_options[j]);
+            UnfolderHelper::plot_entire_matrix(cropped_hist, title, xTitle, yTitle, prefix+"_"+std::to_string(i)+std::to_string(j)+postfix, setYRange, yLow, yHigh, bins_options[i], bins_options[j], labels_options[i], labels_options[j], true, offset_options[i], offset_options[j], footnotes[i] || footnotes[j], differentColorScheme, scientificNotation);
+            delete cropped_hist;
+        }
+    }
+}
+
 void multiply_1d_hist_by_matrix(TMatrixD *mat, TH1 *hist)
 {
     // Copy the histogram contents into a column vector
@@ -97,6 +181,13 @@ std::string toLatexScientific(double value) {
         str.replace(pos, 1, " \\times 10^{");
         str += "}";
     }
+    // Remove unnecessary plus signs in the exponent
+    size_t plus_pos = str.find("+", pos);
+    if (plus_pos != std::string::npos) {
+        str.erase(plus_pos, 1);
+    }
+    // Remove spaces
+    str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
     return str;
 }
 // const std::string SAMPLE_NAME = "MicroBooNE_CC1MuNp_XSec_2D_PpCosp_nu_MC";
@@ -207,7 +298,7 @@ void dump_overall_results(const UnfoldedMeasurement &result,
 
     // Dump similar tables for each of the theoretical predictions (and the fake
     // data truth if applicable). Note that this function expects that the
-    // additional smearing matrix A_C has not been applied to these predictions.
+    // Regularization Matrix A_C has not been applied to these predictions.
     TMatrixD temp_genie_cv = genie_cv_true_events;
     temp_genie_cv *= events_to_xsec_factor;
     dump_text_column_vector("dump_bnb/vec_table_uBTune.txt", temp_genie_cv);
@@ -247,7 +338,7 @@ void dump_overall_results(const UnfoldedMeasurement &result,
 
     // Finally, dump a summary table of the flux-averaged total cross section
     // measurements and their statistical and total uncertainties
-    TMatrixD temp_stat_cov = *unf_cov_matrix_map.at("DataStats");
+    TMatrixD temp_stat_cov = *unf_cov_matrix_map.at("DataStats"); // WARNING! Data stats here is not all the statistical uncertainties!
     TMatrixD temp_total_cov = *unf_cov_matrix_map.at("total");
     temp_stat_cov *= std::pow(events_to_xsec_factor, 2);
     temp_total_cov *= std::pow(events_to_xsec_factor, 2);
@@ -427,13 +518,23 @@ void unfold_bnb()
         "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_17Oct24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_containedMuXSec.root",
         "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
         "../systcalc_unfold.conf",
-        "../ubcc1pi_neutral_slice_config_mergedOverflow.txt",
+        "../ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts.txt",
+        // "../ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts_totalLabelled.txt", // For fractional uncertainty plots with total cross section label
         "_bnb_fixedBackground_mergedOverflow_containedMuXSec"
     };
 
     // #########################
     // Alternative plots
     // #########################
+
+    // // This just includes the total cross section for the genral, contained muon and unscattered pion xsec
+    // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
+    //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_31Jan25_all_three_total_xsecs.root",
+    //     "../file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
+    //     "../systcalc_unfold.conf",
+    //     "../ubcc1pi_neutral_slice_config_all_three_total_xsecs.txt",
+    //     "_bnb_all_three_total_xsecs"
+    // };
 
     // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; WARNING THE BACKGROUND SUBTRACTION IS NOT CORRECT!!!!!!
     //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_06Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_v2.root",
@@ -470,29 +571,11 @@ void unfold_bnb()
 
     // Initialize the FilePropertiesManager and tell it to treat the NuWro MC ntuples as if they were data
     auto &fpm = FilePropertiesManager::Instance();
-
-    // fpm.load_file_properties("../nuwro_file_properties.txt");
-    // fpm.load_file_properties("../nuwro_file_properties_testingOnly.txt");
-    // fpm.load_file_properties("../nuwro_file_properties_testingOnly_lowPiMomThreshold.txt");
     fpm.load_file_properties( input.fileList );
-
-    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_noOverflow_13Jan23.root");
-    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_noOverflow_noGolden_13Jan23.root");
-    // const std::string respmat_file_name("/uboone/data/users/jdetje/ubcc1pi_univmake/100Percent_10/univmake_output_nuwro_with_sideband_overflow_all_13Jan23.root");
-    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_6Mar24.root"); // <-- Yes the name is wrong and should say nuwro
-    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_14Mar24_testingOnly.root"); // <-- Yes the name is wrong and should say nuwro
-    // const std::string respmat_file_name("/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_28Mar24_testingOnly_lowPiMomThreshold.root");
     const std::string respmat_file_name( input.rootFile );
 
-    // const std::string postfix = "_run1_reduced";
-    // const std::string postfix = "_with_Overflow_onlyGolden";
-    // const std::string postfix = "_fd_testingOnly";
-    // const std::string postfix = "_fd_testingOnly_lowPiMomThreshold";
-    const std::string postfix = input.nameExtension;
 
     // Plot slices of the unfolded result
-    // auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config_withPionUnderflow.txt");
-    // auto *sb_ptr = new SliceBinning("../ubcc1pi_neutral_slice_config.txt");
     auto *sb_ptr = new SliceBinning( input.sliceConfig );
     auto &sb = *sb_ptr;
 
@@ -560,27 +643,61 @@ void unfold_bnb()
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1.root", kTeal+6, 1, 1, "NuWro 19.02.1", 1.f},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v19_02_1_cthorpe.root", kGreen+4, 1, 1, "NuWro (v19 + Hyperon Models*)", 1.f},
 
+
+        // {genPath + "FlatTreeAnalyzerOutput_GENIE_Afro_numu_CC_v3_4_0_AR23_20i_00_000_unscaled.root", kkBlue+4, 2, 2, "GENIE 3.04.00 AR23 Numu Afro", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_2000000_numu_CC_v3_4_2_ModAR23_20i_00_000_unscaled.root", kBlue+2, 2, 2, "GENIE 3.04.02 AR23 Numu Me", 1.f/10},
+
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000_noPhotonRequirement.root", kAzure+9, 1, 1, "GENIE DUNE/SBN No Photon Req.", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15_noFSI.root", kOrange, 2, 1, "GiBUU noFSI", 1.f/10},
+
         // ----------------------------------------------------------
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "GENIE G18 Untuned", 1.f/10}, // Using 1/10 scaling since lines were produced with e^-39 scaling but now we use e^-38 on y axis
-        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "GENIE DUNE/SBN", 1.f/10},
+
+        // Main set of generators
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "GENIE G18", 1.f/10}, // Using 1/10 scaling since lines were produced with e^-39 scaling but now we use e^-38 on y axis
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "GENIE AR23", 1.f/10},
         // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro", 1.f/10},
-        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange, 1, 1, "GiBUU", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange, 1, 1, "GiBUU+2", 1.f/10},
         // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15_with_COH_from_Genie_v3_4_2_G18_10a_02_11a.root", kOrange+1, 1, 1, "GiBUU+COH", 1.f/10},
         // {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000.root", kRed, 1, 1, "NEUT", 1.f/10},
-        // // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000_noPhotonRequirement.root", kAzure+9, 1, 1, "GENIE DUNE/SBN No Photon Req.", 1.f/10},
 
-        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a_noFSI.root", kAzure+1, 2, 1, "GENIE G18 Untuned noFSI", 1.f/10},
-        {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000_noFSI.root", kAzure+3, 2, 1, "GENIE DUNE/SBN noFSI", 1.f/10},
-        {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15_noFSI.root", kOrange, 2, 1, "GiBUU noFSI", 1.f/10},
-        {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000_noFSI.root", kRed, 2, 1, "NEUT noFSI", 1.f/10},
-        {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2_noFSI.root", kTeal-7, 2, 1, "NuWro noFSI", 1.f/10},
+        // Main set of generators no GiBUU+COH
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2.root", kTeal-7, 1, 1, "NuWro", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000.root", kRed, 1, 1, "NEUT", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange+1, 1, 1, "GiBUU 2023", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_numubar_15.root", kOrange+2, 1, 1, "GiBUU 2025", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a.root", kAzure+1, 1, 1, "GENIE G18", 1.f/10}, // Using 1/10 scaling since lines were produced with e^-39 scaling but now we use e^-38 on y axis
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000.root", kAzure+3, 1, 1, "GENIE AR23", 1.f/10},
+        // // // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_mediumSwitchTrue.root", kOrange+3, 1, 1, "GiBUU 2025 MS", 1.f/10},
 
+        // No FSI set of generators
+        // {genPath + "FlatTreeAnalyzerOutput_NEUT_numu_1000000_numubar_200000_noFSI.root", kRed, 2, 2, "NEUT", 1.f/10}, // No FSI in header
+        // {genPath + "FlatTreeAnalyzerOutput_NuWro_numu_numubar_CC_v21_09_2_noFSI.root", kTeal-7, 2, 2, "NuWro", 1.f/10}, // No FSI in header
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_numu_100_noFSI_numubar_15_noFSI.root", kOrange+1, 2, 2, "GiBUU 2023", 1.f/10}, // No FSI in header
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_numubar_15_noFSI_V2.root", kOrange+2, 2, 2, "GiBUU 2025", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_G18_10a_02_11a_noFSI.root", kAzure+1, 2, 2, "GENIE G18", 1.f/10}, // No FSI in header
+        // {genPath + "FlatTreeAnalyzerOutput_Genie_numu_numubar_CC_v3_4_2_ModAR23_20i_00_000_noFSI.root", kAzure+3, 2, 2, "GENIE AR23", 1.f/10}, // No FSI in header
+
+        // Modified GiBUU gnerators
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_numubar_15.root", kOrange+1, 1, 1, "GiBUU 25", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_patch3_numu_150_numubar_15.root", kOrange+2, 1, 1, "GiBUU 23", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_numu_100_noOset_numubar_15_noOset.root", kCyan, 1, 1, "GiBUU 23 FSF", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2023_numu_100_flagInMedium_numubar_15_flagInMedium.root", kGreen+4, 1, 1, "GiBUU 23 NN", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_numubar_15_noOset.root", kSpring, 1, 1, "GiBUU 25 FSF", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_numubar_15_flagInMedium.root", kAzure-2, 1, 1, "GiBUU 25 NN", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_100_numubar_15_withDeltaBroadening.root", kViolet, 1, 1, "GiBUU 25 Delta Broad.", 1.f/10},
+        // {genPath + "FlatTreeAnalyzerOutput_GiBUU2025_numu_68_Ben_ME_ODW_2.root", kBlue, 1, 1, "GiBUU 25 ME_ODW = 2", 1.f/10},
     };
+
+    bool plotOnlyDataSample = false; // Whether to plot samples other than the data sample (fakedata or Genie truth)
+    // input.nameExtension += "_noGiBUUCOH";
+    // input.nameExtension += "_noFSI"; plotOnlyDataSample = true;
+    // input.nameExtension += "_GiBUU"; plotOnlyDataSample = true;
+
+    const std::string postfix = input.nameExtension;
 
     // Get the tuned GENIE CV prediction in each true bin (including the
     // background true bins)
     TH1D *genie_cv_truth = syst.cv_universe().hist_true_.get();
-
 
     // Get some reco histograms for the fractional error plots
     TH1D* reco_bnb_hist = syst.data_hists_.at( NFT::kOnBNB ).get();
@@ -589,7 +706,6 @@ void unfold_bnb()
     reco_ext_hist->Clone("reco_mc_plus_ext_hist") ); // Total MC+EXT prediction in reco bin space. Start by getting EXT.
     reco_mc_plus_ext_hist->SetDirectory( nullptr );
     reco_mc_plus_ext_hist->Add( syst.cv_universe().hist_reco_.get() ); // Add in the CV MC prediction
-
 
     int num_true_bins = genie_cv_truth->GetNbinsX();
 
@@ -623,7 +739,6 @@ void unfold_bnb()
     auto &matrix_map = *matrix_map_ptr;
     auto *cov_mat = matrix_map.at("total").cov_matrix_.get();
 
-
     // // Define your custom labels and intervals
     // const Int_t n = 8;
     // const std::vector<int> bins{0, 11, 26, 32, 39, 49, 54, 61, 62};
@@ -634,7 +749,8 @@ void unfold_bnb()
     TMatrixD* corr = new TMatrixD(util::CovarianceMatrixToCorrelationMatrix(util::TH2DToTMatrixD(*cov_mat)));
     TH2D* corr_hist = new TH2D(util::TMatrixDToTH2D(*corr, "corr", "Correlation Matrix", 0, corr->GetNrows(), 0, corr->GetNcols()));
     delete corr; // Delete the dynamically allocated memory
-    UnfolderHelper::plot_entire_matrix(corr_hist, "Correlation Matrix", "Reco Bins", "Reco Bins", "corr"+postfix);
+
+    UnfolderHelper::plot_entire_matrix(corr_hist, "Correlation Matrix", "Reconstructed Bins", "Reconstructed Bins", "corr"+postfix);
 
     // std::unique_ptr<Unfolder> unfolder(new DAgostiniUnfolder(DAgostiniUnfolder::ConvergenceCriterion::FigureOfMerit, 0.025));
     std::unique_ptr<Unfolder> unfolder(new WienerSVDUnfolder( true, WienerSVDUnfolder::RegularizationMatrixType::kFirstDeriv));
@@ -654,10 +770,39 @@ void unfold_bnb()
     // const auto &data_signal = meas.reco_signal_;
     // const auto &data_covmat = meas.cov_matrix_;
 
-    const auto result = unfolder->unfold(syst);
+    auto result = unfolder->unfold(syst);
+
+    TMatrixD *A_C_temp = result.add_smear_matrix_.get();
+    TMatrixD *unfolded_signal_temp = result.unfolded_signal_.get();
+    TMatrixD *cov_matrix = result.cov_matrix_.get();
+    TMatrixD *unfolding_matrix_temp = result.unfolding_matrix_.get();
+    TMatrixD *err_prop_matrix_temp = result.err_prop_matrix_.get();
+    // TMatrixD *response_matrix_temp = result.response_matrix_.get();
+
+    double totalRegularizationFactor = 1.0;
+    // Check the matrix size in both dimensions of A_C
+    constexpr int n = 60;
+    if (A_C_temp->GetNrows() != n || A_C_temp->GetNcols() != n) {
+        std::cerr << "Warning: The matrix A_C_temp does not have the expected size of " << n << "x" << n << std::endl;
+    } else {
+        std::cout << "\n\n\n################################\n################################\n\n\nWARNING: Dividing out regularisation for total xsec. Not applied to all 'result' matricies!"<<std::endl; 
+        totalRegularizationFactor = (*A_C_temp)(n-1, n-1);
+        std::cout<<"totalRegularizationFactor: "<<totalRegularizationFactor<<std::endl;
+        std::cout<<"\n\n\n################################\n################################\n\n\n" << std::endl;
+        (*A_C_temp)(n-1, n-1) = 1.0;
+        // Divide last bin by the total regularization factor
+        unfolded_signal_temp->operator()(n-1, 0) /= totalRegularizationFactor;
+        unfolding_matrix_temp->operator()(n-1, n-1) /= totalRegularizationFactor; // TODO? Is once correct?
+        err_prop_matrix_temp->operator()(n-1, n-1) /= totalRegularizationFactor; // TODO? Is once correct?
+        // Also divide elements in last column and last row by the total regularization factor
+        for (int i = 0; i < n; i++) {
+            (*cov_matrix)(i, n-1) /= totalRegularizationFactor;
+            (*cov_matrix)(n-1, i) /= totalRegularizationFactor;
+        }
+    }
 
     TH2D* error_prop_hist = new TH2D(util::TMatrixDToTH2D(*result.err_prop_matrix_, "err_prop_matrix", "Error Propagation Matrix", 0, result.err_prop_matrix_->GetNrows(), 0, result.err_prop_matrix_->GetNcols()));
-    UnfolderHelper::plot_entire_matrix(error_prop_hist, "Error Propagation Matrix", "Truth Bins", "Reco Bins", "err_prop"+postfix, false, -5, 10);//, true, -10, 10);
+    UnfolderHelper::plot_entire_matrix(error_prop_hist, "Error Propagation Matrix", "Truth Bins", "Reconstructed Bins", "err_prop"+postfix, false, -5, 10);//, true, -10, 10);
     delete error_prop_hist;
 
     // Propagate all defined covariance matrices through the unfolding procedure
@@ -679,44 +824,6 @@ void unfold_bnb()
     NormShapeCovMatrix bd_ns_covmat = make_block_diagonal_norm_shape_covmat(
         *result.unfolded_signal_, *result.cov_matrix_, syst.true_bins_);
 
-    // // Sanity check that adding bd_ns_covmat.norm_ + bd_ns_covmat.shape_ + bd_ns_covmat.mixed_ returns *result.cov_matrix_
-    // const auto combined_covmat = bd_ns_covmat.norm_ + bd_ns_covmat.shape_ + bd_ns_covmat.mixed_;
-    // const auto diff = *result.cov_matrix_ - combined_covmat;
-    // const auto tolerance = 0.01;
-    // // Print the full diff matrix
-    // std::cout << "Difference between the total covariance matrix and the sum of the blockwise decomposed matrices:\n";
-    // diff.Print();
-
-    // for (int i = 0; i < diff.GetNrows(); ++i)
-    // {
-    //     for (int j = 0; j < diff.GetNcols(); ++j)
-    //     {
-    //         if (std::abs(diff(i, j)) > tolerance)
-    //         {
-    //             std::cerr << "Error: The blockwise decomposition of the covariance matrix is incorrect. "
-    //                       << "The difference between the total covariance matrix and the sum of the blockwise "
-    //                       << "decomposed matrices is " << diff(i, j) << " at index (" << i << ", " << j << ")."
-    //                       << std::endl;
-    //             return 1;
-    //         }
-    //     }
-    // }
-    // return 0;
-
-    // // Assuming result_cov_matrix is a std::unique_ptr<TMatrixD>
-    // int nRows = result.cov_matrix_->GetNrows();
-    // int nCols = result.cov_matrix_->GetNcols();
-
-    // // Create a new TH2D object
-    // TH2D *h2 = new TH2D("h2", "Covariance Matrix", nCols, 0, nCols, nRows, 0, nRows);
-
-    // // Fill the TH2D object with the values from the TMatrixD
-    // for (int i = 1; i <= nRows; ++i) {
-    //     for (int j = 1; j <= nCols; ++j) {
-    //         h2->SetBinContent(j, i, (*result.cov_matrix_)(i-1, j-1));
-    //     }
-    // }
-
     // Draw the TH2D object on the canvas
     TCanvas *cm1 = new TCanvas("cm1", "Canvas", 800, 600);
 
@@ -724,32 +831,46 @@ void unfold_bnb()
     TH2D* corr_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*corr_unfolded, "corr_unfolded", "Correlation Matrix", 0, corr_unfolded->GetNrows(), 0, corr_unfolded->GetNcols()));
     delete corr_unfolded; // Delete the dynamically allocated memory
     UnfolderHelper::plot_entire_matrix(corr_unfolded_hist, "Correlation matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_corr"+postfix);
+
+    auto corr_unfolded_hist_noPhi_noTotal = remove_bins(corr_unfolded_hist);
+    const std::vector<int> bins_noPhi_noTotal = {0, 11, 16, 23, 27, 34};
+    const std::vector<std::string> labels_noPhi_noTotal = {"cos(#theta_{#mu})", "p_{#mu}^{*}", "cos(#theta_{#pi})", "p_{#pi}^{*}", "#theta_{#pi #mu}"};
+    UnfolderHelper::plot_entire_matrix(corr_unfolded_hist_noPhi_noTotal, "Correlation matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_corr_noPhi_noTotal"+postfix, true, -1, 1, bins_noPhi_noTotal, bins_noPhi_noTotal, labels_noPhi_noTotal, labels_noPhi_noTotal, false);
+    delete corr_unfolded_hist_noPhi_noTotal;
+
+    createSplitMatrixPlots(corr_unfolded_hist, "Cropped correlation matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_corr_noPhi_noTotal", postfix);
+
+    // Get the factors needed to convert to cross-section units
+    const double total_pot = syst.total_bnb_data_pot_;
+    const double integ_flux = integrated_numu_flux_in_FV(total_pot);
+    const double num_Ar = num_Ar_targets_in_FV();
+
+    std::cout << "TOTAL POT = " << total_pot << '\n';
+    std::cout << "INTEGRATED numu FLUX = " << integ_flux << '\n';
+    std::cout << "NUM Ar atoms in fiducial volume = " << num_Ar << '\n';
+
+    // Retrieve the true-space expected event counts from NUISANCE output files
+    // for each available generator model
+    double conv_factor = (num_Ar * integ_flux) / 1e38;
+    std::map<std::string, TMatrixD *> generator_truth_map = {}; // get_true_events_nuisance( sample_info, conv_factor );
+
     TH2D* cov_unfolded_hist = new TH2D(util::TMatrixDToTH2D(*result.cov_matrix_, "cov_unfolded", "Covariance Matrix", 0, result.cov_matrix_->GetNrows(), 0, result.cov_matrix_->GetNcols()));
+    cov_unfolded_hist->Scale(1/(conv_factor * conv_factor));
+
+    const std::vector<int> bins = {0, 11, 26, 31, 38, 48, 52, 59, 60};
+    const std::vector<std::string> labels = {"cos(#theta_{#mu})", "#phi_{#mu}", "p_{#mu}^{*}", "cos(#theta_{#pi})", "#phi_{#pi}", "p_{#pi}^{*}", "#theta_{#pi #mu}", "Total"};
+    UnfolderHelper::plot_entire_matrix(cov_unfolded_hist, "Covariance matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_cov"+postfix, true, 0.00001, 0.6, bins, bins, labels, labels, false, 0, 0, true, true, true);
+
+    auto cov_unfolded_hist_noPhi_noTotal = remove_bins(cov_unfolded_hist);
+    UnfolderHelper::plot_entire_matrix(cov_unfolded_hist_noPhi_noTotal, "Covariance matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_cov_noPhi_noTotal"+postfix, true, 0.00001, 0.6, bins_noPhi_noTotal, bins_noPhi_noTotal, labels_noPhi_noTotal, labels_noPhi_noTotal, false, 0, 0, true, true, true);
+    delete cov_unfolded_hist_noPhi_noTotal;
+
+    createSplitMatrixPlots(cov_unfolded_hist, "Cropped covariance matrix after blockwise unfolding", "Truth Bins", "Truth Bins", "unfolded_cov_noPhi_noTotal", postfix, true, 0.00001, 0.6, true, true);
 
     // Add the blockwise decomposed matrices into the map
     unfolded_cov_matrix_map["total_blockwise_norm"] = std::make_unique<TMatrixD>(bd_ns_covmat.norm_);
     unfolded_cov_matrix_map["total_blockwise_shape"] = std::make_unique<TMatrixD>(bd_ns_covmat.shape_);
     unfolded_cov_matrix_map["total_blockwise_mixed"] = std::make_unique<TMatrixD>(bd_ns_covmat.mixed_);
-
-    // std::cout << "Unfolded Covariance Matrix:\n";
-    // int nRows = result.cov_matrix_->GetNrows();
-    // int nCols = result.cov_matrix_->GetNcols();
-    // for (int i = 1; i <= nRows; ++i) {
-    //     for (int j = 1; j <= nCols; ++j) {
-    //         std::cout << (*result.cov_matrix_)(i-1, j-1) << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
-
-    // std::cout << "\n\n\n\n\n\n\n\n\n\n\n\nUnfolded Covariance Matrix (Total Blockwise Norm):\n";
-    // for (int i = 0; i < num_true_signal_bins; ++i) {
-    //     for (int j = 0; j < num_true_signal_bins; ++j) {
-    //         std::cout << (*unfolded_cov_matrix_map["total_blockwise_norm"])(i, j) << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
-
-    // return 0;
 
     // Set the event counts in each bin of the histogram that displays the
     // unfolded result. Note that we don't care about the background true bins
@@ -814,8 +935,8 @@ void unfold_bnb()
     // gStyle->SetPalette(paletteNumber);
 
     // Convert TMatrixD to TH2D using the TMatrixDToTH2D function
-    const TH2D* h_A_C = new TH2D(util::TMatrixDToTH2D(*A_C, "h_A_C", "Additional smearing matrix", 0, A_C->GetNcols(), 0, A_C->GetNrows()));
-    UnfolderHelper::plot_entire_matrix(h_A_C, "Additional smearing matrix", "Truth Bins", "Regularized Truth Bins", "ac"+postfix, true, -0.5, 1.5);
+    const TH2D* h_A_C = new TH2D(util::TMatrixDToTH2D(*A_C, "h_A_C", "Regularization Matrix", 0, A_C->GetNcols(), 0, A_C->GetNrows()));
+    UnfolderHelper::plot_entire_matrix(h_A_C, "Regularization Matrix", "Truth Bins", "Regularized Truth Bins", "ac"+postfix, true, -0.5, 1.5);
 
     if(USE_ADD_SMEAR) multiply_1d_hist_by_matrix(A_C, genie_cv_truth); // Can be directly multiplied for all slices because A_C is a block diagonal matrix 
 
@@ -830,7 +951,7 @@ void unfold_bnb()
     if (using_fake_data)
     {
 
-        // Multiply the fake data truth histogram by the additional smearing matrix
+        // Multiply the fake data truth histogram by the Regularization Matrix
         if(USE_ADD_SMEAR) multiply_1d_hist_by_matrix(A_C, fake_data_truth_hist);
 
         fake_data_truth_hist->SetStats(false);
@@ -854,21 +975,6 @@ void unfold_bnb()
 
     lg->Draw("same");
 
-
-    // Get the factors needed to convert to cross-section units
-    const double total_pot = syst.total_bnb_data_pot_;
-    const double integ_flux = integrated_numu_flux_in_FV(total_pot);
-    const double num_Ar = num_Ar_targets_in_FV();
-
-    std::cout << "TOTAL POT = " << total_pot << '\n';
-    std::cout << "INTEGRATED numu FLUX = " << integ_flux << '\n';
-    std::cout << "NUM Ar atoms in fiducial volume = " << num_Ar << '\n';
-
-    // Retrieve the true-space expected event counts from NUISANCE output files
-    // for each available generator model
-    double conv_factor = (num_Ar * integ_flux) / 1e38;
-    std::map<std::string, TMatrixD *> generator_truth_map = {}; // get_true_events_nuisance( sample_info, conv_factor );
-
     // Dump overall results to text files. Total cross section units (10^{-38}
     // cm^2 / Ar) will be used throughout. Do this before adjusting the
     // truth-level prediction TMatrixD objects via multiplication by A_C
@@ -876,7 +982,7 @@ void unfold_bnb()
 
     if (USE_ADD_SMEAR)
     {
-        // Get access to the additional smearing matrix
+        // Get access to the Regularization Matrix
         const TMatrixD &A_C = *result.add_smear_matrix_;
         const TMatrixD A_C_T = TMatrixD(TMatrixD::kTransposed, A_C);
 
@@ -978,7 +1084,7 @@ void unfold_bnb()
             }
         }
 
-        // Add over and underflow bins to additional smearing matrix plots
+        // Add over and underflow bins to Regularization Matrix plots
         // if(sl_idx==2 || sl_idx==5) stop++; // Overflow bin
         // if(sl_idx==5) start--; // Underflow bin // Removed and replaced withh 100 MeV phase space restriction
         TMatrixD ac_hist_slice(stop - start + 1, stop - start + 1);
@@ -1021,14 +1127,14 @@ void unfold_bnb()
         std::string title = slice_unf->hist_->GetXaxis()->GetTitle();
         // std::regex pattern("true (.*)");
         // title = std::regex_replace(title, pattern, "$1");
-        const auto resp_title = std::string("Responce Matrix") + title +";Truth Bins;Reco Bins";
-        const auto conf_title = std::string("Confusion Matrix") + title +";Truth Bins;Reco Bins";
-        const auto ac_title = std::string("Additional Smearing Matrix") + title +";Truth Bins;Regularized Truth Bins";
+        const auto resp_title = std::string("Responce Matrix") + title +";Truth Bins;Reconstructed Bins";
+        const auto conf_title = std::string("Confusion Matrix") + title +";Truth Bins;Reconstructed Bins";
+        const auto ac_title = std::string("Regularization Matrix") /*+ title*/ +";Truth Bins;Regularized Truth Bins";
         const auto corr_unf_title = std::string("Correlation Matrix for Unfolded Bins") + title +";Truth Bins;Truth Bins";
-        const auto cov_unf_title = std::string("Covariance Matrix for Unfolded Bins") + title +";Truth Bins;Truth Bins";
-        const auto corr_title = std::string("Correlation Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
-        const auto cov_title = std::string("Covariance Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
-        const auto chi2_title = std::string("Chi2 Contribution Matrix for Reco Bins") + title +";Reco Bins;Reco Bins";
+        const auto cov_unf_title = std::string("Unfolded Covariance Matrix") + title +";Truth Bins;Truth Bins";
+        const auto corr_title = std::string("Correlation Matrix for Reconstructed Bins") + title +";Reconstructed Bins;Reconstructed Bins";
+        const auto cov_title = std::string("Covariance Matrix") + title +";Reconstructed Bins;Reconstructed Bins";
+        const auto chi2_title = std::string("Chi2 Contribution Matrix for Reconstructed Bins") + title +";Reconstructed Bins;Reconstructed Bins";
 
         const int num_bins = slice.hist_->GetNbinsX();
         const int num_bins_ac = stop - start + 1;
@@ -1039,7 +1145,7 @@ void unfold_bnb()
         // edges[num_bins] = slice.hist_->GetBinLowEdge(num_bins) + slice.hist_->GetBinWidth(num_bins);
 
         // Create a TH2D histogram
-        TH2D *cv_resp_hist = new TH2D(("cv_response slice "+std::to_string(sl_idx)).c_str(),("Genie " + resp_title).c_str(),
+        TH2D *cv_resp_hist = new TH2D(("cv_response slice "+std::to_string(sl_idx)).c_str(),(resp_title).c_str(),
                                 num_bins, 0, num_bins,
                                 num_bins, 0, num_bins);
 
@@ -1071,7 +1177,7 @@ void unfold_bnb()
                                 num_bins, 0, num_bins,
                                 num_bins, 0, num_bins);
 
-        TH2D *trimmed_cov_hist = new TH2D(("trimmed_cov_hist slice "+std::to_string(sl_idx)).c_str(), cov_title.c_str(),
+        TH2D *trimmed_cov_hist = new TH2D(("trimmed_cov_hist slice "+std::to_string(sl_idx)).c_str(), (cov_title).c_str(),
                                 num_bins, 0, num_bins,
                                 num_bins, 0, num_bins);
 
@@ -1115,11 +1221,9 @@ void unfold_bnb()
             }
         }
 
-        std::cout<<"DEBUG trimmed_cov_unf_hist:"<<std::endl;
         for(int i = 0; i < cov_unfolded_hist_slice.GetNrows(); i++) {
             for(int j = 0; j < cov_unfolded_hist_slice.GetNcols(); j++) {
                 trimmed_cov_unf_hist->SetBinContent(i+1, j+1, cov_unfolded_hist_slice.operator()(i, j));
-                // std::cout<<"["<<i<<", "<<j<<"] = "<<cov_unfolded_hist_slice.operator()(i, j)<<std::endl;
             }
         }
 
@@ -1129,18 +1233,17 @@ void unfold_bnb()
             }
         }
 
-        std::cout<<"DEBUG trimmed_cov_hist:"<<std::endl;
         for(int i = 0; i < cov_hist_slice.GetNrows(); i++) {
             for(int j = 0; j < cov_hist_slice.GetNcols(); j++) {
                 trimmed_cov_hist->SetBinContent(i+1, j+1, cov_hist_slice.operator()(i, j));
-                // std::cout<<"["<<i<<", "<<j<<"] = "<<cov_hist_slice.operator()(i, j)<<std::endl;
             }
         }
 
-        TCanvas* c_resp_slice = new TCanvas(("c_resp_slice slice "+std::to_string(sl_idx)).c_str(), "c response matrix", 800, 600);
+        TCanvas* c_resp_slice = new TCanvas(("c_resp_slice slice "+std::to_string(sl_idx)).c_str(), "c response matrix", 800, 700);
+        c_resp_slice->SetRightMargin(0.15); 
         cv_resp_hist->SetStats(false);
-        cv_resp_hist->SetMinimum(0);
-        cv_resp_hist->SetMaximum(1.0);
+        // cv_resp_hist->SetMinimum(0);
+        // cv_resp_hist->SetMaximum(1.0);
         gStyle->SetPalette();
 
         // Set x and y axis labels to bin numbers
@@ -1159,10 +1262,11 @@ void unfold_bnb()
         // Fill histogram with slice data
         for (int i = 0; i < num_bins; i++) {
             for (int j = 0; j < num_bins; j++) {
-            double bin_content = cv_hist_2d_slice(i, j);
-            TLatex* latex = new TLatex(cv_resp_hist->GetXaxis()->GetBinCenter(i+1), cv_resp_hist->GetYaxis()->GetBinCenter(j+1), Form("#splitline{%.1f%%}{(%.1f)}", 100*cv_resp_hist->GetBinContent(i+1, j+1), bin_content));
+            // double bin_content = cv_hist_2d_slice(i, j);
+            // TLatex* latex = new TLatex(cv_resp_hist->GetXaxis()->GetBinCenter(i+1), cv_resp_hist->GetYaxis()->GetBinCenter(j+1), Form("#splitline{%.1f%%}{(%.1f)}", 100*cv_resp_hist->GetBinContent(i+1, j+1), bin_content));
+            TLatex* latex = new TLatex(cv_resp_hist->GetXaxis()->GetBinCenter(i+1), cv_resp_hist->GetYaxis()->GetBinCenter(j+1), Form("%.3f", cv_resp_hist->GetBinContent(i+1, j+1)));
             latex->SetTextFont(42);
-            latex->SetTextSize(0.02);
+            latex->SetTextSize(0.04);
             latex->SetTextAlign(22);
             latex->Draw();
             }
@@ -1259,25 +1363,21 @@ void unfold_bnb()
 
         TCanvas* c_ac_slice = new TCanvas(("c_ac_slice slice "+std::to_string(sl_idx)).c_str(), "c ac matrix", 700, 700);
         c_ac_slice->SetRightMargin(0.15); // Allow extra space for the legend on the right
-        ac_hist->SetTitle(""); // Remove the title
+        // ac_hist->SetTitle(""); // Remove the title
         ac_hist->SetTitleSize(0.05, "t");
         ac_hist->SetStats(false);
         ac_hist->GetZaxis()->SetRangeUser(-0.5, 1.0); // Set the z range
         ac_hist->Draw("colz");
         
-        // Print out number of bins
-        // std::cout<<"DEBUG ac_hist.GetNbinsX() = "<<ac_hist->GetNbinsX()<<std::endl;
         
         // Set x and y axis labels to bin numbers
         for (int i = 1; i <= ac_hist->GetNbinsX(); i++) {
-            // const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
-            const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && i == 5);
+            const auto overFlow = false;
             const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             ac_hist->GetXaxis()->SetBinLabel(i, binLabel);
         }
         for (int i = 1; i <= ac_hist->GetNbinsY(); i++) {
-            // const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && (i == 1 || i == 6));
-            const auto overFlow = false; // (sl_idx == 2 && i ==6 ) || (sl_idx == 5 && i == 5);
+            const auto overFlow = false;
             const auto binLabel = overFlow ? Form("%d*", i) : Form("%d", i);
             ac_hist->GetYaxis()->SetBinLabel(i, binLabel);
         }
@@ -1324,11 +1424,19 @@ void unfold_bnb()
         c_corr_unf_slice->SaveAs(("plots/unfolded_correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
         // Plot for trimmed_cov_unf_hist
-        TCanvas* c_cov_unf_slice = new TCanvas("c_cov_unf_slice", "c covariance matrix", 800, 600);
-        util::CreateRedToBlueColorPalette(20);
+        TCanvas* c_cov_unf_slice = new TCanvas("c_cov_unf_slice", "c covariance matrix", 800, 700);
+        c_cov_unf_slice->SetRightMargin(0.15);         
+        
+        // util::CreateRedToBlueColorPalette(20);
+        // Set default color palette
+        gStyle->SetPalette(kBird);
         trimmed_cov_unf_hist->SetTitleSize(0.05, "t");
         trimmed_cov_unf_hist->SetStats(false);
         trimmed_cov_unf_hist->Draw("colz");
+
+        // Scale twice to get cross-section units?
+        trimmed_cov_unf_hist->Scale(1.0 / conv_factor);
+        trimmed_cov_unf_hist->Scale(1.0 / conv_factor);
 
         // Set x and y axis labels to bin numbers
         for (int i = 1; i <= trimmed_cov_unf_hist->GetNbinsX(); i++) {
@@ -1341,6 +1449,17 @@ void unfold_bnb()
         // Increase the font size of the axis labels
         trimmed_cov_unf_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_cov_unf_hist->GetYaxis()->SetLabelSize(0.05);
+
+        // Fill histogram with slice data
+        for (int i = 0; i < num_bins; i++) {
+            for (int j = 0; j < num_bins; j++) {
+            TLatex* latex = new TLatex(trimmed_cov_unf_hist->GetXaxis()->GetBinCenter(i+1), trimmed_cov_unf_hist->GetYaxis()->GetBinCenter(j+1), Form("%.3f", trimmed_cov_unf_hist->GetBinContent(i+1, j+1)));
+            latex->SetTextFont(42);
+            latex->SetTextSize(0.02);
+            latex->SetTextAlign(22);
+            latex->Draw();
+            }
+        }
 
         c_cov_unf_slice->SaveAs(("plots/unfolded_covariance_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
@@ -1366,8 +1485,11 @@ void unfold_bnb()
         c_corr_slice->SaveAs(("plots/correlation_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
 
         // Plot for trimmed_cov_hist
-        TCanvas* c_cov_slice = new TCanvas(("c_cov_slice slice "+std::to_string(sl_idx)).c_str(), "c covariance matrix", 800, 600);
-        util::CreateRedToBlueColorPalette(20);
+        TCanvas* c_cov_slice = new TCanvas(("c_cov_slice slice "+std::to_string(sl_idx)).c_str(), "c covariance matrix", 800, 700);
+        c_cov_slice->SetRightMargin(0.15);     
+        // util::CreateRedToBlueColorPalette(20);
+        // Set default color palette
+        gStyle->SetPalette(kBird);
         trimmed_cov_hist->SetTitleSize(0.05, "t");
         // trimmed_cov_hist->GetZaxis()->SetRangeUser(-1, 1);
         trimmed_cov_hist->SetStats(false);
@@ -1384,67 +1506,18 @@ void unfold_bnb()
         trimmed_cov_hist->GetXaxis()->SetLabelSize(0.05);
         trimmed_cov_hist->GetYaxis()->SetLabelSize(0.05);
 
+        // Fill histogram with slice data
+        for (int i = 0; i < num_bins; i++) {
+            for (int j = 0; j < num_bins; j++) {
+            TLatex* latex = new TLatex(trimmed_cov_hist->GetXaxis()->GetBinCenter(i+1), trimmed_cov_hist->GetYaxis()->GetBinCenter(j+1), Form("%.3f", trimmed_cov_hist->GetBinContent(i+1, j+1)));
+            latex->SetTextFont(42);
+            latex->SetTextSize(0.02);
+            latex->SetTextAlign(22);
+            latex->Draw();
+            }
+        }
+
         c_cov_slice->SaveAs(("plots/covariance_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
-
-        // // ###########################################################
-        // const auto inverse_cov = slice_mc_plus_ext->get_inverse_cov_mat();
-        // const auto diff = slice_mc_plus_ext->get_diff(*slice_bnb);
-
-        // float chi2Total = 0;
-        // float minValue = std::numeric_limits<float>::max(); // Initialize to maximum possible float value
-        // float maxValue = std::numeric_limits<float>::lowest(); // Initialize to minimum possible float value
-
-        // for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) {
-        //     for (int j = 1; j <= trimmed_deconstructed_chi2->GetNbinsY(); j++) {
-        //         const auto diffValue1 = diff(0, i-1);
-        //         const auto diffValue2 = diff(0, j-1);
-        //         const auto invCovValue = inverse_cov(i-1, j-1);
-        //         const auto newValue = diffValue1 * invCovValue * diffValue2;
-        //         trimmed_deconstructed_chi2->SetBinContent(i, j, newValue);
-        //         chi2Total += newValue;
-
-        //         // Update min and max values
-        //         if (newValue < minValue) minValue = newValue;
-        //         if (newValue > maxValue) maxValue = newValue;
-        //     }
-        // }
-
-        // // Now minValue and maxValue hold the minimum and maximum values encountered in the loop
-        // TCanvas* c_frac_err_slice = new TCanvas(("c_frac_err_slice slice "+std::to_string(sl_idx)).c_str(), "c fractional error matrix", 800, 600);
-
-        // // Number of colors in the palette
-        // const Int_t NRGBs = 3;
-        // const Int_t NCont = 255;
-        // // Define your color stops and the corresponding RGB values
-        // Double_t stops[NRGBs] = {0, std::abs(minValue)/(std::abs(minValue) + std::abs(maxValue)), 1}; // minValue/maxValue corresponds to the zero point, which will be white
-        // Double_t red[NRGBs]   = {0.00, 1.00, 1.00}; // Red component (0 at the start and end, 1 in the middle)
-        // Double_t green[NRGBs] = {0.00, 1.00, 0.00}; // Green component (0 at the start, 1 in the middle, 0 at the end)
-        // Double_t blue[NRGBs]  = {1.00, 1.00, 0.00}; // Blue component (1 at the start, 1 in the middle, 0 at the end)
-
-        // // Create the gradient color table
-        // TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
-        // gStyle->SetNumberContours(NCont);
-
-        // // If needed, you can use minValue and maxValue for further processing
-        // // util::CreateRedToBlueColorPalette(20);
-        // trimmed_deconstructed_chi2->SetTitleSize(0.05, "t");
-        // trimmed_deconstructed_chi2->SetStats(false);
-        // trimmed_deconstructed_chi2->Draw("colz");
-        // // Set x and y axis labels to bin numbers
-        // for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsX(); i++) 
-        // {
-        //     trimmed_deconstructed_chi2->GetXaxis()->SetBinLabel(i, Form("%d", i));
-        // }
-        // for (int i = 1; i <= trimmed_deconstructed_chi2->GetNbinsY(); i++)
-        // {
-        //     trimmed_deconstructed_chi2->GetYaxis()->SetBinLabel(i, Form("%d", i));
-        // }
-
-        // // Increase the font size of the axis labels
-        // trimmed_deconstructed_chi2->GetXaxis()->SetLabelSize(0.05);
-        // trimmed_deconstructed_chi2->GetYaxis()->SetLabelSize(0.05);
-        // c_frac_err_slice->SaveAs(("plots/deconstructed_chi2_matrix_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf").c_str());
-        // // ###########################################################
 
         // Also use the GENIE CV model to do the same
         SliceHistogram *slice_cv = SliceHistogram::make_slice_histogram(
@@ -1468,10 +1541,7 @@ void unfold_bnb()
 
         auto *slice_gen_map_alt_ptr = new std::map<std::string, SliceHistogram *>(); // Used for stats only histograms
         auto &slice_gen_map_alt = *slice_gen_map_alt_ptr;
-        // slice_gen_map_alt["MicroBooNE Tune"] = slice_cv;
         slice_gen_map_alt["Unfolded data Stats Only"] = slice_unf_stats_only;
-        // slice_gen_map_alt["Unfolded data Norm Only"] = slice_unf_norm_only;
-        // slice_gen_map_alt["Unfolded data Shape Only"] = slice_unf_shape_only;
 
         int var_count = 0;
         double other_var_width = 1.;
@@ -1522,11 +1592,9 @@ void unfold_bnb()
 
         int num_slice_bins = slice_unf->hist_->GetNbinsX();
         TMatrixD trans_mat(num_slice_bins, num_slice_bins);
-        std::cout << "DEBUG num_slice_bins: " << num_slice_bins << " for " << slice_unf->hist_->GetName() << std::endl;
         for (int b = 0; b < num_slice_bins; ++b)
         {
             double width = slice_unf->hist_->GetBinWidth(b + 1) * other_var_width;
-            std::cout << "DEBUG width: " << width << std::endl;
             trans_mat(b, b) = 1e38 / (width * integ_flux * num_Ar);
             // std::cout << "DEBUG trans_mat(" << b << ", " << b << "): " << trans_mat(b, b) << "  -  width: " << std::fixed << std::setprecision(5) << width << std::endl;
         }
@@ -1608,11 +1676,12 @@ void unfold_bnb()
         gStyle->SetLegendBorderSize(0);
         const auto rightMargin = 0.25;
 
-        const auto noRatioPlot = (sl_idx == 7);
+        const auto noRatioPlot = (sl_idx == 7 || plotOnlyDataSample);
 
-        TPad* pad2 = new TPad(("pad2 slice "+std::to_string(sl_idx)).c_str(), "", 0, 0.0, 1.0, 0.3);
+        TPad* pad2 = new TPad(("pad2 slice "+std::to_string(sl_idx)).c_str(), "", 0, 0.01, 1.0, 0.3);
         pad2->SetTopMargin(0.03);
         pad2->SetBottomMargin(0.35);
+        pad2->SetLeftMargin(0.125);
         pad2->SetRightMargin(rightMargin);
         if(!noRatioPlot) pad2->Draw();
         pad2->cd();
@@ -1645,12 +1714,11 @@ void unfold_bnb()
 
         // x-axis
         h_ratio->GetXaxis()->SetTitle(slice_unf->hist_->GetXaxis()->GetTitle());
-        h_ratio->GetXaxis()->SetTitleOffset(1.3); // Hide x-axis        
+        h_ratio->GetXaxis()->SetTitleOffset(1.0);        
         h_ratio->GetXaxis()->CenterTitle(true);
-        h_ratio->GetXaxis()->SetLabelSize(0.1);
-        h_ratio->GetXaxis()->SetTitleSize(0.08);
+        // h_ratio->GetXaxis()->SetLabelSize(0.12);
+        // h_ratio->GetXaxis()->SetTitleSize(0.12);
         h_ratio->GetXaxis()->SetTickLength(0.05);
-        // h_ratio->GetXaxis()->SetTitleOffset(0.9);
 
         if(sl_idx == 7)
         {
@@ -1661,9 +1729,10 @@ void unfold_bnb()
         // y-axis
         h_ratio->GetYaxis()->SetTitle("Ratio");
         h_ratio->GetYaxis()->CenterTitle(true);
-        h_ratio->GetYaxis()->SetLabelSize(0.08);
-        h_ratio->GetYaxis()->SetTitleSize(0.08);
+        // h_ratio->GetYaxis()->SetLabelSize(0.12);
+        // h_ratio->GetYaxis()->SetTitleSize(0.12);
         h_ratio->GetYaxis()->SetTitleOffset(0.4);
+        h_ratio->GetYaxis()->SetNdivisions(505);
 
         TH1D* slice_unf_stats_only_ratio = dynamic_cast<TH1D*>(slice_unf_stats_only->hist_.get()->Clone("slice_unf_stats_only_ratio"));
         // Print out the bin sizes for slice_unf_stats_only_ratio and h_cv_no_errors separately to check wethether they are the same
@@ -1704,7 +1773,7 @@ void unfold_bnb()
         h_ratio->GetYaxis()->SetRangeUser(0.95*min, 1.05*max);
 
         // Define a base font size (this is a fraction of the pad size)
-        const auto baseFontSize = 0.033;
+        const auto baseFontSize = 0.04; // 0.033;
 
         // Get the dimensions of the pad
         auto padHeight = pad2->GetAbsHNDC();
@@ -1713,8 +1782,8 @@ void unfold_bnb()
         auto scaledFontSize = baseFontSize / padHeight;
         
         // Increase the axis label font size
-        h_ratio->GetXaxis()->SetLabelSize(scaledFontSize);
-        h_ratio->GetYaxis()->SetLabelSize(scaledFontSize);
+        h_ratio->GetXaxis()->SetLabelSize(scaledFontSize*0.95);
+        h_ratio->GetYaxis()->SetLabelSize(scaledFontSize*0.95);
         
         // Increase the axis title font size
         h_ratio->GetXaxis()->SetTitleSize(scaledFontSize);
@@ -1795,9 +1864,11 @@ void unfold_bnb()
         // Go back to the main canvas before creating the second pad
         c1->cd();
 
-        TPad* pad1 = new TPad(("pad1 slice "+std::to_string(sl_idx)).c_str(), "", 0.0, noRatioPlot ? 0.1 : 0.3, 1.0, 1.0);
-        pad1->SetBottomMargin(0.03);
+        TPad* pad1 = new TPad(("pad1 slice "+std::to_string(sl_idx)).c_str(), "", 0.0, noRatioPlot ? 0.01 : 0.3, 1.0, 1.0);
+        pad1->SetBottomMargin(noRatioPlot ? 0.1 : 0.03); // Increase bottom margin when noRatioPlot is true
+        // pad1->SetBottomMargin(0.03);
         pad1->SetTopMargin(0.1);
+        pad1->SetLeftMargin(0.125);
         pad1->SetRightMargin(rightMargin);
         pad1->Draw();
         pad1->cd();
@@ -1817,14 +1888,15 @@ void unfold_bnb()
         scaledFontSize = baseFontSize / padHeight;
 
         // Increase the axis label font size
-        slice_unf->hist_->GetXaxis()->SetLabelSize(scaledFontSize);
-        slice_unf->hist_->GetYaxis()->SetLabelSize(scaledFontSize);
+        slice_unf->hist_->GetXaxis()->SetLabelSize(scaledFontSize*0.95);
+        slice_unf->hist_->GetYaxis()->SetLabelSize(scaledFontSize*0.95);
         // Increase the axis title font size
         slice_unf->hist_->GetXaxis()->SetTitleSize(scaledFontSize);
         slice_unf->hist_->GetYaxis()->SetTitleSize(scaledFontSize);
 
+        slice_unf->hist_->GetXaxis()->SetTitleOffset(1.0);
+
         double ymax = -DBL_MAX;
-        slice_unf->hist_->Draw("e");
 
         if(sl_idx == 7)
         {
@@ -1832,9 +1904,16 @@ void unfold_bnb()
             slice_unf->hist_->GetXaxis()->SetTickLength(0); // Hide x-axis ticks
         }
 
+        slice_unf->hist_->Draw("e");
+        // TH1D* slice_unf_clone = dynamic_cast<TH1D*>(slice_unf->hist_->Clone("slice_unf_clone"));
+        // slice_unf_clone->SetDirectory( nullptr );
+        // slice_unf_clone->Scale(1./totalRegularizationFactor);
+        // slice_unf_clone->Draw("e");
+
         for (const auto &pair : slice_gen_map)
         {
             const auto &name = pair.first;
+            if( plotOnlyDataSample && name != "Unfolded data") continue;
             const auto *slice_h = pair.second;
 
             double max = slice_h->hist_->GetMaximum();
@@ -1857,9 +1936,18 @@ void unfold_bnb()
             slice_h->hist_->SetLineStyle(file_info.style_);
             slice_h->hist_->SetLineWidth(3);
             slice_h->hist_->Draw("hist same");
+            // TH1D* slice_h_clone = dynamic_cast<TH1D*>(slice_h->hist_->Clone("slice_h_clone"));
+            // slice_h_clone->SetDirectory(nullptr);
+            // slice_h_clone->Scale(1./totalRegularizationFactor);
+            // slice_h_clone->Draw("hist same");
+
         }
 
-        drawHistogramWithBand(slice_cv->hist_.get(), kAzure - 7, 2, 5, 0.3, true);
+        if(!plotOnlyDataSample) drawHistogramWithBand(slice_cv->hist_.get(), kAzure - 7, 2, 5, 0.3, true);
+        // TH1D* slice_cv_clone = dynamic_cast<TH1D*>(slice_cv->hist_->Clone("slice_cv_clone"));
+        // slice_cv_clone->SetDirectory(nullptr);
+        // slice_cv_clone->Scale(1./totalRegularizationFactor);
+        // if(!plotOnlyDataSample) drawHistogramWithBand(slice_cv_clone, kAzure - 7, 2, 5, 0.3, true);
 
         if (using_fake_data)
         {
@@ -1877,7 +1965,10 @@ void unfold_bnb()
             }
 
             drawHistogramWithBand(slice_truth->hist_.get(), kGreen, 2, 5, 0.3, true);
-            // drawHistogramWithBand(h_slice_truth_with_error, kGreen, 2, 5, 0.2, false);
+            // TH1D* slice_truth_clone = dynamic_cast<TH1D*>(slice_truth->hist_->Clone("slice_truth_clone"));
+            // slice_truth_clone->SetDirectory(nullptr);
+            // slice_truth_clone->Scale(1./totalRegularizationFactor);
+            // drawHistogramWithBand(slice_truth_clone, kGreen, 2, 5, 0.3, true);
         }
 
         std::map<std::string, SliceHistogram::Chi2Result> gen_metrics;
@@ -1937,14 +2028,26 @@ void unfold_bnb()
             delete gen_slice_h;
 
             drawHistogramWithBand(gen_hist_clone, generator, 0.3, true);
+            // Clone gen_hist_clone and scale it by totalRegularizationFactor
+            // TH1D* gen_hist_clone_scaled = dynamic_cast<TH1D*>(gen_hist_clone->Clone("gen_hist_clone_scaled"));
+            // gen_hist_clone_scaled->SetDirectory(nullptr);
+            // gen_hist_clone_scaled->Scale(1./totalRegularizationFactor);
+            // drawHistogramWithBand(gen_hist_clone_scaled, generator, 0.3, true);
         }
 
         slice_unf->hist_->GetYaxis()->SetRangeUser(0., ymax * 1.05);
-        slice_unf->hist_->Draw("E same");
+        // slice_unf_clone->GetYaxis()->SetRangeUser(0., ymax * 1.05);
         // slice_unf->hist_->SetTitle("Unfolded NuWro CC1#pi^{#pm}Xp");
         slice_unf->hist_->SetTitle(""); // No title
-        slice_unf->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis
-        slice_unf->hist_->GetXaxis()->SetTitleOffset(999); // Hide x-axis title
+
+        // slice_unf->hist_->GetXaxis()->SetTitle(slice_unf->hist_->GetXaxis()->GetTitle());
+        if(sl_idx == 7 || !noRatioPlot)
+        {
+            slice_unf->hist_->GetXaxis()->SetLabelOffset(999); // Hide x-axis
+            slice_unf->hist_->GetXaxis()->SetTitleOffset(999); // Hide x-axis title
+        }
+
+        slice_unf->hist_->Draw("E same");
 
         gStyle->SetEndErrorSize(3);
         slice_unf_stats_only->hist_->SetLineColor(kBlack);
@@ -1953,11 +2056,16 @@ void unfold_bnb()
         slice_unf_stats_only->hist_->SetStats(false);
         slice_unf_stats_only->hist_->SetLineWidth(4);
         slice_unf_stats_only->hist_->Draw("EX0 same");
+        // TH1D* slice_unf_stats_only_clone = dynamic_cast<TH1D*>(slice_unf_stats_only->hist_->Clone("slice_unf_stats_only_clone"));
+        // slice_unf_stats_only_clone->SetDirectory(nullptr);
+        // slice_unf_stats_only_clone->Scale(1./totalRegularizationFactor);
+        // slice_unf_stats_only_clone->Draw("EX0 same");
 
         c1->cd();
 
-        // TLegend *lg = new TLegend(0.6, 0.2);
-        TLegend *lg = new TLegend(1 - rightMargin + 0.02, 0.09, 1 - 0.02, 0.85);
+        // TLegend *lg = new TLegend(1 - rightMargin + 0.02, 0.09, 1 - 0.02, 0.94);
+        TLegend *lg = new TLegend(1 - rightMargin + 0.01, 0.09, 1 - 0.01, 0.94);
+
 
         // lg->AddEntry((TObject*)0, "Generator Predictions", "");
         for(const auto& generator : generators)
@@ -1971,9 +2079,10 @@ void unfold_bnb()
             const auto metrics = gen_metrics[generator.name];
             // Format the chi2 values and append to the generator name
             std::ostringstream oss;
-            oss << "#splitline{" << generator.name << "}{" 
-                << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{"; 
-            
+            oss << "#splitline{" << generator.name << "}{"
+                // << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{";
+                << "#splitline{#chi^{2} = " << (metrics.chi2_>= 0.01 && metrics.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << metrics.chi2_ << " / " << metrics.num_bins_ << " bin" << (metrics.num_bins_ > 1 ? "s" : "") << "}{";
+
             // if (metrics.num_bins_ > 1)
             if (show_pvalue)
                 oss << "p = " << metrics.p_value_;
@@ -1987,6 +2096,7 @@ void unfold_bnb()
         for (const auto &pair : slice_gen_map)
         {
             const auto &name = pair.first;
+            if( plotOnlyDataSample && name != "Unfolded data") continue;
             const auto *slice_h = pair.second;
 
             // std::string label = name;
@@ -2003,11 +2113,12 @@ void unfold_bnb()
             {
                 oss << "#splitline{";
                 if (name == "NuWro Truth") oss << "#splitline{Fake Data Truth}{(NuWro 19.02.1)}";
-                else if (name == "MicroBooNE Tune") oss << "GENIE CV"; //<< "#splitline{GENIE 3.0.6}{G18_10a_02_11a}";
+                else if (name == "MicroBooNE Tune") oss << "GENIE #muB"; //<< "#splitline{GENIE 3.0.6}{G18_10a_02_11a}";
                 else oss << name;
 
+                // oss << "}{" << "#splitline{#chi^{2} = " << (chi2_result.chi2_>= 0.01 && chi2_result.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin" << (chi2_result.num_bins_ > 1 ? "s" : "") << "}{"; 
                 oss << "}{" << "#splitline{#chi^{2} = " << (chi2_result.chi2_>= 0.01 && chi2_result.chi2_ < 100 ? std::fixed : std::scientific) << std::setprecision(2) << chi2_result.chi2_ << " / " << chi2_result.num_bins_ << " bin" << (chi2_result.num_bins_ > 1 ? "s" : "") << "}{"; 
-                
+
                 // if (chi2_result.num_bins_ > 1)
                 if (show_pvalue)                
                     oss << "p = " << chi2_result.p_value_;
@@ -2027,7 +2138,12 @@ void unfold_bnb()
         // headerss << "#splitline{MicroBooNE}{"
         //          << toLatexScientific(total_pot) << " POT}";
 
-        // lg->SetHeader(headerss.str().c_str());
+        // int nBins = slice_unf->hist_->GetNbinsX();
+        // std::string header = "Bins: " + std::to_string(nBins);
+        if (postfix.find("noFSI") != std::string::npos) {
+            std::string header = "#bf{No FSI}"; // Bold and Underline
+            lg->SetHeader(header.c_str());
+        }
 
         // // Increase the font size for the legend header
         // // (see https://root-forum.cern.ch/t/tlegend-headers-font-size/14434)
@@ -2040,8 +2156,9 @@ void unfold_bnb()
 
         // Add LaTeX text to the plot
         TLatex latex;
-        latex.SetTextSize(0.03); // Adjust the font size
-        latex.DrawLatexNDC(0.77, 0.88, ("#splitline{MicroBooNE in the BNB}{" + toLatexScientific(total_pot) + " POT}").c_str()); // Adjust the position (NDC coordinates)
+        latex.SetTextSize(0.04); // Adjust the font size
+        // latex.DrawLatexNDC(0.78, 0.9, ("#splitline{#splitline{MicroBooNE}{in the BNB}}{" + toLatexScientific(total_pot) + " POT}").c_str()); // Adjust the position (NDC coordinates)
+        latex.DrawLatexNDC(0.22, 0.94, ("MicroBooNE in the BNB with " + toLatexScientific(total_pot) + " POT").c_str()); // Adjust the position (NDC coordinates)
 
         std::string out_pdf_name = "plots/plot_unfolded_slice_" + std::string(sl_idx < 10 ? "0" : "") + std::to_string(sl_idx) + postfix + ".pdf";
         c1->SaveAs(out_pdf_name.c_str());

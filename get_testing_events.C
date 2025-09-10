@@ -5,17 +5,18 @@
 
 void get_testing_events() {
     // Input and output files
-    // std::string input_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root";
-    // std::string input_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root";
-    // std::string input_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root";
-    // std::string input_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root";
-    std::string input_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root";
+    // std::string input_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/highestMuonBDTScoreAndRandomIndex/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_highestMuonBDT_randomIndex.root";
+    // std::string input_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/highestMuonBDTScoreAndRandomIndex/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_highestMuonBDT_randomIndex.root";
+    // std::string input_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/highestMuonBDTScoreAndRandomIndex/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_highestMuonBDT_randomIndex.root";
+    // std::string input_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/highestMuonBDTScoreAndRandomIndex/overlay_peleeTuple_uboone_v08_00_00_70_run4bcd_nu_ubcc1pi_highestMuonBDT_randomIndex.root";
+    std::string input_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/highestMuonBDTScoreAndRandomIndex/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_highestMuonBDT_randomIndex.root";
 
-    // std::string output_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root";
-    // std::string output_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root";
-    // std::string output_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root";
-    // std::string output_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root";
-    std::string output_file_path = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root";
+    // std::string output_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/onlyTestEvents/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_highestMuonBDT_randomIndex_onlyTestEvents.root";
+    // std::string output_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/onlyTestEvents/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_highestMuonBDT_randomIndex_onlyTestEvents.root";
+    // std::string output_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/onlyTestEvents/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_highestMuonBDT_randomIndex_onlyTestEvents.root";
+    // std::string output_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/onlyTestEvents/overlay_peleeTuple_uboone_v08_00_00_70_run4bcd_nu_ubcc1pi_highestMuonBDT_randomIndex_onlyTestEvents.root";
+    std::string output_file_path = "/pnfs/uboone/persistent/users/jdetje/pelee_v08_00_00_70/17July2025_fixedTrackDistance/onlyTestEvents/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_highestMuonBDT_randomIndex_onlyTestEvents.root";
+
 
     // Check if the output file already exists
     if (gSystem->AccessPathName(output_file_path.c_str()) == 0) {

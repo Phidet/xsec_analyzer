@@ -33,10 +33,9 @@ void get_slice_uncertainties() {
     std::string nameExtension = "_fd";
   #else
     auto& fpm = FilePropertiesManager::Instance();
-    fpm.load_file_properties( "file_properties_testingOnly.txt" );
+    fpm.load_file_properties( "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt" );
     auto* syst_ptr = new MCC9SystematicsCalculator(
-    // "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_sideband_run1234bcd5_3Mar24.root",
-    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_20Mar24_testingOnly.root",
+    "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_17Oct24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_containedMuXSec.root",
     "systcalc.conf" );
     std::string nameExtension = "_bnb_testingOnly";
     // std::string nameExtension = "_bnb_xsec_testingOnly";
@@ -44,6 +43,7 @@ void get_slice_uncertainties() {
   #endif
 
   std::cout<<"DEBUG tutorial_slice_plots Point 1"<<std::endl;
+  // syst_ptr->set_syst_mode(syst_ptr->SystMode::VaryBackgroundAndSignalDirectly);
   auto& syst = *syst_ptr;
 
   // Get access to the relevant histograms owned by the SystematicsCalculator
@@ -55,24 +55,24 @@ void get_slice_uncertainties() {
 
   TH2D* category_hist = syst.cv_universe().hist_categ_.get();
 
-  // Create new histograms for signal and background
-  TH1D* mc_signal_hist = new TH1D("signal", "Signal", category_hist->GetNbinsX(), category_hist->GetXaxis()->GetXmin(), category_hist->GetXaxis()->GetXmax());
-  TH1D* mc_background_hist = new TH1D("background", "Background", category_hist->GetNbinsX(), category_hist->GetXaxis()->GetXmin(), category_hist->GetXaxis()->GetXmax());
+  // // Create new histograms for signal and background
+  // TH1D* mc_signal_hist = new TH1D("signal", "Signal", category_hist->GetNbinsX(), category_hist->GetXaxis()->GetXmin(), category_hist->GetXaxis()->GetXmax());
+  // TH1D* mc_background_hist = new TH1D("background", "Background", category_hist->GetNbinsX(), category_hist->GetXaxis()->GetXmin(), category_hist->GetXaxis()->GetXmax());
 
-  // Combine categories for signal
-  for (int bin = 1; bin <= category_hist->GetNbinsX(); ++bin) {
-    double content = category_hist->GetBinContent(bin, 1) + category_hist->GetBinContent(bin, 2);
-    mc_signal_hist->SetBinContent(bin, content);
-  }
+  // // Combine categories for signal
+  // for (int bin = 1; bin <= category_hist->GetNbinsX(); ++bin) {
+  //   double content = category_hist->GetBinContent(bin, 1) + category_hist->GetBinContent(bin, 2);
+  //   mc_signal_hist->SetBinContent(bin, content);
+  // }
 
-  // Combine categories for background
-  for (int bin = 1; bin <= category_hist->GetNbinsX(); ++bin) {
-    double content = 0;
-    for (int category = 3; category <= 12; ++category) {
-      content += category_hist->GetBinContent(bin, category);
-    }
-    mc_background_hist->SetBinContent(bin, content);
-  }
+  // // Combine categories for background
+  // for (int bin = 1; bin <= category_hist->GetNbinsX(); ++bin) {
+  //   double content = 0;
+  //   for (int category = 3; category <= 12; ++category) {
+  //     content += category_hist->GetBinContent(bin, category);
+  //   }
+  //   mc_background_hist->SetBinContent(bin, content);
+  // }
 
   // Total MC+EXT prediction in reco bin space. Start by getting EXT.
   TH1D* reco_mc_plus_ext_hist = dynamic_cast< TH1D* >(
@@ -88,8 +88,12 @@ void get_slice_uncertainties() {
   auto* matrix_map_ptr = syst.get_covariances().release();
   auto& matrix_map = *matrix_map_ptr;
 
-  auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config.txt" );
+  // auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts.txt" );
+  auto* sb_ptr = new SliceBinning( "ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts_totalLabelled.txt" ); // With x axis label for the total cross section 
   auto& sb = *sb_ptr;
+
+  TLegend* lg2 = new TLegend(0.1, 0.1, 0.9, 0.9); // Adjust legend size to fill the canvas
+  lg2->SetHeader("Uncertainties", "C"); // Add a header to the legend
 
   for ( size_t sl_idx = 0u; sl_idx < sb.slices_.size(); ++sl_idx ) {
     const auto& slice = sb.slices_.at( sl_idx );
@@ -161,8 +165,8 @@ void get_slice_uncertainties() {
       frac_uncertainty_hists[ key ] = slice_for_syst->hist_.get();
 
       // if ( color <= 9 ) ++color;
-      // if ( color == 5 ) ++color;
-      if ( color >= 9 ) color += 7;
+      if ( color == 4 ) ++color;
+      if ( color >= 9 ) color += 8;
       else color++;
       //   slice_for_syst->hist_->SetLineStyle( 3 );
       // if(color > 20)
@@ -175,51 +179,52 @@ void get_slice_uncertainties() {
     std::cout<<"DEBUG tutorial_slice_plots Point 7"<<std::endl;
 
     TCanvas* c2 = new TCanvas;
-    // TLegend* lg2 = new TLegend( 0.7, 0.7, 0.9, 0.9 );
-    TLegend* lg2 = new TLegend( 0.2, 0.3);
-
-    std::cout<<"DEBUG tutorial_slice_plots Point 7.1"<<std::endl;
+    c2->SetRightMargin(0.05); // Reduce the right margin to minimize whitespace
 
     auto* total_frac_err_hist = frac_uncertainty_hists.at( total_name );
-    std::cout<<"DEBUG tutorial_slice_plots Point 7.2"<<std::endl;
     total_frac_err_hist->SetStats( false );
     total_frac_err_hist->GetYaxis()->SetRangeUser( 0.,
       total_frac_err_hist->GetMaximum() * 1.05 );
     total_frac_err_hist->SetLineColor( kBlack );
-    total_frac_err_hist->SetLineStyle( 2 );
+    total_frac_err_hist->SetLineStyle( 7 );
     total_frac_err_hist->SetLineWidth( 3 );
     total_frac_err_hist->Draw( "hist" );
     total_frac_err_hist->SetTitle("Fractional Uncertainty of Selected #nu_{#mu}CC1#pi^{#pm}Xp, X #geq 0 Events");
     total_frac_err_hist->GetYaxis()->SetTitle("Fractional Uncertainty");
 
-    std::cout<<"DEBUG tutorial_slice_plots Point 7.3"<<std::endl;
-
-    // const auto frac_ymax = 0.35;
-    // total_frac_err_hist->GetYaxis()->SetRangeUser( 0., frac_ymax);
-
-    lg2->AddEntry( total_frac_err_hist, total_name, "l" );
+    if (sl_idx == 0) {
+      lg2->AddEntry(total_frac_err_hist, "Total", "l");
+    }
 
     for ( auto& pair : frac_uncertainty_hists ) {
-      std::cout<<"DEBUG tutorial_slice_plots Point 7.4"<<std::endl;
       const auto& name = pair.first;
       TH1* hist = pair.second;
       // We already plotted the "total" one above
       if ( name == total_name ) continue;
-      if (name.size() >= 5 && name.substr(name.size() - 5) == "stats") 
-      {
+      if (name.size() >= 5 && name.substr(name.size() - 5) == "stats") {
         hist->SetLineStyle( 2 );
       }
-      std::cout<<"DEBUG tutorial_slice_plots Point 7.5"<<std::endl;
+      if (sl_idx == 0) {
+        // Replace legend labels with stylized versions
+        std::string label;
+        if (name == "EXTstats") label = "Beam-off Statistical";
+        else if (name == "MCstats") label = "MC Statistical";
+        else if (name == "POT") label = "POT";
+        else if (name == "detVar_total") label = "Detector Variations";
+        else if (name == "flux") label = "Flux";
+        else if (name == "numTargets") label = "Target";
+        else if (name == "reint") label = "Reinteraction";
+        else if (name == "xsec_total") label = "Interaction Model";
+        else label = name; // Default to the original name if not matched
 
-      lg2->AddEntry( hist, name.c_str(), "l" );
+        lg2->AddEntry(hist, label.c_str(), "l");
+      }
       hist->Draw( "same hist" );
 
 
       std::cout << name << " frac err in bin #1 = "
         << hist->GetBinContent( 1 )*100. << "%\n";
     }
-
-    lg2->Draw( "same" );
 
     std::string frac_out_name = "plots/get_slice_uncertainties_slice";
     if ( sl_idx < 10 ) frac_out_name += "0";
@@ -232,6 +237,13 @@ void get_slice_uncertainties() {
       << total_frac_err_hist->GetBinContent( 1 )*100. << "%\n";
 
   } // End of loop over slices
+
+  // Create a separate canvas for the legend
+  TCanvas* legend_canvas = new TCanvas("legend_canvas", "Legend", 400, 400); // Adjust canvas size to match legend
+  legend_canvas->cd();
+  lg2->Draw();
+  legend_canvas->SaveAs("plots/get_slice_uncertainties_legend.pdf");
+  legend_canvas->SaveAs("plots/get_slice_uncertainties_legend.C");
 
   std::cout<<"--------- All Done ---------"<<std::endl;
 

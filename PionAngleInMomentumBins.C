@@ -191,6 +191,9 @@ void MakePlot2D(TH2D* hist, const std::string& name, const bool drawDiagonal = f
     hist->GetXaxis()->SetTitle(xTitle);
     hist->GetYaxis()->SetTitle(yTitle);
 
+    // Set x axis label offset
+    hist->GetXaxis()->SetTitleOffset(1.2);
+
     std::cout << "DEBUG - hist title 1: " << hist->GetTitle() << std::endl;
 
     c1->SaveAs(("plots/PionAngleInMomentumBins_" + name + "_testingOnly_lowPiMomThreshold.pdf").c_str());
@@ -212,39 +215,39 @@ void PionAngleInMomentumBins()
 
     // 2d histograms
     std::vector<double> phi_bin_edges = {-3.141592654, -2.513274123, -1.884955592, -1.256637061, -0.6283185307, 0, 0.6283185307, 1.256637061, 1.884955592, 2.513274123, 3.141592654};
-    TH2D* h_piPhi_0 = new TH2D("pi_phi_h0", "Truth vs Reco #phi_{#pi} for Selected Signal Events with true p_{#pi^{#pm}} < 0 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_1 = new TH2D("pi_phi_h1", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= true p_{#pi^{#pm}} < 160 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_2 = new TH2D("pi_phi_h2", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 160 MeV <= true p_{#pi^{#pm}} < 190 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_3 = new TH2D("pi_phi_h3", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 190 MeV <= true p_{#pi^{#pm}} < 220 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_4 = new TH2D("pi_phi_h4", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 220 MeV <= true p_{#pi^{#pm}} < 600 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_5 = new TH2D("pi_phi_h5", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 600 MeV <= true p_{#pi^{#pm}}; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_0 = new TH2D("pi_phi_h0", "Truth vs Reco #phi_{#pi} for Selected Signal Events with true p_{#pi} < 0 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_1 = new TH2D("pi_phi_h1", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= true p_{#pi} < 160 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_2 = new TH2D("pi_phi_h2", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 160 MeV <= true p_{#pi} < 190 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_3 = new TH2D("pi_phi_h3", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 190 MeV <= true p_{#pi} < 220 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_4 = new TH2D("pi_phi_h4", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 220 MeV <= true p_{#pi} < 600 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_5 = new TH2D("pi_phi_h5", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 600 MeV <= true p_{#pi}; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
 
-    TH2D* h_piPhi_reco_0 = new TH2D("pi_phi_reco_h0", "Truth vs Reco #phi_{#pi} for Selected Signal Events with reco p_{#pi^{#pm}} < 0 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_reco_1 = new TH2D("pi_phi_reco_h1", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= reco p_{#pi^{#pm}} < 160 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_reco_2 = new TH2D("pi_phi_reco_h2", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 160 MeV <= reco p_{#pi^{#pm}} < 190 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_reco_3 = new TH2D("pi_phi_reco_h3", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 190 MeV <= reco p_{#pi^{#pm}} < 220 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_reco_4 = new TH2D("pi_phi_reco_h4", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 220 MeV <= reco p_{#pi^{#pm}} < 600 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_reco_5 = new TH2D("pi_phi_reco_h5", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 600 MeV <= reco p_{#pi^{#pm}}; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_reco_0 = new TH2D("pi_phi_reco_h0", "Truth vs Reco #phi_{#pi} for Selected Signal Events with reco p_{#pi} < 0 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_reco_1 = new TH2D("pi_phi_reco_h1", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= reco p_{#pi} < 160 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_reco_2 = new TH2D("pi_phi_reco_h2", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 160 MeV <= reco p_{#pi} < 190 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_reco_3 = new TH2D("pi_phi_reco_h3", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 190 MeV <= reco p_{#pi} < 220 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_reco_4 = new TH2D("pi_phi_reco_h4", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 220 MeV <= reco p_{#pi} < 600 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_reco_5 = new TH2D("pi_phi_reco_h5", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 600 MeV <= reco p_{#pi}; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
 
-    TH2D* h_piPhi_fineBinning_true_00 = new TH2D("h_piPhi_fineBinning_true_00", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 0 MeV <= true p_{#pi^{#pm}} < 80 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_true_80 = new TH2D("h_piPhi_fineBinning_true_80", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 80 MeV <= true p_{#pi^{#pm}} < 100 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_true_100 = new TH2D("h_piPhi_fineBinning_true_100", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= true p_{#pi^{#pm}} < 120 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_true_120 = new TH2D("h_piPhi_fineBinning_true_120", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 120 MeV <= true p_{#pi^{#pm}} < 140 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_true_00 = new TH2D("h_piPhi_fineBinning_true_00", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 0 MeV <= true p_{#pi} < 80 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_true_80 = new TH2D("h_piPhi_fineBinning_true_80", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 80 MeV <= true p_{#pi} < 100 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_true_100 = new TH2D("h_piPhi_fineBinning_true_100", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= true p_{#pi} < 120 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_true_120 = new TH2D("h_piPhi_fineBinning_true_120", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 120 MeV <= true p_{#pi} < 140 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
 
     
-    TH2D* h_piPhi_fineBinning_reco_00 = new TH2D("h_piPhi_fineBinning_reco_00", "Truth vs Reco #phi_{#pi} for Selected Signal Events with reco p_{#pi^{#pm}} < 100 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_reco_100 = new TH2D("h_piPhi_fineBinning_reco_100", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= reco p_{#pi^{#pm}} < 120 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_reco_120 = new TH2D("h_piPhi_fineBinning_reco_120", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 120 MeV <= reco p_{#pi^{#pm}} < 140 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_reco_140 = new TH2D("h_piPhi_fineBinning_reco_140", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 140 MeV <= reco p_{#pi^{#pm}} < 160 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
-    TH2D* h_piPhi_fineBinning_reco_160 = new TH2D("h_piPhi_fineBinning_reco_160", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 160 MeV <= reco p_{#pi^{#pm}} < 180 MeV; True #phi_{#pi}; Reco #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_reco_00 = new TH2D("h_piPhi_fineBinning_reco_00", "Truth vs Reco #phi_{#pi} for Selected Signal Events with reco p_{#pi} < 100 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_reco_100 = new TH2D("h_piPhi_fineBinning_reco_100", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 100 MeV <= reco p_{#pi} < 120 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_reco_120 = new TH2D("h_piPhi_fineBinning_reco_120", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 120 MeV <= reco p_{#pi} < 140 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_reco_140 = new TH2D("h_piPhi_fineBinning_reco_140", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 140 MeV <= reco p_{#pi} < 160 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
+    TH2D* h_piPhi_fineBinning_reco_160 = new TH2D("h_piPhi_fineBinning_reco_160", "Truth vs Reco #phi_{#pi} for Selected Signal Events with 160 MeV <= reco p_{#pi} < 180 MeV; True #phi_{#pi}; Reconstructed #phi_{#pi}", phi_bin_edges.size() - 1, &phi_bin_edges[0], phi_bin_edges.size() - 1, &phi_bin_edges[0]);
 
-    // TH2D* h_piMom_recoGolden = new TH2D("h_piMom_recoGolden", "Truth vs reco p_{#pi^{#pm}} for signal events in unscattered-enhanced selection; True p_{#pi^{#pm}}; Reco p_{#pi^{#pm}}", 100, 0, 0.6, 100, 0, 0.6);
-    // TH2D* h_piMom_reco = new TH2D("h_piMom_reco", "Truth vs reco p_{#pi^{#pm}} for signal events in generic selection; True p_{#pi^{#pm}}; Reco p_{#pi^{#pm}}", 100, 0, 0.6, 100, 0, 0.6);
+    // TH2D* h_piMom_recoGolden = new TH2D("h_piMom_recoGolden", "Truth vs reco p_{#pi} for signal events in unscattered-enhanced selection; True p_{#pi}; Reconstructed p_{#pi}", 100, 0, 0.6, 100, 0, 0.6);
+    // TH2D* h_piMom_reco = new TH2D("h_piMom_reco", "Truth vs reco p_{#pi} for signal events in generic selection; True p_{#pi}; Reconstructed p_{#pi}", 100, 0, 0.6, 100, 0, 0.6);
 
-    TH2D* h_piMom_recoGolden = new TH2D("h_piMom_recoGolden", "; True p_{#pi^{#pm}}; Reco p_{#pi^{#pm}}", 100, 0, 0.6, 100, 0, 0.6);
-    TH2D* h_piMom_reco = new TH2D("h_piMom_reco", "; True p_{#pi^{#pm}}; Reco p_{#pi^{#pm}}", 100, 0, 0.6, 100, 0, 0.6);
+    TH2D* h_piMom_recoGolden = new TH2D("h_piMom_recoGolden", "; True p_{#pi} (GeV); Reconstructed p_{#pi} (GeV)", 100, 0, 0.6, 100, 0, 0.6);
+    TH2D* h_piMom_reco = new TH2D("h_piMom_reco", "; True p_{#pi} (GeV); Reconstructed p_{#pi} (GeV)", 100, 0, 0.6, 100, 0, 0.6);
 
-    TH2D* h_piMom_trueGolden = new TH2D("h_piMom_trueGolden", "Truth vs Reco p_{#pi^{#pm}} for Golden Selection Golden Signal Events; True p_{#pi^{#pm}}; Reco p_{#pi^{#pm}}", 100, 0, 0.6, 100, 0, 0.6);
+    TH2D* h_piMom_trueGolden = new TH2D("h_piMom_trueGolden", "Truth vs Reco p_{#pi} for Golden Selection Golden Signal Events; True p_{#pi} (GeV); Reconstructed p_{#pi} (GeV)", 100, 0, 0.6, 100, 0, 0.6);
 
     // std::vector<double> cosTheta_bin_edges = {-1, -0.47, 0, 0.39, 0.65, 0.84, 0.93, 1};
 
@@ -459,7 +462,8 @@ void PionAngleInMomentumBins()
     MakePlot2D(h_piPhi_fineBinning_reco_140, "recoVsTruePiPhi_fineBinning_reco_140", false, true, false);
     MakePlot2D(h_piPhi_fineBinning_reco_160, "recoVsTruePiPhi_fineBinning_reco_160", false, true, false);
 
-    const std::vector<float> binEdges = {0.1, 0.16, 0.19, 0.22, 0.6};
+    // const std::vector<float> binEdges = {0.1, 0.16, 0.19, 0.22}; // No 0.6 for this plot because of merged overflow bin
+    const std::vector<float> binEdges = {0.1};
     MakePlot2D(h_piMom_recoGolden, "recoVsTruePiMom_goldenSelection", false, true, false, binEdges);
     MakePlot2D(h_piMom_reco, "recoVsTruePiMom_genericSelection", false, true, false, binEdges);
     MakePlot2D(h_piMom_trueGolden, "recoVsTruePiMom_goldenSelection_trueGolden", false, true, false, binEdges);

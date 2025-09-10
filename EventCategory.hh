@@ -152,7 +152,7 @@ class EventCategoryInterpreter {
       { kUnknown, kGray },
       { kNumuCC1PiChargedGolden,  kGreen },
       { kNumuCC1PiChargedNonGolden, kGreen+3}, // kViolet
-      { kNumuCC1PiNonSignal , kOrange + 5 },
+      { kNumuCC1PiNonSignal , kBlue}, //kOrange + 5 },
       { kNumuCC0PiSignal, kYellow - 6},
       { kNumuCC0Pi, kYellow },
       { kNumuCC1PiZero, kOrange - 4 },

@@ -16,29 +16,29 @@ void BDTStudy1DParticleInputVar()
     // tuple: type, run, file path, run weight
     const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
         std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
-        // std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
-        // std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
-        // std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
-        // std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
+        std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
+        std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
+        std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
+        std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
     };
 
     const std::string postfix = "_test";
 
-    // const std::vector<std::string> runs {"0", "1", "2", "3", "4bcd", "5"}; // Here 0 is the full set of all runs
-    const std::vector<std::string> runs {"0", "1"}; // Here 0 is the full set of all runs
-    const std::vector<std::string> variables = {"wiggliness"};
-    // const std::vector<std::string> variables = {"logBragg_pToMIP", "logBragg_piToMIP", "truncMeandEdx", "wiggliness", "trackScore", "nDescendents"};
-    const std::vector<std::string> particles = {"P", "Mu", "Pi", "Golden Pi", "EXT"};
+    const std::vector<std::string> runs {"0", "1", "2", "3", "4bcd", "5"}; // Here 0 is the full set of all runs
+    // const std::vector<std::string> runs {"0", "1"}; // Here 0 is the full set of all runs
+    // const std::vector<std::string> variables = {"wiggliness"};
+    const std::vector<std::string> variables = {"logBragg_pToMIP", "logBragg_piToMIP", "truncMeandEdx", "wiggliness", "trackScore", "nDescendents"};
+    const std::vector<std::string> particles = {"P", "Mu", "Scattered Pi", "Unscattered Pi", "EXT"};
     const std::vector<bool> trainingOptions = {true, false};
 
     // map: variable, tuple(nBins, xMin, xMax, xAxisLog, yAxisLog)
     const std::map<std::string, std::tuple<int, double, double, bool, bool>> binningInfo = {
-        // {"logBragg_pToMIP", std::make_tuple(60, -8, 8, false, false)},
-        // {"logBragg_piToMIP", std::make_tuple(60, -4, 7, false, false)},
-        // {"truncMeandEdx", std::make_tuple(60, 0, 10.0, false, false)},
-        {"wiggliness", std::make_tuple(60, 0.00000, 0.03, false, false)},
-        // {"trackScore", std::make_tuple(60, 0, 1.0, false, true)},
-        // {"nDescendents", std::make_tuple(4, 0, 4, false, false)}
+        {"logBragg_pToMIP", std::make_tuple(60, -8, 8, false, false)},
+        {"logBragg_piToMIP", std::make_tuple(60, -4, 7, false, false)},
+        {"truncMeandEdx", std::make_tuple(60, 0, 10.0, false, false)},
+        {"wiggliness", std::make_tuple(60, 0.00005, 0.25, true, false)},
+        {"trackScore", std::make_tuple(60, 0, 1.0, false, true)},
+        {"nDescendents", std::make_tuple(4, 0, 4, false, false)}
     };
 
     // map: run, variable, particle
@@ -70,6 +70,15 @@ void BDTStudy1DParticleInputVar()
                     }
                     
                     histograms1D[run][variable][particle]->Sumw2();
+                    
+                    // Set integer bin labels for nDescendents histograms
+                    if (variable == "nDescendents") {
+                        for (int i = 1; i <= nBinsVar; i++) {
+                            histograms1D[run][variable][particle]->GetXaxis()->SetBinLabel(i, Form("%d", i-1));
+                        }
+                        // Make the bin labels 50% larger
+                        histograms1D[run][variable][particle]->GetXaxis()->SetLabelSize(0.06);
+                    }
             }
         }
     }
@@ -187,8 +196,8 @@ void BDTStudy1DParticleInputVar()
                                 break;
                             case 211:
                             {
-                                const auto isGolden = pReco_particle_ccinc_backtracked_goldenPion->at(v);
-                                particle = isGolden ? "Golden Pi" : "Pi";
+                                const auto isUnscattered = pReco_particle_ccinc_backtracked_goldenPion->at(v);
+                                particle = isUnscattered ? "Unscattered Pi" : "Scattered Pi";
                                 break;
                             }
                             case 2212:
@@ -202,19 +211,19 @@ void BDTStudy1DParticleInputVar()
                             }
                         }
 
-                        // histograms1D[run]["logBragg_pToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_pToMIP->at(v), eventWeight);
-                        // histograms1D[run]["logBragg_piToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_piToMIP->at(v), eventWeight);
-                        // histograms1D[run]["truncMeandEdx"][particle]->Fill(pReco_particle_ccinc_truncMeandEdx->at(v), eventWeight);
+                        histograms1D[run]["logBragg_pToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_pToMIP->at(v), eventWeight);
+                        histograms1D[run]["logBragg_piToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_piToMIP->at(v), eventWeight);
+                        histograms1D[run]["truncMeandEdx"][particle]->Fill(pReco_particle_ccinc_truncMeandEdx->at(v), eventWeight);
                         histograms1D[run]["wiggliness"][particle]->Fill(pReco_particle_ccinc_wiggliness->at(v), eventWeight);
-                        // histograms1D[run]["trackScore"][particle]->Fill(pReco_particle_ccinc_trackScore->at(v), eventWeight);
-                        // histograms1D[run]["nDescendents"][particle]->Fill(pReco_particle_ccinc_nDescendents->at(v), eventWeight);
+                        histograms1D[run]["trackScore"][particle]->Fill(pReco_particle_ccinc_trackScore->at(v), eventWeight);
+                        histograms1D[run]["nDescendents"][particle]->Fill(pReco_particle_ccinc_nDescendents->at(v), eventWeight);
 
-                        // histograms1D["0"]["logBragg_pToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_pToMIP->at(v), eventWeight);
-                        // histograms1D["0"]["logBragg_piToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_piToMIP->at(v), eventWeight);
-                        // histograms1D["0"]["truncMeandEdx"][particle]->Fill(pReco_particle_ccinc_truncMeandEdx->at(v), eventWeight);
+                        histograms1D["0"]["logBragg_pToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_pToMIP->at(v), eventWeight);
+                        histograms1D["0"]["logBragg_piToMIP"][particle]->Fill(pReco_particle_ccinc_logBragg_piToMIP->at(v), eventWeight);
+                        histograms1D["0"]["truncMeandEdx"][particle]->Fill(pReco_particle_ccinc_truncMeandEdx->at(v), eventWeight);
                         histograms1D["0"]["wiggliness"][particle]->Fill(pReco_particle_ccinc_wiggliness->at(v), eventWeight);
-                        // histograms1D["0"]["trackScore"][particle]->Fill(pReco_particle_ccinc_trackScore->at(v), eventWeight);
-                        // histograms1D["0"]["nDescendents"][particle]->Fill(pReco_particle_ccinc_nDescendents->at(v), eventWeight);
+                        histograms1D["0"]["trackScore"][particle]->Fill(pReco_particle_ccinc_trackScore->at(v), eventWeight);
+                        histograms1D["0"]["nDescendents"][particle]->Fill(pReco_particle_ccinc_nDescendents->at(v), eventWeight);
                     }
                 } // End of loop over vector entries (aka particles)
             } // End of if signal
@@ -225,8 +234,8 @@ void BDTStudy1DParticleInputVar()
     std::map<std::string, int> particleColors = {
         {"P", kOrange+1},
         {"Mu", kBlue},
-        {"Pi", kMagenta},
-        {"Golden Pi", kGreen},
+        {"Scattered Pi", kGreen+3},
+        {"Unscattered Pi", kGreen},
         {"EXT", kBlack},
     };
 
@@ -259,7 +268,7 @@ void BDTStudy1DParticleInputVar()
             auto firstHist = true;
             const auto outName = "BDTStudy1DParticleInputVariables_" + run + "_" + variable;
             auto c = new TCanvas(outName.c_str(), "", 800, 600);
-            auto legend = variable == "trackScore" ? new TLegend(0.3, 0.7, 0.5, 0.9) : new TLegend(0.7, 0.7, 0.9, 0.9);
+            auto legend = variable == "trackScore" ? new TLegend(0.3, 0.7, 0.6, 0.9) : new TLegend(0.6, 0.7, 0.9, 0.9);
             const auto [nBinsVar, xMin, xMax, xAxisLog, yAxisLog] = binningInfo.at(variable);
             for (const auto& particle : particles)
             {
@@ -267,6 +276,7 @@ void BDTStudy1DParticleInputVar()
                 h->SetStats(0); // Remove stats box
                 h->SetLineColor(particleColors[particle]);
                 h->SetLineWidth(2);
+                h->GetXaxis()->SetTitleOffset(1.2);
                 std::string style = "HIST";
     
 
@@ -278,7 +288,7 @@ void BDTStudy1DParticleInputVar()
                 {
                     firstHist = false;
                     // Set the title
-                    const std::string variableName = variable == "logBragg_pToMIP" ? "log(R_{p}/MIP)" : (variable == "logBragg_piToMIP" ? "log(R_{#pi}/MIP)" : (variable == "truncMeandEdx" ? "Truncated Mean dE/dx" : (variable == "wiggliness" ? "Wiggliness" : (variable == "trackScore" ? "Track Score" : (variable == "nDescendents" ? "# Descendents" : "Unknown Variable")))));
+                    const std::string variableName = variable == "logBragg_pToMIP" ? "LLR(p/MIP)" : (variable == "logBragg_piToMIP" ? "LLR(#pi/MIP)" : (variable == "truncMeandEdx" ? "Truncated Mean dE/dx (MeV / cm)" : (variable == "wiggliness" ? "Wiggliness (rad)" : (variable == "trackScore" ? "Track Score" : (variable == "nDescendents" ? "# Descendents" : "Unknown Variable")))));
                     const std::string runName = run == "0" ? "All Runs" : ("Run " + run);
                     std::string title = variableName + " for " + runName;
                     h->SetTitle(("True CC1#pi Events Passing the #nu_#mu Preselection for " + runName).c_str());
@@ -304,7 +314,7 @@ void BDTStudy1DParticleInputVar()
                 hCopy->Draw(errorStyle.c_str());
 
                 // Add the entry to the legend
-                const std::string particleName = particle == "Golden Pi" ? "Golden Pion" : (particle == "Pi" ? "Other Pion" : (particle == "Mu" ? "Muon" :(particle == "P" ? "Proton" : "EXT")));
+                const std::string particleName = particle == "Unscattered Pi" ? "Unscattered #pi^{#pm}" : (particle == "Scattered Pi" ? "Scattered #pi^{#pm}" : (particle == "Mu" ? "#mu^{#pm}" :(particle == "P" ? "p" : "Overlaid Background")));
                 legend->AddEntry(h, particleName.c_str(), "l");
             }
 

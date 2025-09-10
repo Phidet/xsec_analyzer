@@ -127,7 +127,7 @@ void make_slice_plots(const bool normaliseByBinWidth) {
     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow.root",
     "nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
     "systcalc_fd_min.conf",
-    "ubcc1pi_neutral_slice_config_mergedOverflow.txt",
+    "ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts.txt",
     "_nuwro_fixedBackground_mergedOverflow"
   };
 
@@ -179,6 +179,7 @@ void make_slice_plots(const bool normaliseByBinWidth) {
     // std::string nameExtension = "_bnb_golden_muo_mom_phase_space";
     // std::string nameExtension = "_bnb_golden_pion_mom_phase_space";
   #endif
+  syst_ptr->set_syst_mode(syst_ptr->SystMode::VaryBackgroundAndSignalDirectly);
 
   std::string nameExtension = input.nameExtension;
 

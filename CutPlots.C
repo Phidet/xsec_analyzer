@@ -27,6 +27,7 @@
 using NFT = NtupleFileType;
 
 #define FILE_PROPERTIES "file_properties_testingOnly_lowPiMomThreshold.txt"
+// #define FILE_PROPERTIES "file_properties_sidebandJuly25.txt"
 
 
 void make_plots( const std::string& out_name,
@@ -38,6 +39,7 @@ void make_plots( const std::string& out_name,
     const bool xAxisLog = false,
     const bool yAxisLog = false,
     const bool noData = false,
+    const bool useIntBinLabels = false,
     const std::string& mc_event_weight = DEFAULT_MC_EVENT_WEIGHT )
 {
     // Get the number of bins to use in histograms
@@ -320,9 +322,111 @@ void make_plots( const std::string& out_name,
       line->Draw();
     }
 
-    // Prepare the plot legend
+    c1->cd();
+
+    // Ratio plot
+    TPad* pad2 = new TPad( "pad2", "", 0, 0.01, 0.75, 0.23 );
+
+    if(!noData)
+    {
+      pad2->SetFrameFillStyle( 4000 );
+      pad2->SetBottomMargin( 0.38 );
+      pad2->SetTopMargin( 0.01 );
+      pad2->SetRightMargin( 0.03 );
+      pad2->SetLeftMargin( 0.13 );
+
+      pad2->SetGridx();
+      pad2->Draw();
+      pad2->cd(); // change current pad to pad2
+      pad2->SetLogx(xAxisLog);
+
+      // Ratio plot
+      TH1D* h_ratio = dynamic_cast<TH1D*>( on_data_hist->Clone("h_ratio") );
+      h_ratio->SetStats( false );
+      h_ratio->Divide( stat_err_hist );
+      h_ratio->SetLineWidth( 2 );
+      h_ratio->SetLineColor( kBlack );
+      h_ratio->SetMarkerStyle( kFullCircle );
+      h_ratio->SetMarkerSize( 0.8 );
+      h_ratio->SetTitle( "" );
+
+      // x-axis
+      h_ratio->GetXaxis()->SetTitle( on_data_hist->GetXaxis()->GetTitle() );
+      h_ratio->GetXaxis()->CenterTitle( true );
+      h_ratio->GetXaxis()->SetLabelSize( 0.12 );
+      h_ratio->GetXaxis()->SetTitleSize( 0.18 );
+      h_ratio->GetXaxis()->SetTickLength( 0.05 );
+      h_ratio->GetXaxis()->SetTitleOffset( 0.9 );
+
+      // y-axis
+      h_ratio->GetYaxis()->SetTitle( "Ratio" ); //"#frac{Beam ON}{Beam OFF + MC}" );
+      h_ratio->GetYaxis()->CenterTitle( true );
+      h_ratio->GetYaxis()->SetLabelSize( 0.12);
+      h_ratio->GetYaxis()->SetNdivisions(505, kTRUE); // Fewer, less crowded divisions
+      h_ratio->GetYaxis()->SetTitleSize( 0.15 );
+      h_ratio->GetYaxis()->SetTitleOffset( 0.35 );
+
+      h_ratio->Draw( "E1" );
+
+      if (useIntBinLabels) {
+        h_ratio->GetXaxis()->SetLabelSize( 0.18 );
+        for (int i = 0; i < Nbins; ++i) {
+          on_data_hist->GetXaxis()->SetBinLabel(i, TString::Format("%d", int(bin_low_edges.at(i))));
+          h_ratio->GetXaxis()->SetBinLabel(i+1, TString::Format("%d", int(bin_low_edges.at(i))));
+        }
+      }
+
+      gStyle->SetGridColor( 17 );
+
+      // Adjust y-axis
+      double ratio_max = -std::numeric_limits<double>::max();
+      double ratio_min = std::numeric_limits<double>::max();
+
+      int nBins = h_ratio->GetNbinsX();
+      for (int i = 1; i <= nBins; ++i) {
+        double binContent = h_ratio->GetBinContent(i);
+        if (binContent > 0) {
+          if (binContent > ratio_max) {
+            ratio_max = binContent;
+          }
+          if (binContent < ratio_min) {
+            ratio_min = binContent;
+          }
+        }
+      }
+
+      h_ratio->SetMaximum( ratio_max + ratio_max*0.15 );
+      h_ratio->SetMinimum( ratio_min - ratio_min*0.2 );
+
+      gPad->Update();
+
+      // Draw a horizontal dashed line at ratio == 1
+      TLine* line = new TLine( h_ratio->GetXaxis()->GetXmin(), 1.0,
+        h_ratio->GetXaxis()->GetXmax(), 1.0 );
+      line->SetLineColor( kBlack );
+      line->SetLineStyle( 9 ); // dashed
+      line->Draw();
+    }
+
+    // Set the axis labels and title when not using pads
+    if(noData)
+    {
+      stacked_hist->GetXaxis()->SetTitle( x_axis_label.c_str() );
+      stacked_hist->GetYaxis()->SetTitle( y_axis_label.c_str() );
+      stacked_hist->SetTitle( title.c_str() );
+      if (useIntBinLabels) {
+        stacked_hist->GetXaxis()->SetLabelSize(0.05);
+        for (int i = 0; i < Nbins; ++i) {
+          stacked_hist->GetXaxis()->SetBinLabel(i+1, TString::Format("%d", int(bin_low_edges.at(i))));
+        }
+      }
+    }
+
+
+
+  // Prepare the plot legend
     c1->cd(); // Go back from pad1 to main canvas c1
-    TLegend* lg = new TLegend(0.75, 0.1, 1, 0.95); // Position the legend to the right of the pads
+    TLegend* lg = new TLegend(0.73, 0.1, 0.995, 0.95); // Position the legend to the right of the pads
 
     std::string legend_title = get_legend_title( pot_on );
     lg->SetHeader( legend_title.c_str(), "C" );
@@ -369,89 +473,6 @@ void make_plots( const std::string& out_name,
 
     lg->Draw( "same" );
 
-    // Ratio plot
-    TPad* pad2 = new TPad( "pad2", "", 0, 0.01, 0.75, 0.23 );
-
-    if(!noData)
-    {
-      pad2->SetFrameFillStyle( 4000 );
-      pad2->SetBottomMargin( 0.38 );
-      pad2->SetTopMargin( 0.01 );
-      pad2->SetRightMargin( 0.03 );
-      pad2->SetLeftMargin( 0.13 );
-
-      pad2->SetGridx();
-      pad2->Draw();
-      pad2->cd(); // change current pad to pad2
-      pad2->SetLogx(xAxisLog);
-
-      // Ratio plot
-      TH1D* h_ratio = dynamic_cast<TH1D*>( on_data_hist->Clone("h_ratio") );
-      h_ratio->SetStats( false );
-      h_ratio->Divide( stat_err_hist );
-      h_ratio->SetLineWidth( 2 );
-      h_ratio->SetLineColor( kBlack );
-      h_ratio->SetMarkerStyle( kFullCircle );
-      h_ratio->SetMarkerSize( 0.8 );
-      h_ratio->SetTitle( "" );
-
-      // x-axis
-      h_ratio->GetXaxis()->SetTitle( on_data_hist->GetXaxis()->GetTitle() );
-      h_ratio->GetXaxis()->CenterTitle( true );
-      h_ratio->GetXaxis()->SetLabelSize( 0.12 );
-      h_ratio->GetXaxis()->SetTitleSize( 0.18 );
-      h_ratio->GetXaxis()->SetTickLength( 0.05 );
-      h_ratio->GetXaxis()->SetTitleOffset( 0.9 );
-
-      // y-axis
-      h_ratio->GetYaxis()->SetTitle( "Ratio" ); //"#frac{Beam ON}{Beam OFF + MC}" );
-      h_ratio->GetYaxis()->CenterTitle( true );
-      h_ratio->GetYaxis()->SetLabelSize( 0.08);
-      h_ratio->GetYaxis()->SetTitleSize( 0.15 );
-      h_ratio->GetYaxis()->SetTitleOffset( 0.35 );
-
-      h_ratio->Draw( "E1" );
-
-      gStyle->SetGridColor( 17 );
-
-      // Adjust y-axis
-      double ratio_max = -std::numeric_limits<double>::max();
-      double ratio_min = std::numeric_limits<double>::max();
-
-      int nBins = h_ratio->GetNbinsX();
-      for (int i = 1; i <= nBins; ++i) {
-        double binContent = h_ratio->GetBinContent(i);
-        if (binContent > 0) {
-          if (binContent > ratio_max) {
-            ratio_max = binContent;
-          }
-          if (binContent < ratio_min) {
-            ratio_min = binContent;
-          }
-        }
-      }
-
-      h_ratio->SetMaximum( ratio_max + ratio_max*0.15 );
-      h_ratio->SetMinimum( ratio_min - ratio_min*0.2 );
-
-      gPad->Update();
-
-      // Draw a horizontal dashed line at ratio == 1
-      TLine* line = new TLine( h_ratio->GetXaxis()->GetXmin(), 1.0,
-        h_ratio->GetXaxis()->GetXmax(), 1.0 );
-      line->SetLineColor( kBlack );
-      line->SetLineStyle( 9 ); // dashed
-      line->Draw();
-    }
-
-    // Set the axis labels and title when not using pads
-    if(noData)
-    {
-      stacked_hist->GetXaxis()->SetTitle( x_axis_label.c_str() );
-      stacked_hist->GetYaxis()->SetTitle( y_axis_label.c_str() );
-      stacked_hist->SetTitle( title.c_str() );
-    }
-
     c1->Update();
 
     // Save the plot to a file  named after selection and the runs included
@@ -496,11 +517,11 @@ std::vector<double> get_log_bin_edges( double xMin, double xMax, int nBins )
 
 void CutPlots() {
   const std::vector<std::set<int>> runSets = {
-    std::set<int>{1},
-    std::set<int>{2},
-    std::set<int>{3},
-    std::set<int>{4},
-    std::set<int>{5},
+    // std::set<int>{1},
+    // std::set<int>{2},
+    // std::set<int>{3},
+    // std::set<int>{4},
+    // std::set<int>{5},
     std::set<int>{1,2,3,4,5},
   };
 
@@ -518,10 +539,13 @@ void CutPlots() {
       {"goldenPionBDTScore", get_bin_low_edges(-0.8, 0.6, 30 )},
       {"openingAngle", get_bin_low_edges( 0, 3.15, 25 )},
       {"openingAngle2", get_bin_low_edges( 2.35, 3.15,  8)},
-      {"muonMomentum", get_bin_low_edges( 0, 1.5, 30 )},
-      {"muonMomentum2", get_bin_low_edges( 0.0, 0.3, 8 )},
+      {"muonMomentum", get_bin_low_edges( 0.15, 1.5, 30 )},
+      {"muonMomentum2", get_bin_low_edges( 0.0, 1.5, 20 )},
       {"pionMomentum", get_bin_low_edges( 0, 1.0, 30 )},
-      {"pionMomentum2", get_bin_low_edges( 0, 0.2, 4 )},
+      {"pionMomentum2", get_bin_low_edges( 0, 1.0, 20 )},
+      {"leadingProtonMomentum", get_bin_low_edges( 0, 0.6, 15 )},
+      {"leadingProtonCosTheta", get_bin_low_edges( -1, 1, 20 )},
+      {"nProtons", {0, 1, 2, 3, 4, 5, 6}},
   };
 
 
@@ -535,7 +559,11 @@ void CutPlots() {
     //             /* x_axis_label = */      "Number of fitted tracks",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Generic Cut #1: At least two tracks",
-    //             /* vertical_lines = */ std::set<float>{2.f} );
+    //             /* vertical_lines = */ std::set<float>{2.f},
+    //             /* xAxisLog = */ false,
+    //             /* yAxisLog = */ false,
+    //             /* noData = */ false,
+    //             /* useIntBinLabels = */ true );
 
     // make_plots( /* out_name = */         "cut2",
     //             /* branchexpr = */        "event_cutValue_nUncontained",
@@ -545,17 +573,27 @@ void CutPlots() {
     //             /* x_axis_label = */      "Number of reconstructed uncontained particles",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Generic Cut #2: At most one uncontained",
-    //             /* vertical_lines = */ std::set<float>{2.f} );
+    //             /* vertical_lines = */ std::set<float>{2.f},
+    //             /* xAxisLog = */ false,
+    //             /* yAxisLog = */ false,
+    //             /* noData = */ false,
+    //             /* useIntBinLabels = */ true );
+
 
     // make_plots( /* out_name = */          "cut3",
     //             /* branchexpr = */        "event_cutValue_nNonProtons",
     //             /* selection = */         "passed_max1Uncontained",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("nNonProtons"),
-    //             /* x_axis_label = */      "Number reconstructed of non-protons",
+    //             /* x_axis_label = */      "Number of reconstructed non-protons",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Generic Cut #3: Two non-protons",
-    //             /* vertical_lines = */ std::set<float>{2.f, 3.f} );
+    //             /* vertical_lines = */ std::set<float>{2.f, 3.f},
+    //             /* xAxisLog = */ false,
+    //             /* yAxisLog = */ false,
+    //             /* noData = */ false,
+    //             /* useIntBinLabels = */ true );
+
 
     // make_plots( /* out_name = */          "cut4",
     //             /* branchexpr = */        "event_cutValue_pionTruncatedMeandEdx",
@@ -565,7 +603,8 @@ void CutPlots() {
     //             /* x_axis_label = */      "Reconstructed track energy loss, dE/dx / MeV / cm",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Generic Cut #4: Pion candidate dE/dx is valid",
-    //             /* vertical_lines = */ std::set<float>{1.0f} );
+    //             /* vertical_lines = */ std::set<float>{1.0f});
+
 
     // make_plots( /* out_name = */          "cut5a",
     //             /* branchexpr = */        "event_cutValue_pionPhi",
@@ -637,69 +676,80 @@ void CutPlots() {
     //             /* vertical_lines = */ std::set<float>{2.65f},
     //             /* const bool xAxisLog = */ false,
     //             /* const bool yAxisLog = */ false,
-    //             /* const bool noData = */ true );
+    //             /* const bool noData = */ false );
 
     // make_plots( /* out_name = */          "cut10",
     //             /* branchexpr = */        "cc1pi_reco_muonMomentum",
     //             /* selection = */         "passed_openingAngle",
     //             /* runs = */              runSet,
-    //             /* bin_low_edges = */     binEdges.at("muonMomentum"),
-    //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / (GeV / c)",
+    //             /* bin_low_edges = */     binEdges.at("muonMomentum2"),
+    //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #2: Cut on muon momentum",
     //             /* vertical_lines = */ std::set<float>{0.15f},
     //             /* xAxisLog = */ false,
     //             /* yAxisLog = */ false,
-    //             /* noData = */ true );
+    //             /* noData = */ false );
 
-    // make_plots( /* out_name = */          "cut11",
-    //             /* branchexpr = */        "cc1pi_reco_pionMomentum",
-    //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15",
+    make_plots( /* out_name = */          "cut11",
+                /* branchexpr = */        "cc1pi_reco_pionMomentum",
+                /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15",
+                /* runs = */              runSet,
+                /* bin_low_edges = */     binEdges.at("pionMomentum2"),
+                /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / GeV",
+                /* y_axis_label = */      "# Events", 
+                /* title = */             "Phase Space Cut #3: Cut on pion momentum",
+                /* vertical_lines = */ std::set<float>{0.1f},
+                /* xAxisLog = */ false,
+                /* yAxisLog = */ false,
+                /* noData = */ false );
+
+
+    // make_plots( /* out_name = */          "cut12a",
+    //             /* branchexpr = */        "cc1pi_reco_muonMomentum",
+    //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1",
     //             /* runs = */              runSet,
-    //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / (GeV / c)",
-    //             /* y_axis_label = */      "# Events", 
-    //             /* title = */             "Phase Space Cut #3: Cut on pion momentum",
-    //             /* vertical_lines = */ std::set<float>{0.1f},
+    //             /* bin_low_edges = */     binEdges.at("muonMomentum"),
+    //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / GeV",
+    //             /* y_axis_label = */      "# Events",
+    //             /* title = */             "Before Muon Momentum Subset Cut: Contained Muons");
+
+    // make_plots( /* out_name = */          "cut12b",
+    //             /* branchexpr = */        "cc1pi_reco_muonMomentum",
+    //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1 && cc1pi_recoMuon_IsContained",
+    //             /* runs = */              runSet,
+    //             /* bin_low_edges = */     binEdges.at("muonMomentum"),
+    //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / GeV",
+    //             /* y_axis_label = */      "# Events",
+    //             /* title = */             "After Muon Momentum Subset Cut: Contained Muons");
+
+    // make_plots( /* out_name = */          "cut12",
+    //             /* branchexpr = */        "event_cutValue_goldenPionBDT",
+    //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1",
+    //             /* runs = */              runSet,
+    //             /* bin_low_edges = */     binEdges.at("goldenPionBDTScore"),
+    //             /* x_axis_label = */      "Golden pion BDT response",
+    //             /* y_axis_label = */      "# Events",
+    //             /* title = */             "Pion Momentum Subset Cut: Golden-pion BDT",
+    //             /* vertical_lines = */ std::set<float>{-0.03f} );
+
+
+    // **************************************************************
+    // ********************* Sideband cut plots *********************
+    
+    // make_plots( /* out_name = */          "sideband_cut3",
+    //             /* branchexpr = */        "event_cutValue_nNonProtons",
+    //             /* selection = */         "passed_max1Uncontained",
+    //             /* runs = */              runSet,
+    //             /* bin_low_edges = */     binEdges.at("nNonProtons"),
+    //             /* x_axis_label = */      "Number of reconstructed non-protons",
+    //             /* y_axis_label = */      "# Events",
+    //             /* title = */             "Sideband cut #3: One non-proton",
+    //             /* vertical_lines = */ std::set<float>{2.f},
     //             /* xAxisLog = */ false,
     //             /* yAxisLog = */ false,
-    //             /* noData = */ true );
-
-
-    // // make_plots( /* out_name = */          "cut12a",
-    // //             /* branchexpr = */        "cc1pi_reco_muonMomentum",
-    // //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1",
-    // //             /* runs = */              runSet,
-    // //             /* bin_low_edges = */     binEdges.at("muonMomentum2"),
-    // //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / (GeV / c)",
-    // //             /* y_axis_label = */      "# Events",
-    // //             /* title = */             "Before Muon Momentum Subset Cut: Contained Muons");
-
-    // // make_plots( /* out_name = */          "cut12b",
-    // //             /* branchexpr = */        "cc1pi_reco_muonMomentum",
-    // //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1 && cc1pi_recoMuon_IsContained",
-    // //             /* runs = */              runSet,
-    // //             /* bin_low_edges = */     binEdges.at("muonMomentum2"),
-    // //             /* x_axis_label = */      "Reconstructed muon momentum, p_{#mu} / (GeV / c)",
-    // //             /* y_axis_label = */      "# Events",
-    // //             /* title = */             "After Muon Momentum Subset Cut: Contained Muons");
-
-    make_plots( /* out_name = */          "cut12",
-                /* branchexpr = */        "event_cutValue_goldenPionBDT",
-                /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum > 0.1",
-                /* runs = */              runSet,
-                /* bin_low_edges = */     binEdges.at("goldenPionBDTScore"),
-                /* x_axis_label = */      "Golden pion BDT response",
-                /* y_axis_label = */      "# Events",
-                /* title = */             "Pion Momentum Subset Cut: Golden-pion BDT",
-                /* vertical_lines = */ std::set<float>{-0.03f} );
-
-
-
-
-
-
-
+    //             /* noData = */ false,
+    //             /* useIntBinLabels = */ true );
 
 
     // **************************************************************
@@ -720,7 +770,7 @@ void CutPlots() {
     //             /* selection = */         "passed_startNearVertex && event_cutValue_openingAngle < 2.65",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("muonMomentum2"),
-    //             /* x_axis_label = */      "Muon momentum / (GeV / c)",
+    //             /* x_axis_label = */      "Muon momentum / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Generic phase space restriction 2: Muon momentum",
     //             /* vertical_lines = */ std::set<float>{0.15f} );
@@ -730,7 +780,7 @@ void CutPlots() {
     //             /* selection = */         "passed_startNearVertex && event_cutValue_openingAngle < 2.65 && cc1pi_reco_muonMomentum > 0.15",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum2"),
-    //             /* x_axis_label = */      "Pion momentum / GeV (GeV / c)",
+    //             /* x_axis_label = */      "Pion momentum / GeV GeV",
     //             /* y_axis_label = */      "# Events",
     //             /* title = */             "Generic phase space restriction 3: Pion momentum",
     //             /* vertical_lines = */ std::set<float>{0.1f} );
@@ -751,7 +801,7 @@ void CutPlots() {
     //             /* selection = */         "passed_startNearVertex && event_cutValue_goldenPionBDT > -0.03 && event_cutValue_openingAngle < 2.65",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("muonMomentum"),
-    //             /* x_axis_label = */      "Muon momentum / (GeV / c)",
+    //             /* x_axis_label = */      "Muon momentum / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Golden phase space restriction 2: Muon momentum",
     //             /* vertical_lines = */ std::set<float>{0.15f} );
@@ -761,7 +811,7 @@ void CutPlots() {
     //             /* selection = */         "passed_startNearVertex && event_cutValue_goldenPionBDT > -0.03 && event_cutValue_openingAngle < 2.65 && cc1pi_reco_muonMomentum > 0.15",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "Pion momentum / GeV (GeV / c)",
+    //             /* x_axis_label = */      "Pion momentum / GeV GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Golden phase space restriction 3: Pion momentum",
     //             /* vertical_lines = */ std::set<float>{0.1f} );
@@ -775,7 +825,7 @@ void CutPlots() {
   //               /* selection = */         "passed_startNearVertex && event_cutValue_openingAngle < 2.65 && cc1pi_recoMuon_IsContained",
   //               /* runs = */              runSet,
   //               /* bin_low_edges = */     binEdges.at("muonMomentum"),
-  //               /* x_axis_label = */      "Muon momentum / (GeV / c)",
+  //               /* x_axis_label = */      "Muon momentum / GeV",
   //               /* y_axis_label = */      "# Events", 
   //               /* title = */             "Generic phase space restriction 2: Muon momentum",
   //               /* vertical_lines = */ std::set<float>{0.15f} );
@@ -785,7 +835,7 @@ void CutPlots() {
   //               /* selection = */         "passed_startNearVertex && event_cutValue_openingAngle < 2.65 && !cc1pi_recoMuon_IsContained",
   //               /* runs = */              runSet,
   //               /* bin_low_edges = */     binEdges.at("muonMomentum"),
-  //               /* x_axis_label = */      "Muon momentum / (GeV / c)",
+  //               /* x_axis_label = */      "Muon momentum / GeV",
   //               /* y_axis_label = */      "# Events", 
   //               /* title = */             "Generic phase space restriction 2: Muon momentum",
   //               /* vertical_lines = */ std::set<float>{0.15f} );
@@ -796,7 +846,7 @@ void CutPlots() {
     //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / (GeV / c)",
+    //             /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #3: Cut on pion momentum",
     //             /* vertical_lines = */    std::set<float>{0.1f},
@@ -809,7 +859,7 @@ void CutPlots() {
     //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "True pion momentum, p_{#pi} / (GeV / c)",
+    //             /* x_axis_label = */      "True pion momentum, p_{#pi} / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #3: Cut on pion momentum",
     //             /* vertical_lines = */    std::set<float>{0.1f},
@@ -822,7 +872,7 @@ void CutPlots() {
     //             /* selection = */         "true_cc1pi && passed_openingAngle && cc1pi_reco_muonMomentum > 0.15",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / (GeV / c)",
+    //             /* x_axis_label = */      "Reconstructed pion momentum, p_{#pi} / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #3: Cut on pion momentum",
     //             /* vertical_lines = */    std::set<float>{0.1f},
@@ -835,7 +885,7 @@ void CutPlots() {
     //             /* selection = */         "1",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "True pion momentum, p_{#pi} / (GeV / c)",
+    //             /* x_axis_label = */      "True pion momentum, p_{#pi} / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "",
     //             /* vertical_lines = */    std::set<float>{0.1f},
@@ -850,7 +900,7 @@ void CutPlots() {
     //             /* selection = */         "passed_openingAngle && cc1pi_reco_muonMomentum > 0.15 && cc1pi_reco_pionMomentum < 0.1",
     //             /* runs = */              runSet,
     //             /* bin_low_edges = */     binEdges.at("pionMomentum"),
-    //             /* x_axis_label = */      "True pion momentum, p_{#pi} / (GeV / c)",
+    //             /* x_axis_label = */      "True pion momentum, p_{#pi} / GeV",
     //             /* y_axis_label = */      "# Events", 
     //             /* title = */             "Phase Space Cut #3: Cut on pion momentum",
     //             /* vertical_lines = */    std::set<float>{0.1f},

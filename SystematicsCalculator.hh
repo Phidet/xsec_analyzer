@@ -1149,6 +1149,7 @@ void SystematicsCalculator::build_universes(TDirectoryFile &root_tdir)
           // each universe to the BNB data POT for the current run
           double run_bnb_pot = run_to_bnb_pot_map.at(run);
           double rw_scale_factor = run_bnb_pot / file_pot;
+          std::cout<<"!!!!!!!!!!!! run_bnb_pot: "<<run_bnb_pot<<" file_pot: "<<file_pot<<" rw_scale_factor: "<<rw_scale_factor<<std::endl;
 
           // Iterate over the reweighting universes, retrieve the
           // histograms for each, and add their POT-scaled contributions

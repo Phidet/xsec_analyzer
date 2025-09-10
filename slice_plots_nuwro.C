@@ -17,7 +17,7 @@
 
 using NFT = NtupleFileType;
 
-// #define USE_FAKE_DATA "yes"
+#define USE_FAKE_DATA "yes"
 
 void scale_by_bin_width(SliceHistogram* pSlice)
 {
@@ -69,113 +69,13 @@ struct inputFiles
 
 void make_slice_plots(const bool normaliseByBinWidth) {
 
-  // inputFiles input{ // Same as above but without NuWro uncertainty
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May24_testingOnly_lowPiMomThreshold_fullDetVars.root",
-  //   "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //   "systcalc.conf",
-  //   "ubcc1pi_neutral_slice_config.txt",
-  //   "_bnb"
-  // };
-
-  // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
-  //   "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_02Jul24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow.root",
-  //   "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //   "systcalc.conf",
-  //   "ubcc1pi_neutral_slice_config_mergedOverflow.txt",
-  //   "_bnb_fixedBackground_mergedOverflow"
-  // };
-
-  // // This is the main data config <-----------------------------------
-  // inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been merged with the last bin in the bin and slice definitions
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_17Oct24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_containedMuXSec.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts.txt",
-  //     "_bnb_fixedBackground_mergedOverflow_containedMuXSec"
-  // };
-
-  // #########################
-  // Sideband plots
-  // #########################
-
-  // inputFiles input{ // Direct cut inversion
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May25_invertedCutSideband.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts.txt",
-  //     "_invertedCutSideband"
-  // };
-
-  // This is the main sideband config <-----------------------------------
-  inputFiles input{ // Additional cuts on leading proton bdt scores 
-      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_16May25_invertedCut_near_Sideband.root",
-      "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-      "systcalc.conf",
+  inputFiles input{ // The bin definition used for the reco file ensures that CC1pi events with p_pi < 100MeV are not double counted + overflow bins have been removed from the bin and slice definitions
+      "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_nuwro_run1234bcd5_17Oct24_testingOnly_lowPiMomThreshold_allUncertainties_fixedBackground_mergedOverflow_containedMuXSec.root",
+      "nuwro_file_properties_testingOnly_lowPiMomThreshold_allUncertainties.txt",
+      "systcalc_fd_min.conf",
       "ubcc1pi_neutral_slice_config_mergedOverflow_noSuperscripts.txt",
-      "_invertedCut_near_Sideband"
+      "_nuwro_fixedBackground_mergedOverflow_containedMuXSec"
   };
-
-  // #########################
-  // Alternative plots
-  // #########################
-
-  // Coarser binning (17) and all quality cuts applied + only including events and particles that the BDTs are applied to (fixed version)
-  // inputFiles input{
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_bdt_28May25_bdts_all_quality_cuts_17bins_onlyAppliedParticles_fixed.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars_highestMuonBDTScore.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_bdt_all_quality_cuts_17bins_highestMuonBDTScore.txt",
-  //     "_bdts_full_uncertainty_highestMuonBDTScore"
-  // };
-
-  // inputFiles input{
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_bdt_29May25_bdts_all_quality_cuts_15bins_onlyAppliedParticles_fixed.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars_highestMuonBDTScore.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_bdt_all_quality_cuts_15bins_highestMuonBDTScore.txt",
-  //     "_bdts_full_uncertainty_highestMuonBDTScore"
-  // };
-
-  // // Coarser binning (15) only including events and particles that the BDTs are applied to (fixed version) + only muon BDT plot using only the first particle in each event
-  // inputFiles input{
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_bdt_30May25_bdts_all_quality_cuts_15bins_onlyAppliedParticles_randomSampling.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars_highestMuonBDTScore.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_bdt_all_quality_cuts_15bins_randomSampling.txt",
-  //     "_bdts_full_uncertainty_highestMuonBDTScore"
-  // };
-
-  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; WARNING THE BACKGROUND SUBTRACTION IS NOT CORRECT!!!!!!
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_06Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_v2.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_phiStudy.txt",
-  //     "_bnb_fixedBackground_mergedOverflow_phiStudy"
-  // };
-
-  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions are unchanged but the reco bins ar
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_unchangedSignalDef.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_phiStudy.txt",
-  //     "_bnb_fixedBackground_mergedOverflow_phiStudy_unchangedSignalDef"
-  // };
-
-  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include contained muons
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_contained.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_phiStudy_containedSignal.txt",
-  //     "_bnb_fixedBackground_mergedOverflow_phiStudy_contained"
-  // };
-
-  // inputFiles input{ // Alternative plots to study phi dependence and the effect of uncontained muons; The signal definitions was changed to only include uncontained muons
-  //     "/exp/uboone/data/users/jdetje/ubcc1pi_univmake/22Feb24/univmake_output_bnb_run1234bcd5_07Aug24_testingOnly_lowPiMomThreshold_fullDetVars_fixedBackground_mergedOverflow_phiStudy_uncontained.root",
-  //     "file_properties_testingOnly_lowPiMomThreshold_fullDetvars.txt",
-  //     "systcalc.conf",
-  //     "ubcc1pi_slice_config_phiStudy_uncontainedSignal.txt",
-  //     "_bnb_fixedBackground_mergedOverflow_phiStudy_uncontained"
-  // };
 
   #ifdef USE_FAKE_DATA
     // Initialize the FilePropertiesManager and tell it to treat the NuWro
@@ -224,7 +124,6 @@ void make_slice_plots(const bool normaliseByBinWidth) {
     // std::string nameExtension = "_bnb_golden_muo_mom_phase_space";
     // std::string nameExtension = "_bnb_golden_pion_mom_phase_space";
   #endif
-
   syst_ptr->set_syst_mode(syst_ptr->SystMode::VaryBackgroundAndSignalDirectly);
 
   std::string nameExtension = input.nameExtension;
@@ -282,19 +181,8 @@ void make_slice_plots(const bool normaliseByBinWidth) {
     reco_ext_hist->Clone("reco_mc_plus_ext_hist") );
   reco_mc_plus_ext_hist->SetDirectory( nullptr );
 
-  // // Reset reco_mc_plus_ext_hist for testing/debugging !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // for (int i = 1; i <= reco_mc_plus_ext_hist->GetNbinsX(); ++i) {
-  //   reco_mc_plus_ext_hist->SetBinContent(i, 0);
-  //   reco_mc_plus_ext_hist->SetBinError(i, 0);
-  // }
-
   // Add in the CV MC prediction
   reco_mc_plus_ext_hist->Add( syst.cv_universe().hist_reco_.get() );
-
-  // std::cout << "reco_mc_plus_ext_hist values:" << std::endl;
-  // for (int i = 1; i <= reco_mc_plus_ext_hist->GetNbinsX(); ++i) {
-  //   std::cout << "Bin " << i << ": " << reco_mc_plus_ext_hist->GetBinContent(i) << std::endl;
-  // }
 
   // Keys are covariance matrix types, values are CovMatrix objects that
   // represent the corresponding matrices
@@ -345,7 +233,6 @@ void make_slice_plots(const bool normaliseByBinWidth) {
   eci.set_ext_histogram_style(slice_ext->hist_.get());
   
   THStack* slice_pred_stack = new THStack("mc+ext", "");
-  std::cout << "\n\n\n\n\nExternal (EXT) contribution: " << slice_ext->hist_->Integral() << " entries" << std::endl;
   if (normaliseByBinWidth) scale_by_bin_width(slice_ext);
   slice_pred_stack->Add(slice_ext->hist_.get()); // extBNB
   
@@ -381,15 +268,6 @@ void make_slice_plots(const bool normaliseByBinWidth) {
 
   std::vector<std::pair<TH1D*, std::string>> legend_entries;
   
-  // // Print out the sum for each category in the category_hist
-  // for (int cat = 0; cat < category_hist->GetNbinsX(); ++cat) {
-  //   TH1D* temp_mc_hist = category_hist->ProjectionY("temp_mc_hist_sum", cat + 1, cat + 1);
-  //   double sum = temp_mc_hist->Integral();
-  //   std::cout << "Category " << cat << ": " << sum << " entries" << std::endl;
-  //   delete temp_mc_hist;
-  // }
-  // Print out the external (EXT) contribution, which is handled separately
-
   for (const auto& group_name : group_order) {
       const auto& group = group_map[group_name];
       TH1D* group_hist = nullptr;
@@ -401,10 +279,6 @@ void make_slice_plots(const bool normaliseByBinWidth) {
           } else {
               group_hist->Add(temp_mc_hist);
           }
-
-          SliceHistogram* temp_slice_cat = SliceHistogram::make_slice_histogram(*temp_mc_hist, slice);
-          std::cout << "DEBUG: Integral of temp_slice_cat for category " << cat << " = " << temp_slice_cat->hist_->Integral() << std::endl;
-          delete temp_slice_cat;
       }
   
       if (!group_hist) {
@@ -413,10 +287,6 @@ void make_slice_plots(const bool normaliseByBinWidth) {
       }
   
       SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(*group_hist, slice);
-
-      // Print the integral of the temp_slice_mc histogram for debugging
-      std::cout << "DEBUG: Integral of temp_slice_mc for group '" << group_name << "' = " << temp_slice_mc->hist_->Integral() << std::endl;
-
       // Use the first category in the group to set the histogram style
       eci.set_mc_histogram_style(group.front(), temp_slice_mc->hist_.get());
   
@@ -511,16 +381,16 @@ void make_slice_plots(const bool normaliseByBinWidth) {
     if(sl_idx == 0) // Only plotting the legend once
     {
       #ifdef USE_FAKE_DATA
-        lg->AddEntry(slice_bnb->hist_.get(), "NuWro Fake-data", "lp");
+        lg->AddEntry(slice_bnb->hist_.get(), "NuWro fake data", "lp");
       #else
         lg->AddEntry(slice_bnb->hist_.get(), "Data", "lp");
       #endif
 
-      save_legend_as_plot(lg, "plots/slice_plots_bnb_legend.pdf");
+      save_legend_as_plot(lg, "plots/slice_plots_nuwro_legend.pdf");
     }
     
     slice_bnb->hist_->SetTitle("");
-    const std::string y_title = (normaliseByBinWidth && sl_idx != 7) ? "# Events / Bin width" : "# Events"; // 7 is the total slice
+    const std::string y_title = normaliseByBinWidth ? "# Events / Bin width" : "# Events";
     slice_bnb->hist_->GetYaxis()->SetTitle(y_title.c_str());
     
 
@@ -529,7 +399,7 @@ void make_slice_plots(const bool normaliseByBinWidth) {
 
     // Add LaTeX text to the plot
     TLatex latex;
-    latex.SetTextSize(0.0418); // Adjust the font size
+    latex.SetTextSize(0.037); // Adjust the font size
     latex.SetTextAlign(22); // Center the text both horizontally and vertically
     
     std::ostringstream legendStream;
@@ -586,7 +456,6 @@ void make_slice_plots(const bool normaliseByBinWidth) {
       SliceHistogram* slice_for_syst = SliceHistogram::make_slice_histogram(
         *reco_mc_plus_ext_hist, slice, &cov_matrix );
 
-
       // The SliceHistogram object already set the bin errors appropriately
       // based on the slice covariance matrix. Just change the bin contents
       // for the current histogram to be fractional uncertainties. Also set
@@ -632,8 +501,8 @@ void make_slice_plots(const bool normaliseByBinWidth) {
 
     TCanvas* c2 = new TCanvas;
     // c2->SetLogy(); // Use this for golden Pion Cut variable plots
-    TLegend* lg2 = new TLegend( 0.7, 0.6, 0.9, 0.9 );
-    // TLegend* lg2 = new TLegend( 0.2, 0.3);
+    // TLegend* lg2 = new TLegend( 0.7, 0.7, 0.9, 0.9 );
+    TLegend* lg2 = new TLegend( 0.2, 0.3);
 
     std::cout<<"DEBUG tutorial_slice_plots Point 7.1"<<std::endl;
 
@@ -692,8 +561,7 @@ void make_slice_plots(const bool normaliseByBinWidth) {
 
 }
 
-int slice_plots_bnb() {
-  const bool normaliseByBinWidth = true;
-  make_slice_plots(normaliseByBinWidth);
+int slice_plots_nuwro() {
+  make_slice_plots(true);
   return 0;
 }

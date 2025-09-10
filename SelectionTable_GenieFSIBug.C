@@ -1,35 +1,15 @@
 #include <map>
 #include <string>
 
-void SelectionTable() 
+void SelectionTable_GenieFSIBug() 
 {
     const std::string rootPath = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/";
 
     // List of files; tuple: file type, run, path, fileWeight
     const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
-        std::make_tuple("beam on", "1",  rootPath + "bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run1_C1_ubcc1pi.root", 1.f),
-        std::make_tuple("beam on", "2",  rootPath + "bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root", 1.f),
-        std::make_tuple("beam on", "3",  rootPath + "bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root", 1.f),
-        std::make_tuple("beam on", "4bcd", rootPath + "bnb_beam_on_peleeTuple_uboone_run4bcd_ubcc1pi.root", 1.f),
-        std::make_tuple("beam on", "5",  rootPath + "bnb_beam_on_peleeTuple_uboone_v08_00_00_75_run5_ubcc1pi.root", 1.f),
-
-        std::make_tuple("beam off", "1",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run1_ubcc1pi.root", 0.56421),
-        std::make_tuple("beam off", "2",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root", 0.40202),
-        std::make_tuple("beam off", "3",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_70_run3_ubcc1pi.root", 0.30657),
-        std::make_tuple("beam off", "4bcd", rootPath + "bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root", 0.30175),
-        std::make_tuple("beam off", "5",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root", 0.32807),
-
-        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011*2.0), // Times two because the scaling is for the full MC and this is only half
-        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750*2.0),
-        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113*2.0),
-        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074*2.0),
-        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196*2.0),
-
-        std::make_tuple("dirt mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root", 0.52806),
-        std::make_tuple("dirt mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root", 0.27521),
-        std::make_tuple("dirt mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_dirt_ubcc1pi.root", 0.80892),
-        std::make_tuple("dirt mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_dirt_ubcc1pi.root", 0.329301), // old value: 0.39701),
-        std::make_tuple("dirt mc", "5",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_with_fake_weights_ubcc1pi.root", 0.41280),
+        std::make_tuple("nu mc", "1", "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 1.0), // Ignoring proper scaling
+        // FSI fix sample (treating it as run 2 here)
+        std::make_tuple("nu mc", "2", "/exp/uboone/data/users/jdetje/ubcc1piPelee/pionFSIFix/GENIE_PionFSIFix_50_Percent_run1_ubcc1pi.root", 1.0),
     };
 
     // Vector of pairs; pair: stop when cut is failed, cut formula
@@ -197,7 +177,7 @@ void SelectionTable()
     // *********************************
     for (const auto& run : runs) {
         // Open the output file
-        std::ofstream outputFileLatex("eventCountTable_run" + run + "_onlyTesting_lowPiMomThreshold_fixed_muonContainedOption.tex");
+        std::ofstream outputFileLatex("eventCountTable_run" + run + "_onlyTesting_lowPiMomThreshold_fixed_muonContainedOption_GENIEFSIBugFix.tex");
 
         // Write the header row
         std::string header = 
@@ -305,5 +285,5 @@ R"(
     std::cout << "Total MC sum runs 1-5: " << totalMCSum << std::endl;
     std::cout << "Total Signal sum runs 1-5: " << totalSignalSum << std::endl;
 
-    std::cout<<"Done! Output written to eventCountTable_run*.tex"<<std::endl;
+    std::cout<<"Done! Output written to eventCountTable_run*_GENIEFSIBugFix.tex"<<std::endl;
 }

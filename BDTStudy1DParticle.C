@@ -10,7 +10,7 @@
 void BDTStudy1DParticle() 
 {
 
-    const std::string rootPath = "/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/";
+    const std::string rootPath = "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/";
     // tuple: type, run, file path, run weight
     const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
         std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
@@ -191,18 +191,37 @@ void BDTStudy1DParticle()
         } // End of loop over tree entries
     } // End of loop over files
 
+    // Sum and print total integrated events for training and testing for run "0" only
+    double totalTrainingEvents = 0;
+    double totalTestingEvents = 0;
+    if(histograms1D.find("0") != histograms1D.end()){
+        for (const auto& bdtPair : histograms1D["0"]) {
+            for (const auto& trainingPair : bdtPair.second) { // key is isTraining (true/false)
+                for (const auto& particlePair : trainingPair.second) {
+                    const double integral = particlePair.second->Integral();
+                    if (trainingPair.first)
+                        totalTrainingEvents += integral;
+                    else
+                        totalTestingEvents += integral;
+                }
+            }
+        }
+    }
+    std::cout << "Total Training Events (run 0): " << totalTrainingEvents << std::endl;
+    std::cout << "Total Testing Events (run 0): " << totalTestingEvents << std::endl;
+
     // Create a particle to color map
     std::map<std::string, int> particleColors = {
         {"P", kOrange+1},
         {"Mu", kBlue},
-        {"Pi", kMagenta},
+        {"Pi", kGreen+3},
         {"Golden Pi", kGreen},
         {"EXT", kBlack},
     };
 
     // Map with max y values for each plot; map: run, bdt
     std::map<std::string, std::map<std::string, double>> maxYValues;
-    
+
     // Area normalise all plots
     for (const auto& run : runs)
     {
@@ -223,7 +242,7 @@ void BDTStudy1DParticle()
             }
         }
     }
-
+    
     // Loop over the runs and bdts in histograms1D and for each draw all particle types on one canvas
     for (const auto& run : runs)
     {
@@ -233,7 +252,7 @@ void BDTStudy1DParticle()
             auto firstHist = true;
             const auto outName = "BDTStudy1DParticle_" + run + "_" + bdt;
             auto c = new TCanvas(outName.c_str(), "", 800, 600);
-            auto legend = new TLegend(0.7, 0.7, 0.9, 0.9); // Adjust these parameters as needed
+            auto legend = new TLegend(0.6, 0.7, 0.9, 0.9); // Adjust these parameters as needed
             for (const auto& isTraining : trainingOptions)
             {
                 for (const auto& particle : particles)
@@ -268,7 +287,7 @@ void BDTStudy1DParticle()
                     {
                         style = "E";
                         h->SetLineWidth(3);
-                        const auto particleName = particle == "Golden Pi" ? "Golden Pion" : (particle == "Mu" ? "Muon" : (particle == "P" ? "Proton" : (particle == "Pi" ? "Other Pion" : "Other (including EXT)")));
+                        const auto particleName = particle == "Golden Pi" ? "Unscattered #pi^{#pm}" : (particle == "Mu" ? "#mu^{#pm}" : (particle == "P" ? "p" : (particle == "Pi" ? "Scattered #pi^{#pm}" : "Overlaid Background")));
                         // Only add one line type to the legend
                         legend->AddEntry(h, particleName, "l");
                     }
@@ -281,18 +300,18 @@ void BDTStudy1DParticle()
                     {
                         firstHist = false;
                         // Set the title
-                        const std::string bdtName = bdt == "goldenPionBDTScore" ? "Golden Pion" : (bdt == "protonBDTScore" ? "Proton" : "Muon");
+                        const std::string bdtName = bdt == "goldenPionBDTScore" ? "Unscattered Pion" : (bdt == "protonBDTScore" ? "Proton" : "Muon");
                         const std::string runName = run == "0" ? "All Runs" : ("Run " + run);
                         std::string title = bdtName + " BDT Score for " + runName;
-                        h->SetTitle(title.c_str());
+                        h->SetTitle("");//title.c_str());
                         // Set the y axis label
-                        std::string yAxisLabel = "# Events (area normalised)";
+                        std::string yAxisLabel = "Event Count (Area Normalised)";
                         h->SetYTitle(yAxisLabel.c_str());
                         // Set the x axis label
                         std::string xAxisLabel = bdtName + " BDT Score";
                         h->SetXTitle(xAxisLabel.c_str());
                         // Set y axis range
-                        h->GetYaxis()->SetRangeUser(0, 1.2*maxYValues[run][bdt]);
+                        h->GetYaxis()->SetRangeUser(0, 1.35*maxYValues[run][bdt]);
                     }
 
                     h->Draw(style.c_str());

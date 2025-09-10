@@ -13,8 +13,9 @@ void BDTStudy1DVsData()
 {
     const EventCategoryInterpreter& eventCategoryInterpreter = EventCategoryInterpreter::Instance();
 
-    const std::string rootPath = "/pnfs/uboone/persistent/users/jdetje/ubcc1piPelee/22Feb24/";
-    // tuple: type, run, file path, run weight
+    const std::string rootPath = "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/";
+
+    // List of files; tuple: file type, run, path, fileWeight
     const std::vector<std::tuple<std::string, std::string, std::string, float>> files = {
         std::make_tuple("beam on", "1",  rootPath + "bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run1_C1_ubcc1pi.root", 1.f),
         std::make_tuple("beam on", "2",  rootPath + "bnb_beam_on_peleeTuple_uboone_v08_00_00_70_run2_ubcc1pi.root", 1.f),
@@ -28,41 +29,34 @@ void BDTStudy1DVsData()
         std::make_tuple("beam off", "4bcd", rootPath + "bnb_beam_off_peleeTuple_uboone_run4bcd_ubcc1pi.root", 0.30175),
         std::make_tuple("beam off", "5",  rootPath + "bnb_beam_off_peleeTuple_uboone_v08_00_00_72_run5_ubcc1pi.root", 0.32807),
 
-        // std::make_tuple("nu mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi.root", 0.13011),
-        // std::make_tuple("nu mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi.root", 0.25750),
-        // std::make_tuple("nu mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi.root", 0.20113),
-        // std::make_tuple("nu mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi.root", 0.13074),
-        // std::make_tuple("nu mc", "5",  rootPath + "overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi.root", 0.15196),
-
-        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011*2.0), // Times two because the scaling is for the full MC and this is only half
-        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750*2.0),
-        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113*2.0),
-        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074*2.0),
-        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/1March24/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196*2.0),
+        std::make_tuple("nu mc", "1",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run1_nu_ubcc1pi_only_testing.root", 0.13011*2.0), // Times two because the scaling is for the full MC and this is only half
+        std::make_tuple("nu mc", "2",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run2_nu_ubcc1pi_only_testing.root", 0.25750*2.0),
+        std::make_tuple("nu mc", "3",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_v08_00_00_70_run3_nu_ubcc1pi_only_testing.root", 0.20113*2.0),
+        std::make_tuple("nu mc", "4bcd", "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_peleeTuple_uboone_run4bcd_nu_ubcc1pi_only_testing.root", 0.13074*2.0),
+        std::make_tuple("nu mc", "5",  "/exp/uboone/data/users/jdetje/ubcc1piPelee/27March24_pionMomThreshold/overlay_nu_peleeTuple_uboone_v08_00_00_73_weightFix_run5_ubcc1pi_only_testing.root", 0.15196*2.0),
 
         std::make_tuple("dirt mc", "1",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run1_dirt_ubcc1pi.root", 0.52806),
         std::make_tuple("dirt mc", "2",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run2_dirt_ubcc1pi.root", 0.27521),
         std::make_tuple("dirt mc", "3",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run3_dirt_ubcc1pi.root", 0.80892),
-        std::make_tuple("dirt mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_dirt_ubcc1pi.root", 0.39701),
-        std::make_tuple("dirt mc", "5",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_ubcc1pi.root", 0.41280),
+        std::make_tuple("dirt mc", "4bcd", rootPath + "overlay_peleeTuple_uboone_run4bcd_dirt_ubcc1pi.root", 0.329301), // old value: 0.39701),
+        std::make_tuple("dirt mc", "5",  rootPath + "overlay_peleeTuple_uboone_v08_00_00_70_run5_dirt_with_fake_weights_ubcc1pi.root", 0.41280),
     };
 
     const std::vector<std::string> runs = {"0", "1", "2", "3", "4bcd", "5"}; // Here 0 is the full set of all runs
     const std::vector<std::string> bdts = {"muonBDTScore", "protonBDTScore", "goldenPionBDTScore", "logBragg_pToMIP", "logBragg_piToMIP", "truncMeandEdx", "wiggliness", "trackScore", "nDescendents"};
     // const std::vector<std::string> types = {"EXT", "Dirt", "E", "Photon", "K", "P", "Mu", "Pi", "Golden Pi", "Beam On"};
     const std::vector<std::string> types = {"Other", "P", "Mu", "Pi", "Golden Pi", "Beam On"};
-    const std::vector<bool> dataOptions = {true, false};
 
     // map: variable, tuple(nBins, xMin, xMax, axisLog)
     const std::map<std::string, std::tuple<int, double, double, bool>> binningInfo = {
-        {"muonBDTScore", std::make_tuple(60, -1, 1, false)},
-        {"protonBDTScore", std::make_tuple(60, -1, 1, false)},
-        {"goldenPionBDTScore", std::make_tuple(60, -1, 1, false)},
-        {"logBragg_pToMIP", std::make_tuple(60, -8, 8, false)},
-        {"logBragg_piToMIP", std::make_tuple(60, -4, 7, false)},
-        {"truncMeandEdx", std::make_tuple(60, 0, 10.0, false)},
-        {"wiggliness", std::make_tuple(60, 0.00005, 0.25, true)},
-        {"trackScore", std::make_tuple(60, 0, 1.0, false)},
+        {"muonBDTScore", std::make_tuple(40, -1, 1, false)},
+        {"protonBDTScore", std::make_tuple(40, -1, 1, false)},
+        {"goldenPionBDTScore", std::make_tuple(40, -1, 1, false)},
+        {"logBragg_pToMIP", std::make_tuple(40, -8, 8, false)},
+        {"logBragg_piToMIP", std::make_tuple(40, -4, 7, false)},
+        {"truncMeandEdx", std::make_tuple(40, 0, 10.0, false)},
+        {"wiggliness", std::make_tuple(40, 0.00005, 0.25, true)},
+        {"trackScore", std::make_tuple(40, 0, 1.0, false)},
         {"nDescendents", std::make_tuple(4, 0, 4, false)}
     };
 
@@ -93,6 +87,15 @@ void BDTStudy1DVsData()
                         histograms1D[run][bdt][type] = std::make_unique<TH1D>((name + "_" + bdt + "_" + type).c_str(), (name + " reco Particles Backtracked to True " + type + " in Signal Events; " + bdt + " BDT Score").c_str(), nBinsBDT, xMin, xMax);
                     }
                     histograms1D[run][bdt][type]->Sumw2();
+                    
+                    // Set integer bin labels for nDescendents histograms
+                    if (bdt == "nDescendents") {
+                        for (int i = 1; i <= nBinsBDT; i++) {
+                            histograms1D[run][bdt][type]->GetXaxis()->SetBinLabel(i, Form("%d", i-1));
+                        }
+                        // Make the bin labels 50% larger
+                        histograms1D[run][bdt][type]->GetXaxis()->SetLabelSize(0.06);
+                    }
             }
         }
     }
@@ -159,7 +162,7 @@ void BDTStudy1DVsData()
         std::string metaType = isBeamOn ? "Beam On" : ((isDirt || isBeamOff) ? "Other" : "");
 
         // Get the total number of entries
-        // std::cout<<"WARNING - Only using 3% of the entries!!!!!!!!!"<<std::endl;
+        // std::cout<<"WARNING - Only using 5% of the entries!!!!!!!!!"<<std::endl;
         const auto nEntries = tree->GetEntries();
 
         // Loop over the entries in the tree
@@ -303,7 +306,7 @@ void BDTStudy1DVsData()
     std::map<std::string, int> particleColors = {
         {"P", kOrange+1},
         {"Mu", kBlue},
-        {"Pi", kMagenta},
+        {"Pi", kGreen+3},
         // {"E", kCyan},
         // {"Photon", kYellow},
         // {"K", kMagenta},
@@ -327,11 +330,11 @@ void BDTStudy1DVsData()
             const auto outName = "BDTStudy1DVsData_run" + run + "_" + bdt;
             auto c = new TCanvas(outName.c_str(), "", 800, 600);
             c->SetLogx(xAxisLog);
-            auto legend = (bdt != "trackScore") ? new TLegend(0.75, 0.6, 0.9, 0.9) : new TLegend(0.45, 0.6, 0.6, 0.9);
+            auto legend = (bdt != "trackScore" && bdt != "logBragg_pToMIP") ? new TLegend(0.65, 0.55, 0.9, 0.9) : new TLegend(0.1, 0.55, 0.35, 0.9);
 
             // Create two pads
             TPad *pad1 = new TPad((outName+"pad1").c_str(), "pad1", 0, 0.3, 1, 0.95);
-            pad1->SetBottomMargin(0.05); // Upper pad, no space on the bottom
+            pad1->SetBottomMargin(0.03); // Upper pad, no space on the bottom
             pad1->Draw();             // Draw the upper pad
             pad1->cd();               // pad1 becomes the current pad
             gPad->SetLogx(xAxisLog);
@@ -349,7 +352,7 @@ void BDTStudy1DVsData()
             {
                 std::cout << "DEBUG Point Z2" << std::endl;
                 auto h = histograms1D.at(run).at(bdt).at(type).get();
-                h->SetStats(0); // Remove stats box
+                h->SetStats(0); // Remove stats box                
                 const auto maxY = h->GetMaximum();
                 if(maxY > maxYTotal)
                     maxYTotal = maxY;
@@ -373,18 +376,22 @@ void BDTStudy1DVsData()
                 sum->Add(h);
 
                 // Add an entry to the legend for this histogram
-                const std::string typeName = type == "Other" ? "Other (including EXT)" : (type == "Beam On" ? "Beam On" : (type == "P" ? "Proton" : (type == "Mu" ? "Muon" : (type == "Pi" ? "Other Pion" : "Golden Pion"))));
+                const std::string typeName = type == "Other" ? "Other" : (type == "Beam On" ? "Beam On" : (type == "P" ? "p" : (type == "Mu" ? "#mu^{#pm}" : (type == "Pi" ? "Scattered #pi^{#pm}" : "Unscattered #pi^{#pm}"))));
                 legend->AddEntry(h, typeName.c_str(), "f");
             }
 
-            std::cout << "DEBUG Point Z3" << std::endl;
+            std::cout << "DEBUG Point Z3: maxYTotal: " << maxYTotal<< std::endl;
 
             hs->SetMaximum(maxYTotal*1.2);
-            
+        
+            std::cout << "DEBUG Point Z3.01" << std::endl;
             hs->Draw("HIST");
+            std::cout << "DEBUG Point Z3.02" << std::endl;
             // auto hsCopy = (THStack*)hs->Clone();
             sum->SetFillColor(TColor::GetColorTransparent(kBlack, 0.5));
+            std::cout << "DEBUG Point Z3.03" << std::endl;
             sum->Draw("E2 SAME");
+            std::cout << "DEBUG Point Z3.1" << std::endl;
 
             // Get the beam on histogram
             auto h = histograms1D.at(run).at(bdt).at("Beam On").get();
@@ -393,24 +400,36 @@ void BDTStudy1DVsData()
             h->Draw("E same");
 
             legend->Draw();
+            std::cout << "DEBUG Point Z3.2" << std::endl;
 
             // Set y axis title
             hs->GetYaxis()->SetTitle("# Reconstructed Particles");
+            hs->GetYaxis()->SetTitleSize(0.05);
+            hs->GetYaxis()->SetLabelSize(0.05);
+            hs->GetYaxis()->SetTitleOffset(0.95);
+            // Force scientific (10^x) notation on y-axis above ~999
+            hs->GetYaxis()->SetNoExponent(false);
+            hs->GetYaxis()->SetMoreLogLabels();
+            hs->GetYaxis()->SetMaxDigits(3); // Use scientific notation for numbers with more than 3 digits
+            hs->GetXaxis()->SetTitle("");
+            hs->GetXaxis()->SetLabelSize(0);
 
             // Set title
-            const std::string bdtTitle = bdt == "muonBDTScore" ? "Muon BDT Score" : (bdt == "protonBDTScore" ? "Proton BDT Score" : (bdt == "goldenPionBDTScore" ? "Golden Pion BDT Score" : (bdt == "logBragg_pToMIP" ? "log(R_{p}/MIP)" : (bdt == "logBragg_piToMIP" ? "log(R_{#pi}/MIP)" : (bdt == "truncMeandEdx" ? "Truncated Mean dE/dx" : (bdt == "wiggliness" ? "Wiggliness" : (bdt == "trackScore" ? "Track Score" : "Number of Descendents")))))));
+            const std::string bdtTitle = bdt == "muonBDTScore" ? "Muon BDT Score" : (bdt == "protonBDTScore" ? "Proton BDT Score" : (bdt == "goldenPionBDTScore" ? "Unscattered Pion BDT Score" : (bdt == "logBragg_pToMIP" ? "LLR(p/MIP)" : (bdt == "logBragg_piToMIP" ? "LLR(#pi/MIP)" : (bdt == "truncMeandEdx" ? "Truncated Mean dE/dx (MeV / cm)" : (bdt == "wiggliness" ? "Wiggliness (rad)" : (bdt == "trackScore" ? "Track Score" : "Number of Descendents")))))));
             const std::string runTitle = run == "0" ? "All Runs" : ("Run " + run);
             hs->SetTitle((bdtTitle + " for " + runTitle + "\nReconstructed & Contained Beam-on and MC+EXT Particles in Events that Pass the CC #nu_#mu Preselection").c_str());
-            
+
+            std::cout << "DEBUG Point Z3.3" << std::endl;
             // Draw the ratio plot in the lower pad
             c->cd(); // Go back to the main canvas before creating a new pad
-            TPad *pad2 = new TPad((outName+"pad2").c_str(), "pad2", 0, 0.05, 1, 0.25);
-            pad2->SetTopMargin(0);
+            TPad *pad2 = new TPad((outName+"pad2").c_str(), "pad2", 0, 0.005, 1, 0.3);
+            pad2->SetTopMargin(0.01);
             pad2->SetBottomMargin(0.3);
             pad2->Draw();
             pad2->cd(); // pad2 becomes the current pad
             gPad->SetLogx(xAxisLog);
 
+            std::cout << "DEBUG Point Z3.4" << std::endl;
             // Create the ratio plot
             TH1F *ratio = (TH1F*)h->Clone("ratio");
 
@@ -429,10 +448,23 @@ void BDTStudy1DVsData()
             ratio->Sumw2();
             ratio->Divide(sum);
             // Get the max and min y values and set the range
-            double maxY = 1.2*ratio->GetMaximum();
-            double minY = 0.8*ratio->GetMinimum();
+            double minYWithErr = std::numeric_limits<double>::max();
+            double maxYWithErr = -std::numeric_limits<double>::max();
+            for (int i = 1; i <= ratio->GetNbinsX(); i++) {
+                double val = ratio->GetBinContent(i);
+                double err = ratio->GetBinError(i);
+                if(val <= 1e-2) continue; // Skip bins with zero or negative content
+
+                if ((val - err) < minYWithErr) minYWithErr = std::max(val - err, 0.0);
+                if ((val + err) > maxYWithErr) maxYWithErr = val + err;
+            }
+            std::cout << "DEBUG Point Z5 - minYWithErr: " << minYWithErr << ", maxYWithErr: " << maxYWithErr << std::endl;
+            const auto minY = 0.80 * minYWithErr;
+            const auto maxY = 1.2 * maxYWithErr;
             ratio->SetMinimum(minY);
             ratio->SetMaximum(maxY);
+            ratio->GetYaxis()->SetRangeUser(minY, maxY);
+
 
             // Adjust the font size of the x-axis labels and title
             ratio->GetXaxis()->SetTitleSize(0.12);
@@ -440,9 +472,13 @@ void BDTStudy1DVsData()
 
             // Adjust the font size of the y-axis labels and title
             ratio->GetYaxis()->SetTitleSize(0.12);
+            ratio->GetYaxis()->SetNdivisions(505, kTRUE); // Reduce number of y-axis ticks and labels
             ratio->GetYaxis()->SetLabelSize(0.12);
 
+
+
             ratio->Draw("E"); // Draw the ratio plot
+            gPad->Update();
 
             // Add a horizontal line at y=1 to the ratio plot (Bottom pad)
             TLine *line = new TLine(ratio->GetXaxis()->GetXmin(), 1, ratio->GetXaxis()->GetXmax(), 1);
