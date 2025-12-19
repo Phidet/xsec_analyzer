@@ -46,7 +46,7 @@ void BDTStudy1DVsData_fullUncertainty()
 
     const bool fractionalWeighting = false; // Flag to weight tracks as a fraction of the total number of tracks in event 
 
-    const bool limitToAppliedParticles = true; // Only fill the BDT plots with the particles and events 
+    const bool limitToAppliedParticles = true; // Only fill the BDT plots with the particles and events that the BDTs are applied to
 
     const bool useFirstParticle = false; // Only use the first particle in each event
     
@@ -428,7 +428,7 @@ void BDTStudy1DVsData_fullUncertainty()
                 unsigned int nPionValues = 0;
                 unsigned int excludedMuonValues = 0;
                 // If we're using the random index, get a random index
-                int randomIndex = -2; // Events with index -1 have no particles  
+                int randomIndex = -2; // Events with index -1 have no particles
                 if (useRandomIndex) {
                     randomIndex = static_cast<int>(tree->GetLeaf("random_index")->GetValue());
                 }
